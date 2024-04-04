@@ -1,0 +1,821 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- File naming: <part/series name>.svd -->
+<!--
+  Copyright (C) 2012-2014 ARM Limited. All rights reserved.
+
+  Purpose: System Viewer Description (SVD) Example (Schema Version 1.1)
+           This is a description of a none-existent and incomplete device
+		   for demonstration purposes only.
+		   
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+   - Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+   - Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+   - Neither the name of ARM nor the names of its contributors may be used 
+     to endorse or promote products derived from this software without 
+     specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS AND CONTRIBUTORS BE
+  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  POSSIBILITY OF SUCH DAMAGE.
+ -->
+<device schemaVersion="1.1" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:noNamespaceSchemaLocation="svd.xsd">
+	<vendor>Infineon</vendor>
+	<!-- device vendor name -->
+	<vendorID>IFX</vendorID>
+	<!-- device vendor short name -->
+	<name>ARM_Example</name>
+	<!-- name of part-->
+	<series>ARMCM3</series>
+	<!-- device series the device belongs to -->
+	<version>1.2</version>
+	<!-- version of this description, adding CMSIS-SVD 1.1 tags -->
+	<description>SVD Test for Rust PAC generator</description>
+	<!-- this license text will appear in header file. \n force line breaks -->
+	<licenseText>Test license\n </licenseText>
+	<cpu>
+		<!-- details about the cpu embedded in the device -->
+		<name>CM3</name>
+		<revision>r1p0</revision>
+		<endian>little</endian>
+		<mpuPresent>true</mpuPresent>
+		<fpuPresent>true</fpuPresent>
+		<nvicPrioBits>3</nvicPrioBits>
+		<vendorSystickConfig>false</vendorSystickConfig>
+	</cpu>
+	<addressUnitBits>8</addressUnitBits>
+	<!-- byte addressable memory -->
+	<width>32</width>
+	<!-- bus width is 32 bits -->
+	<!-- default settings implicitly inherited by subsequent sections -->
+	<!-- this is the default size (number of bits) of all peripherals
+                                                                       and register that do not define "size" themselves -->
+	<size>32</size>
+	<access>read-write</access>
+	<!-- default access permission for all subsequent registers -->
+	<resetValue>0x00000000</resetValue>
+	<!-- by default all bits of the registers are initialized to 0 on reset -->
+	<resetMask>0xFFFFFFFF</resetMask>
+	<!-- by default all 32Bits of the registers are used -->
+	<peripherals>
+		<!-- Timer 0 -->
+		<peripheral>
+			<name>TIMER</name>
+			<version>1.0</version>
+			<description>Description of peripheral</description>
+			<groupName>TIMER</groupName>
+			<baseAddress>0x40010000</baseAddress>
+			<access>read-write</access>
+			<addressBlock>
+				<offset>0</offset>
+				<size>0x100</size>
+				<usage>registers</usage>
+			</addressBlock>
+			<interrupt>
+				<name>TIMER0</name>
+				<description>Timer 0 interrupt</description>
+				<value>0</value>
+			</interrupt>
+			<registers>
+				<register>
+					<name>BITFIELD_REG</name>
+					<description>Register to test basic bitfield features</description>
+					<addressOffset>0x00</addressOffset>
+					<access>read-write</access>
+					<resetMask>0x1337F7F</resetMask>
+					<fields>
+						<field>
+							<name>BoolR</name>
+							<description>Boolean Bitfield Read Only</description>
+							<bitRange>[0:0]</bitRange>
+							<access>read-only</access>
+						</field>
+						<field>
+							<name>BoolW</name>
+							<description>Boolean Bitfield Write Only</description>
+							<bitRange>[1:1]</bitRange>
+							<access>write-only</access>
+						</field>
+						<field>
+							<name>BoolRW</name>
+							<description>Boolean bitfield Read Write</description>
+							<bitRange>[2:2]</bitRange>
+							<access>read-write</access>
+						</field>
+						<field>
+							<name>BitfieldR</name>
+							<description>Raw Bitfield Read Only</description>
+							<bitRange>[5:3]</bitRange>
+							<access>read-only</access>
+						</field>
+						<field>
+							<name>BitfieldW</name>
+							<description>Bitfield Raw Write Only</description>
+							<bitRange>[7:6]</bitRange>
+							<access>write-only</access>
+						</field>
+						<field>
+							<name>BitfieldRW</name>
+							<description>BitField Raw Read Write</description>
+							<bitRange>[11:8]</bitRange>
+							<access>read-write</access>
+						</field>
+						<field>
+							<name>BitfieldEnumerated</name>
+							<description>Bitfield with enumerated field</description>
+							<bitRange>[15:12]</bitRange>
+							<access>read-write</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>CClk</name>
+									<description>Core Clock</description>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOA_0</name>
+									<description>GPIO A, PIN 0</description>
+									<value>1</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOA_1</name>
+									<description>GPIO A, PIN 1</description>
+									<value>2</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOA_2</name>
+									<description>GPIO A, PIN 2</description>
+									<value>3</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOA_3</name>
+									<description>GPIO A, PIN 3</description>
+									<value>4</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOA_4</name>
+									<description>GPIO A, PIN 4</description>
+									<value>5</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOA_5</name>
+									<description>GPIO A, PIN 5</description>
+									<value>6</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOA_6</name>
+									<description>GPIO A, PIN 6</description>
+									<value>7</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOA_7</name>
+									<description>GPIO A, PIN 7</description>
+									<value>8</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOB_0</name>
+									<description>GPIO B, PIN 0</description>
+									<value>9</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOB_1</name>
+									<description>GPIO B, PIN 1</description>
+									<value>10</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOB_2</name>
+									<description>GPIO B, PIN 2</description>
+									<value>11</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOB_3</name>
+									<description>GPIO B, PIN 3</description>
+									<value>12</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOC_0</name>
+									<description>GPIO C, PIN 0</description>
+									<value>13</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOC_5</name>
+									<description>GPIO C, PIN 1</description>
+									<value>14</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>GPIOC_6</name>
+									<description>GPIO C, PIN 2</description>
+									<value>15</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+						<field>
+							<dim>8</dim>
+							<dimIncrement>1</dimIncrement>
+							<name>Field%sArray</name>
+							<description>Array of bitfields</description>
+							<bitRange>[17:16]</bitRange>
+							<access>read-write</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>RISING</name>
+									<description>Only rising edges result in a counter increment or decrement</description>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>FALLING</name>
+									<description>Only falling edges result in a counter increment or decrement</description>
+									<value>1</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>BOTH</name>
+									<description>Rising and falling edges result in a counter increment or decrement</description>
+									<value>2</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+					</fields>
+				</register>
+				<register>
+					<name>SR</name>
+					<description>Status Register</description>
+					<addressOffset>0x04</addressOffset>
+					<size>16</size>
+					<access>read-only</access>
+					<resetValue>0x00000000</resetValue>
+					<resetMask>0xD701</resetMask>
+					<fields>
+						<!-- RUN: Shows if Timer is running -->
+						<field>
+							<name>RUN</name>
+							<description>Shows if Timer is running or not</description>
+							<bitRange>[0:0]</bitRange>
+							<access>read-only</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>Stopped</name>
+									<description>Timer is not running</description>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>Running</name>
+									<description>Timer is running</description>
+									<value>1</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+						<!-- MATCH: Shows if a Match was hit -->
+						<field>
+							<name>MATCH</name>
+							<description>Shows if the MATCH was hit</description>
+							<bitRange>[8:8]</bitRange>
+							<access>read-write</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>No_Match</name>
+									<description>The MATCH condition was not hit</description>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>Match_Hit</name>
+									<description>The MATCH condition was hit</description>
+									<value>1</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+						<!-- UN: Shows if an underflow occured -->
+						<field>
+							<name>UN</name>
+							<description>Shows if an underflow occured. This flag is sticky</description>
+							<bitRange>[9:9]</bitRange>
+							<access>read-write</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>No_Underflow</name>
+									<description>No underflow occured since last clear</description>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>Underflow</name>
+									<description>A minimum of one underflow occured since last clear</description>
+									<value>1</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+						<!-- OV: Shows if an overflow occured -->
+						<field>
+							<name>OV</name>
+							<description>Shows if an overflow occured. This flag is sticky</description>
+							<bitRange>[10:10]</bitRange>
+							<access>read-write</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>No_Overflow</name>
+									<description>No overflow occured since last clear</description>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>Overflow_occured</name>
+									<description>A minimum of one overflow occured since last clear</description>
+									<value>1</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+						<!-- RST: Shows if Timer is in RESET state -->
+						<field>
+							<name>RST</name>
+							<description>Shows if Timer is in RESET state</description>
+							<bitRange>[12:12]</bitRange>
+							<access>read-only</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>Ready</name>
+									<description>Timer is not in RESET state and can operate</description>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>In_Reset</name>
+									<description>Timer is in RESET state and can not operate</description>
+									<value>1</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+						<!-- RELOAD: Shows the currently active Reload Register -->
+						<field>
+							<name>RELOAD</name>
+							<description>Shows the currently active RELOAD Register</description>
+							<bitRange>[15:14]</bitRange>
+							<access>read-only</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>RELOAD0</name>
+									<description>Reload Register number 0 is active</description>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>RELOAD1</name>
+									<description>Reload Register number 1 is active</description>
+									<value>1</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>RELOAD2</name>
+									<description>Reload Register number 2 is active</description>
+									<value>2</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>RELOAD3</name>
+									<description>Reload Register number 3 is active</description>
+									<value>3</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+					</fields>
+				</register>
+				<register>
+					<name>INT</name>
+					<description>Interrupt Register</description>
+					<addressOffset>0x10</addressOffset>
+					<size>16</size>
+					<access>write-only</access>
+					<resetValue>0x00000000</resetValue>
+					<resetMask>0x0771</resetMask>
+					<fields>
+						<!-- EN: Interrupt Enable -->
+						<field>
+							<name>EN</name>
+							<description>Interrupt Enable</description>
+							<bitRange>[0:0]</bitRange>
+							<access>read-write</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>Disabled</name>
+									<description>Timer does not generate Interrupts</description>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>Enable</name>
+									<description>Timer triggers the TIMERn Interrupt</description>
+									<value>1</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+						<!-- MODE: Interrupt Mode -->
+						<field>
+							<name>MODE</name>
+							<description>Interrupt Mode, selects on which condition the Timer should generate an Interrupt</description>
+							<bitRange>[6:4]</bitRange>
+							<access>read-write</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>Match</name>
+									<description>Timer generates an Interrupt when the MATCH condition is hit</description>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>Underflow</name>
+									<description>Timer generates an Interrupt when it underflows</description>
+									<value>1</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>Overflow</name>
+									<description>Timer generates an Interrupt when it overflows</description>
+									<value>2</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+					</fields>
+				</register>
+				<register>
+					<name>NOBITFIELD_REG</name>
+					<description>The Counter Register reflects the actual Value of the Timer/Counter</description>
+					<addressOffset>0x20</addressOffset>
+					<access>read-write</access>
+					<resetValue>0x00000000</resetValue>
+					<resetMask>0xFFFFFFFF</resetMask>
+				</register>
+				<register>
+					<name>MATCH</name>
+					<description>The Match Register stores the compare Value for the MATCH condition</description>
+					<addressOffset>0x24</addressOffset>
+					<access>read-writeOnce</access>
+				</register>
+				<register>
+					<name>PRESCALE_RD</name>
+					<description>The Prescale Register stores the Value for the prescaler. The cont event gets divided by this value</description>
+					<addressOffset>0x28</addressOffset>
+					<access>read-only</access>
+				</register>
+				<register>
+					<name>PRESCALE_WR</name>
+					<description>The Prescale Register stores the Value for the prescaler. The cont event gets divided by this value</description>
+					<addressOffset>0x28</addressOffset>
+					<access>write-only</access>
+					<resetValue>0x00000000</resetValue>
+					<resetMask>0xFFFFFFFF</resetMask>
+				</register>
+				<register>
+					<dim>4</dim>
+					<dimIncrement>4</dimIncrement>
+					<name>ARRAYREG[%s]</name>
+					<description>Array of register</description>
+					<addressOffset>0x50</addressOffset>
+					<access>read-write</access>
+					<resetValue>0x00000000</resetValue>
+					<resetMask>0xFFFFFFFF</resetMask>
+				</register>
+				<register>
+					<name>BITFIELD_REG</name>
+					<description>Another defintion register using alternate group</description>
+					<alternateGroup>alt_group</alternateGroup>
+					<addressOffset>0x00</addressOffset>
+				</register>
+				<cluster>
+					<name>Cluster1</name>
+					<description>Test Cluster</description>
+					<addressOffset>0x100</addressOffset>
+					<cluster>
+						<name>Cluster1</name>
+						<description>A cluster inside another cluster</description>
+						<addressOffset>0x100</addressOffset>
+						<register>
+							<name>NestedReg</name>
+							<addressOffset>0x00</addressOffset>
+							<access>read-write</access>
+							<resetValue>0x12345</resetValue>
+						</register>
+					</cluster>
+					<register>
+						<name>CR</name>
+						<addressOffset>0x00</addressOffset>
+						<access>read-write</access>
+						<resetValue>0x0</resetValue>
+						<fields>
+							<field>
+								<name>filed1</name>
+								<lsb>0</lsb>
+								<msb>2</msb>
+								<access>read-write</access>
+							</field>
+							<field>
+								<name>PSC</name>
+								<lsb>3</lsb>
+								<msb>4</msb>
+								<access>read-write</access>
+								<enumeratedValues>
+									<enumeratedValue>
+										<name>val1</name>
+										<value>1</value>
+									</enumeratedValue>
+								</enumeratedValues>
+							</field>
+						</fields>
+					</register>
+				</cluster>
+				<cluster>
+					<dim>4</dim>
+					<dimIncrement>0x100</dimIncrement>
+					<name>ClusterDim[%s]</name>
+					<description>Test Cluster array </description>
+					<addressOffset>0x200</addressOffset>
+					<register>
+						<name>CR</name>
+						<addressOffset>0x00</addressOffset>
+						<access>read-write</access>
+						<resetValue>0x1000</resetValue>
+						<fields>
+							<field>
+								<name>filed1</name>
+								<lsb>0</lsb>
+								<msb>2</msb>
+								<access>read-write</access>
+							</field>
+							<field>
+								<name>PSC</name>
+								<lsb>3</lsb>
+								<msb>4</msb>
+								<access>read-write</access>
+								<enumeratedValues>
+									<enumeratedValue>
+										<name>val1</name>
+										<value>1</value>
+									</enumeratedValue>
+								</enumeratedValues>
+							</field>
+						</fields>
+					</register>
+				</cluster>
+			</registers>
+		</peripheral>
+		<!-- Timer 1 -->
+		<!-- Timer 2 -->
+		<peripheral>
+			<dim>3</dim>
+			<dimIncrement>0x1000</dimIncrement>
+			<name>UART[%s]</name>
+			<version>1.0</version>
+			<description>Test cluster</description>
+			<baseAddress>0x50000000</baseAddress>
+			<access>read-write</access>
+			<interrupt>
+				<name>UartInt</name>
+				<description>Uart interrupt</description>
+				<value>2</value>
+			</interrupt>
+			<registers>
+				<register>
+					<dim>2</dim>
+					<dimIncrement>0x100</dimIncrement>
+					<name>Reg1_[%s]</name>
+					<description>read-write reg</description>
+					<addressOffset>0x0</addressOffset>
+					<access>read-write</access>
+					<resetValue>0x000</resetValue>
+					<resetMask>0xFFFFFFFF</resetMask>
+				</register>
+				<register>
+					<name>RegBitfieldRaw</name>
+					<description>Register with bitfields without enumeration</description>
+					<addressOffset>0x100</addressOffset>
+					<access>read-write</access>
+					<resetValue>0x000</resetValue>
+					<resetMask>0xFFFFFFFF</resetMask>
+					<fields>
+						<field>
+							<name>Bitfield9bits</name>
+							<lsb>0</lsb>
+							<msb>8</msb>
+							<access>read-write</access>
+						</field>
+						<field>
+							<name>Bitfield17bits</name>
+							<lsb>9</lsb>
+							<msb>26</msb>
+							<access>read-write</access>
+						</field>
+						<field>
+							<name>Bool</name>
+							<lsb>27</lsb>
+							<msb>27</msb>
+							<access>read-write</access>
+						</field>
+					</fields>
+				</register>
+				<register>
+					<name>Reg16bitEnum</name>
+					<description>read write reg enum</description>
+					<addressOffset>0x104</addressOffset>
+					<size>16</size>
+					<access>read-write</access>
+					<resetValue>0x000</resetValue>
+					<resetMask>0xFFFF</resetMask>
+					<fields>
+						<field>
+							<name>Bitfield9bitsEnum</name>
+							<description>Check when bitfield size is not standard</description>
+							<lsb>0</lsb>
+							<msb>8</msb>
+							<access>read-write</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>Val0</name>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>Val256</name>
+									<value>256</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+						<field>
+							<name>Boolenum</name>
+							<description>Boolean with enum</description>
+							<lsb>9</lsb>
+							<msb>16</msb>
+							<access>read-write</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>bool0</name>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>bool1</name>
+									<value>1</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+					</fields>
+				</register>
+				<register>
+					<name>Reg8bitRaw</name>
+					<description>Read write whithout enum</description>
+					<addressOffset>0x106</addressOffset>
+					<size>8</size>
+					<access>read-write</access>
+					<resetValue>0x00</resetValue>
+					<resetMask>0xFF</resetMask>
+				</register>
+				<register>
+					<name>Reg16bitRaw</name>
+					<description>Read write without enum</description>
+					<addressOffset>0x107</addressOffset>
+					<size>16</size>
+					<access>read-write</access>
+					<resetValue>0x0000</resetValue>
+					<resetMask>0xFFFF</resetMask>
+				</register>
+				<register>
+					<name>Reg32bitRaw</name>
+					<description>Read write without enum</description>
+					<addressOffset>0x109</addressOffset>
+					<access>read-write</access>
+					<resetValue>0x0000000</resetValue>
+					<resetMask>0xFFFFFFFF</resetMask>
+				</register>
+			</registers>
+		</peripheral>
+		<!-- UART 0-->
+		<!-- UART 1-->
+		<!-- UART 2-->
+		<peripheral>
+			<name>FOO</name>
+			<version>1.0</version>
+			<description>Fake peripheral containing registers with names starting with non XID_Start characters that cannot be directly used as Rust identifier names.</description>
+			<groupName>FOO</groupName>
+			<baseAddress>0x60000000</baseAddress>
+			<access>read-write</access>
+			<addressBlock>
+				<offset>0</offset>
+				<size>0x100</size>
+				<usage>registers</usage>
+			</addressBlock>
+			<interrupt>
+				<name>INT_FOO</name>
+				<description>Foo interrupt</description>
+				<value>3</value>
+			</interrupt>
+			<registers>
+				<register>
+					<name>IN</name>
+					<description>FOO Input Register</description>
+					<addressOffset>0x0</addressOffset>
+					<size>8</size>
+					<access>read-write</access>
+					<resetValue>0x0</resetValue>
+					<resetMask>0xFF</resetMask>
+					<fields>
+						<field>
+							<name>SELF</name>
+							<description>SELF element of FOO</description>
+							<bitOffset>1</bitOffset>
+							<bitWidth>1</bitWidth>
+							<access>read-write</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>0_VALUE</name>
+									<description>Input is on low level.</description>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>1_VALUE</name>
+									<description>Input is on high level.</description>
+									<value>1</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+					</fields>
+				</register>
+			</registers>
+		</peripheral>
+		<peripheral>
+			<name>EscapeTest</name>
+			<version>1.0</version>
+			<description>Fake peripheral containing register with characters that may need to be escaped (and some UTF-8) when documentation is inserted.</description>
+			<baseAddress>0x60000000</baseAddress>
+			<access>read-write</access>
+			<addressBlock>
+				<offset>0</offset>
+				<size>0x100</size>
+				<usage>registers</usage>
+			</addressBlock>
+			<interrupt>
+				<name>interrupt</name>
+				<description>[]\&#34;😀"\n\a
+						multi-line
+						\r'𒀀𒀽</description>
+				<value>42</value>
+			</interrupt>
+			<registers>
+				<register>
+					<name>register</name>
+					<description>[]\&#34;😀"\n\a\r'𒀀𒀽</description>
+					<addressOffset>0x0</addressOffset>
+					<size>8</size>
+					<access>read-write</access>
+					<resetValue>0x0</resetValue>
+					<resetMask>0xFF</resetMask>
+					<fields>
+						<field>
+							<name>field</name>
+							<description>[]\&#34;😀"\n\a\r'𒀀𒀽</description>
+							<bitOffset>1</bitOffset>
+							<bitWidth>1</bitWidth>
+							<access>read-write</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>enum_value</name>
+									<description>[]\&#34;😀"\n\a\r'𒀀𒀽</description>
+									<value>0</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+					</fields>
+				</register>
+			</registers>
+		</peripheral>
+		<peripheral>
+			<name>DerivedTest</name>
+			<version>1.0</version>
+			<description>Fake Peripheral to test cluster and register with derivedFrom attribute</description>
+			<baseAddress>0xA0000</baseAddress>
+			<access>read-write</access>
+			<addressBlock>
+				<offset>0</offset>
+				<size>0x100</size>
+				<usage>registers</usage>
+			</addressBlock>
+			<registers>
+				<cluster>
+					<name>BaseCluster</name>
+					<description>Cluster that defines the base type</description>
+					<headerStructName>BaseClusterType</headerStructName>
+					<addressOffset>0x0</addressOffset>
+					<register>
+						<name>Reg1</name>
+						<addressOffset>0x00</addressOffset>
+					</register>
+					<register>
+						<name>Reg2</name>
+						<addressOffset>0x4</addressOffset>
+					</register>
+				</cluster>
+				<cluster derivedFrom="BaseCluster">
+					<dim>4</dim>
+					<dimIncrement>16</dimIncrement>
+					<name>ArrayCluster[%s]</name>
+					<description>ArrayCluster</description>
+					<addressOffset>0x8</addressOffset>
+				</cluster>
+			</registers>
+		</peripheral>
+	</peripherals>
+</device>

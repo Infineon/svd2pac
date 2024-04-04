@@ -1,0 +1,5 @@
+{% for interrupt in ir.interrupt_table -%}
+{% if interrupt -%}
+PROVIDE({{interrupt.name | upper}} = DefaultHandler);
+{% endif -%}
+{% endfor %}

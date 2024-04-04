@@ -1,0 +1,3 @@
+This is demo license.
+Multiple lines /* with some nested comments*/
+

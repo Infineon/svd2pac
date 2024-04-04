@@ -1,0 +1,183 @@
+/*
+{{ir.license_text}}
+*/
+{%- if tracing %}
+#![cfg_attr(not(feature = "tracing"), no_std)]
+{%- else %}
+#![no_std]
+{%- endif %}
+{% if target=="Aurix" %}
+#![cfg_attr(target_arch = "tricore", feature(stdsimd))]
+{% endif %}
+#![allow(non_camel_case_types)]
+#![doc = "{{ir.device.description | svd_description_to_doc}}"]
+pub mod common;
+pub use common::*;
+
+{% if tracing %}
+#[cfg(feature = "tracing")]
+pub mod reg_name;
+#[cfg(feature = "tracing")]
+pub mod tracing;
+{% endif %}
+{% for peri_mod_name, peri in ir.peripheral_mod -%}
+{%- set module_name = peri.name | to_mod_id -%}
+#[cfg(feature = "{{module_name}}")]
+pub mod {{module_name}};
+{% endfor -%}
+{% if ir_csfr %}
+{% for peri_mod_name, peri in ir_csfr.peripheral_mod -%}
+{%- set module_name = peri.name | to_mod_id -%}
+#[cfg(feature = "{{module_name}}")]
+pub mod {{module_name}};
+#[cfg(feature = "{{module_name}}")]
+pub use {{module_name}} as csfr_cpu;
+{% endfor -%}
+{% endif %}
+
+
+{% for name,p in ir.peripheral_mod %}
+{%- set module_name = p.name | to_mod_id -%}
+{%- set module_struct = p.name | to_struct_id -%}
+{%- set full_path_struct = module_name ~ "::" ~ module_struct -%}
+#[cfg(feature = "{{module_name}}")]
+{%- if p.base_addr | length == 1 %}
+pub const {{name | upper}}: {{full_path_struct}} = {{full_path_struct}}({{p.base_addr[0] | to_hex }}u32 as _);
+{% else %}
+pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}({{addr | to_hex }}u32 as _), {% endfor -%}];
+{%- endif -%}
+{%- endfor -%}
+{% if ir_csfr %}
+#[cfg(any(
+{%- set module_struct = "csfr_cpu" | to_struct_id -%}
+{%- set full_path_struct = "csfr_cpu" ~ "::" ~ module_struct -%}
+{% for name,p in ir_csfr.peripheral_mod %}
+{%- set module_name = p.name | to_mod_id -%}
+{% if not loop.last %}feature = "{{module_name}}",{% else %}feature = "{{module_name}}"))]
+{%- if p.base_addr | length == 1 %}
+pub const {{"csfr_cpu" | upper}}: {{full_path_struct}} = {{full_path_struct}}({{p.base_addr[0] | to_hex }}u32 as _);
+{% else %}
+pub const {{"csfr_cpu" | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}({{addr | to_hex }}u32 as _), {% endfor -%}];
+{% endif %}
+{% endif %}
+{%- endfor -%}
+
+
+{% endif %}
+
+{#- Block to support Cortex-m-rt #}
+{% if target=="CortexM" -%}
+pub use cortex_m::peripheral::Peripherals as CorePeripherals;
+pub use cortex_m::peripheral::{CBP, CPUID, DCB, DWT, FPB, {%if ir.fpu_present %}FPU ,{%endif%} ITM, {%if ir.mpu_present %}MPU ,{%endif%} NVIC, SCB, {%if not ir.vendor_systick_config %}SYST,{%endif%} TPIU};
+{%- if ir.nvic_prio_bits %}
+#[doc = "Number available in the NVIC for configuring priority"]
+pub const NVIC_PRIO_BITS: u8 = {{ir.nvic_prio_bits}};
+{%- endif %}
+#[doc(hidden)]
+pub union Vector {
+    _handler: unsafe extern "C" fn(),
+    _reserved: u32,
+}
+{%- if ir.interrupt_table  | length > 0 %}
+#[cfg(feature = "rt")]
+pub use self::Interrupt as interrupt;
+#[cfg(feature = "rt")]
+pub use cortex_m_rt::interrupt;
+#[cfg(feature = "rt")]
+extern "C" {
+    {% for interrupt in ir.interrupt_table -%}
+    {% if interrupt -%}
+    fn {{interrupt.name | upper}}();
+    {% endif -%}
+    {% endfor -%}
+
+}
+#[cfg(feature = "rt")]
+#[doc(hidden)]
+#[link_section = ".vector_table.interrupts"]
+#[no_mangle]
+pub static __INTERRUPTS: [Vector; {{ir.interrupt_table  | length}}] = [
+    {% for interrupt in ir.interrupt_table -%}
+    {% if interrupt -%}
+    Vector { _handler: {{interrupt.name | upper}} },
+    {% else -%}
+    Vector { _reserved: 0 },
+    {% endif -%}
+    {% endfor -%}
+];
+#[doc = "Enumeration of all the interrupts."]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[repr(u16)]
+pub enum Interrupt {
+    {% for interrupt in ir.interrupt_table -%}
+    {% if interrupt -%}
+    #[doc = "{{interrupt.description | svd_description_to_doc}}"]
+    {{interrupt.name | upper}} = {{interrupt.value}},
+    {% endif -%}
+    {% endfor -%}
+}
+unsafe impl cortex_m::interrupt::InterruptNumber for Interrupt {
+    #[inline(always)]
+    fn number(self) -> u16 {
+        self as u16
+    }
+}
+{% endif -%}
+#[allow(non_snake_case)]
+/// Required for compatibility with RTIC and other frameworks
+pub struct Peripherals {
+    {% for name,p in ir.peripheral_mod %}
+    {%- set module_name = p.name | to_mod_id -%}
+    {%- set module_struct = p.name | to_struct_id -%}
+    {%- set full_path_struct = module_name ~ "::" ~ module_struct -%}
+    #[cfg(feature = "{{module_name}}")]
+    {%- if p.base_addr | length == 1 %}
+    pub {{name | upper}}: {{full_path_struct}},
+    {% else %}
+    pub {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}],
+    {%- endif -%}
+    {%- endfor -%}
+    {% if ir_csfr %}
+    {% for name,p in ir_csfr.peripheral_mod %}
+    {%- set module_name = p.name | to_mod_id -%}
+    {%- set module_struct = p.name | to_struct_id -%}
+    {%- set full_path_struct = module_name ~ "::" ~ module_struct -%}
+    #[cfg(feature = "{{module_name}}")]
+    {%- if p.base_addr | length == 1 %}
+    pub {{name | upper}}: {{full_path_struct}},
+    {% else %}
+    pub {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}],
+    {%- endif -%}
+    {%- endfor -%}
+    {%- endif -%}
+
+
+}
+
+impl Peripherals {
+    /// Returns Peripheral struct multiple times
+    /// Required for compatibility with RTIC and other frameworks
+    #[inline]
+    pub fn take() -> Option<Self> {
+        Some(Self::steal())
+    }
+
+    /// Returns Peripheral struct multiple times
+    /// Required for compatibility with RTIC and other frameworks
+    #[inline]
+    pub fn steal() -> Self {
+        
+        Peripherals{
+            {% for name,p in ir.peripheral_mod %}
+            {%- set module_name = p.name | to_mod_id -%}
+            {%- set module_struct = p.name | to_struct_id -%}
+            {%- set full_path_struct = module_name ~ "::" ~ module_struct %}
+            #[cfg(feature = "{{module_name}}")]
+            {{name | upper}}: crate::{{name | upper}},
+            {%- endfor %}
+        
+        }
+        
+    }
+}
+{% endif -%}

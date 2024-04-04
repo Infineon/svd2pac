@@ -1,0 +1,51 @@
+{% for line in  ir.license_text | prepend_lines(prefix="# ") -%}
+{{line}}
+{% endfor -%}
+[package]
+name = "{{package_name}}"
+version = "0.0.1"
+authors = ["Infineon developers"]
+edition = "2021"
+rust-version = "1.64"
+description = "{{description}}"
+keywords = ["no_std", "infineon"{%- if target=="Aurix" -%}, "aurix"{%- endif -%}]
+categories = ["embedded","hardware-support","no-std","no-std::no-alloc"]
+license-file = "LICENSE.txt"
+
+[lib]
+test = false
+bench = false
+
+{% if tracing or target=="CortexM"%}
+[dependencies]
+{%- endif %}
+{%- if tracing %}
+phf = { version = "0.11", features = ["macros"], optional = true }
+{%- endif %}
+{%- if target=="CortexM" %}
+cortex-m-rt= { version = "0.7", optional = true }
+cortex-m = "0.7.6"
+{%- endif %}
+
+
+
+[features]
+{%- for peri_mod_name, peri in ir.peripheral_mod %}
+{{peri.name | to_mod_id}} = []
+{%- endfor %}
+{% if ir_csfr %}
+{%- for peri_mod_name, peri in ir_csfr.peripheral_mod %}
+{{peri.name | to_mod_id}} = []
+{%- endfor %}
+{%- endif %}
+all = [{%- for peri_mod_name, peri in ir.peripheral_mod -%}"{{peri.name | to_mod_id }}",{%- endfor -%}]
+{%- if tracing %}
+tracing = ["dep:phf"]
+tracing_dummy = []
+{%- endif %}
+{%- if target=="CortexM" %}
+rt = ["cortex-m-rt/device"]
+{%- endif %}
+
+[package.metadata.docs.rs]
+features = ["all"{% if target=="CortexM" %},"rt"{%endif%}]

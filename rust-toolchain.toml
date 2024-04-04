@@ -1,0 +1,3 @@
+[toolchain]
+components = [ "rustfmt", "clippy","llvm-tools","rust-analyzer" ]
+targets = ["thumbv7em-none-eabihf"] # Required to test cortex-m code generation target

@@ -1,0 +1,183 @@
+{%- macro reg_size2num_type(bit_size) -%}
+{%- if bit_size=="BIT8" -%}
+u8
+{%- elif bit_size=="BIT16" -%}
+u16
+{%- elif bit_size=="BIT32" -%}
+u32
+{%- else -%}
+Unsupported register size
+{%- endif -%}
+{%- endmacro reg_size2num_type -%}
+
+{# Generated register function #}
+{%- macro register_func(types_mod,reg) -%}
+{%- set reg_struct = reg.name | to_struct_id -%}
+{%- set reg_struct_name = types_mod ~ "::" ~  reg_struct  -%}
+{%- set reg_mod_name = reg.name | to_mod_id -%}
+#[doc = "{{reg.description | svd_description_to_doc}}"]
+#[inline(always)]
+{% if reg.dim == 1 -%}
+pub const fn {{reg.name | to_func_id }}(&self) -> crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}> {
+    unsafe { crate::common::Reg::from_ptr(self.0.add({{reg.offset}}usize)) }
+}
+{%- else -%}
+pub const fn {{reg.name | to_func_id }}(&self) -> [crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>;{{reg.dim}}] {
+    unsafe {  [
+    {%- for index in range(end=reg.dim) -%}
+    crate::common::Reg::from_ptr(self.0.add({{reg.offset | to_hex }}usize + {{index * reg.dim_increment | to_hex }}usize )),
+    {% endfor -%}
+    ] }
+}
+{%- endif -%}
+{%- endmacro -%}
+ 
+
+{# Generated core register function #}
+{%- macro register_core_func(types_mod,reg, base_addr) -%}
+{%- set reg_struct = reg.name | to_struct_id -%}
+{%- set reg_struct_name = types_mod ~ "::" ~  reg_struct  -%}
+{%- set reg_mod_name = reg.name | to_mod_id -%}
+{%- set reg_addr = base_addr+reg.offset | to_hex -%}
+#[doc = r"{{reg.description | svd_description_to_doc}}"]
+#[inline(always)]
+{% if reg.dim == 1 -%}
+pub const fn {{reg.name | to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{reg_addr}}> {
+    unsafe { crate::common::RegCore::new() }
+}
+{%- endif -%}
+{%- endmacro -%}
+
+
+{%- macro bitfield_type(field,reg_struct_name,reg_mod_name,turbofish) -%}
+{%-if turbofish %}{%set separator = "::"%}{%else%}{%set separator = ""%}{%endif-%}
+{%- if not field.enum_type and field.mask == 1 %}
+    crate::common::RegisterFieldBool{{separator}}<{{field.offset}},{{field.dim}},{{field.dim_increment}},{{reg_struct_name}}_SPEC,crate::common::{{field.access}}>
+{%- else -%}
+    {%- if field.enum_type -%}
+        {%- set enum_name_type= field.enum_type.name | to_struct_id -%}
+        {%- set field_type= reg_mod_name ~ "::" ~ enum_name_type -%}
+    {%- else %}
+        {%- set field_type= self::reg_size2num_type(bit_size=field.size) -%}
+    {%- endif -%}
+    crate::common::RegisterField{{separator}}<{{field.offset}},{{field.mask | to_hex}},{{field.dim}},{{field.dim_increment}},{{field_type}}, {{reg_struct_name}}_SPEC,crate::common::{{field.access}}>
+{%- endif -%}
+{%- endmacro -%}
+
+
+{%- macro register_struct(reg) -%}
+{%- set reg_struct_name = reg.name | to_struct_id -%}
+{%- set reg_mod_name = reg.name | to_mod_id -%}
+
+#[doc(hidden)]
+#[derive(Copy, Clone,Eq, PartialEq)]
+pub struct {{reg_struct_name}}_SPEC;
+impl crate::sealed::RegSpec for {{reg_struct_name}}_SPEC {
+    type DataType = {{self::reg_size2num_type(bit_size=reg.size)}};
+}
+#[doc = "{{reg.description | svd_description_to_doc}}"]
+pub type  {{reg_struct_name}} = crate::RegValueT<{{reg_struct_name}}_SPEC>;
+
+{% if not reg.fields %}
+impl NoBitfieldReg<{{reg_struct_name}}_SPEC> for {{reg_struct_name}} {}
+{% else -%}
+impl {{reg_struct_name}} {
+    {%- for field in reg.fields %}
+    #[doc = "{{field.description | svd_description_to_doc}}"]
+    #[inline(always)]
+    {%- if field.dim > 1 -%}
+    pub fn {{field.name | to_func_id }}(self,index:u8) -> {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
+        assert!(index < {{field.dim}});
+        {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=true)}}::from_register(self,index)
+     
+    }
+    {%- else %}
+    pub fn {{field.name | to_func_id }}(self) -> {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
+        {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=true)}}::from_register(self,0)
+    }
+    {%- endif -%}
+    {%- endfor %}
+}
+{% endif -%}
+impl core::default::Default for {{reg_struct_name}} {
+    #[inline(always)]
+    fn default() -> {{reg_struct_name}} {
+        <crate::RegValueT::<{{reg_struct_name}}_SPEC> as RegisterValue<_>>::new({{reg.reset_value}})
+    }
+}
+{% if reg.has_enumerated_fields -%}
+pub mod {{reg_mod_name}} {
+    {% for field in reg.fields -%}
+    {%-if field.enum_type -%}
+    {%- set enum_name_type= field.enum_type.name | to_struct_id %}
+    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+    pub struct {{enum_name_type}}_SPEC;
+    pub type  {{enum_name_type}} = crate::EnumBitfieldStruct<{{self::reg_size2num_type(bit_size=field.enum_type.size)}},{{enum_name_type}}_SPEC>;
+    impl {{enum_name_type}} {
+        {%- for val in field.enum_type.values %}
+        #[doc = "{{val.description | svd_description_to_doc}}"]
+        pub const {{val.name | to_enumerated_const_id }}:Self =Self::new({{val.value}});
+        {%- endfor %}
+    }
+    {%- endif -%}
+    {% endfor %}
+}
+{%- endif -%}
+{%- endmacro -%}
+
+{# Generate getter for clusters #}
+{%- macro cluster_func(types_mod,cluster) -%}
+{%- if cluster.is_derived_from -%}
+{%- set cluster_struct_path = cluster.struct_path -%}
+{%- else -%}
+{%- set cluster_struct_id = cluster.struct_id | to_struct_id -%}
+{%- set cluster_struct_path = types_mod ~ "::" ~ cluster_struct_id -%}
+{%- endif -%}
+{%- set cluster_func = cluster.name | to_func_id -%}
+#[doc = "{{cluster.description | svd_description_to_doc}}"]
+#[inline(always)]
+{%- if cluster.dim == 1 %}
+pub fn {{cluster_func}}(self) -> {{cluster_struct_path}}{
+    unsafe {   {{cluster_struct_path}}(self.0.add({{cluster.offset}}usize)) }
+}
+{%- else %}
+pub fn {{cluster_func}}(self) -> [{{cluster_struct_path}};{{cluster.dim}}] {
+    unsafe {  [
+        {%- for index in range(end=cluster.dim) -%}
+        {{cluster_struct_path}}(self.0.add({{cluster.offset | to_hex}}usize + {{index*cluster.dim_increment | to_hex }}usize)),
+        {% endfor -%}
+        ] }
+}
+{%- endif -%}
+{%- endmacro -%}
+
+{# Macro to generate structure and module for a cluster#}
+{%- macro cluster_struct(cluster) -%}
+{%- if not cluster.is_derived_from -%}
+{%- set cluster_struct = cluster.struct_id | to_struct_id -%}
+{%- set cluster_mod = cluster.struct_id | to_mod_id -%}
+#[doc = "{{cluster.description | svd_description_to_doc}}"]
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct {{ cluster_struct }}(pub(super) *mut u8);
+unsafe impl core::marker::Send for {{ cluster_struct}} {}
+unsafe impl core::marker::Sync for {{ cluster_struct }} {}
+impl {{cluster_struct}} {
+    {% for register_name,reg in cluster.registers -%}
+    {{self::register_func(types_mod=cluster_mod,reg=reg)}}
+    {% endfor -%}
+    {% for cluster_name,cluster in cluster.clusters -%}
+    {{self::cluster_func(types_mod=cluster_mod,cluster=cluster)}}
+    {% endfor -%}
+}
+pub mod {{cluster_mod}} {
+    #[allow(unused_imports)]
+    use crate::common::{*};
+    {% for register_name,reg in cluster.registers -%}
+    {{self::register_struct(reg=reg)}}
+    {% endfor -%}
+    {% for cluster_name,cluster in cluster.clusters -%}
+    {{self::cluster_struct(cluster=cluster) }}
+    {% endfor -%}
+}
+{%- endif -%}
+{%- endmacro -%}

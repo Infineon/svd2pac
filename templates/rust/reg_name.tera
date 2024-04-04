@@ -1,0 +1,29 @@
+/*
+{{ir.license_text}}
+*/
+//! Contains perfect hash function that maps form raw addresses to
+//! a string containing the names of all registers that point to an address.
+//!
+//! When using tracing feature to record accesses to registers, the exact
+//! API path, though which a specific address was accessed gets lost.
+//! This poses a problem when recorded register accesses contain accesses
+//! to unexpected registers. [`reg_name_from_addr`] can be used to make
+//! logs of raw register accesses more readable to humans by providing a list
+//! of names of registers that alias a specific physical address.
+//!
+use phf::phf_map;
+
+/// Get a &str name of a register given it's address.
+pub fn reg_name_from_addr(addr: u64) -> Option<&'static &'static str> {
+    REGISTER_NAMES.get(&addr)
+}
+
+static REGISTER_NAMES: phf::Map<u64, &'static str> = phf_map! {
+  {%- for address, registers in register_addresses %}
+  {{ address | num_str_to_hex }}u64 => "
+    {%- for register_path in registers %}
+      {{ register_path | render_path }},
+    {%- endfor %}
+    ",
+  {%- endfor %}
+};

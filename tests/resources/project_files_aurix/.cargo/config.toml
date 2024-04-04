@@ -1,0 +1,16 @@
+[target.tc162-htc-none]
+rustflags = ["-C", "link-args=-Llinker-scripts -Ttc39xB_memory.ld -Map memory.map"]
+linker = "rust-lld.exe"
+runner = "tsim16p_e -tc162p -config_file_path tsim-semihosting/tsim-config -disable-watchdog  -s -U -x 100000 -e -H -o"
+
+[build]
+target = "tc162-htc-none"
+
+[env]
+CC_tc162_htc_none = "clang"
+CFLAGS_tc162_htc_none = "-march=tc162"
+AR_tc162_htc_none = "llvm-ar"
+ARFLAGS_tc162_htc_none = "r"
+
+[unstable]
+sparse-registry = true
