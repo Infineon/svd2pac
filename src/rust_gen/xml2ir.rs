@@ -267,7 +267,7 @@ fn get_cluster<T: PeripheralClusterT>(
         if !registers.is_empty() || !clusters.is_empty() {
             error!("Cluster with derivedFrom attributes are supported only if they doesn't contains registers and/or clusters. Included registers and clusters are ignored")
         }
-        get_parent_struct_name_cluster(device, container, &derived_path)
+        get_parent_struct_name_cluster(device, container, derived_path)
     } else {
         let mut struct_name = cluster.struct_name().to_sanitized_struct_ident();
         struct_name.insert_str(0, "self::");
@@ -367,7 +367,7 @@ fn get_peripherals_types(
 /// # Result
 ///
 /// Device containing all information of svd file
-fn parse_xml(xml: &mut String, svd_validation_level: SvdValidationLevel) -> Result<svd::Device> {
+fn parse_xml(xml: &mut str, svd_validation_level: SvdValidationLevel) -> Result<svd::Device> {
     let mut parser_config = svd_parser::Config::default();
     parser_config.expand_properties = true;
     parser_config.ignore_enums = false;
@@ -412,7 +412,7 @@ fn get_interrupt_table(
 }
 
 pub(super) fn parse_xml2ir(
-    xml: &mut String,
+    xml: &mut str,
     svd_validation_level: SvdValidationLevel,
     custom_license_text: &Option<String>,
 ) -> Result<IR> {

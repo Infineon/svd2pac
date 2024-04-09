@@ -15,7 +15,7 @@
 //! - Support [tracing](#tracing) of register accesses and additionally mocking of registers on non-embedded devices through
 //!   external libraries. This allows the execution unit tests for code that uses the generated libraries on non-embedded devices.
 //! - PAC shall have ideally 0 dependencies to any other crates.
-//! 
+//!
 //! #  chiptool features implemented by `svd2pac`
 //!
 //! - No owned data structure -> unsafe api that can be used from any interrupts or thread.
@@ -33,10 +33,10 @@
 //! - Support also for 8,16,64 bit size registers.
 //! - Avoid long type and bitfield names (chiptool concatenates identifiers) by generating modules for registers and svd clusters.
 //! - No support for SVD transformation.
-//! 
+//!
 //! # Limitations
 //!
-//! * Inheritance via `derivedFrom` attribute is supported only in `cluster` declaration and requires 
+//! * Inheritance via `derivedFrom` attribute is supported only in `cluster` declaration and requires
 //!  that child is not overriding anything except `name`, `description` and `offset`
 //! * `headerStructName` tag is considered only in `cluster`` tag
 //! * `resetMask` tag is ignored
