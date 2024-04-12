@@ -221,7 +221,7 @@
 						</field>
 						<field>
 							<dim>8</dim>
-							<dimIncrement>1</dimIncrement>
+							<dimIncrement>2</dimIncrement>
 							<name>Field%sArray</name>
 							<description>Array of bitfields</description>
 							<bitRange>[17:16]</bitRange>
@@ -566,6 +566,11 @@
 			<description>Test cluster</description>
 			<baseAddress>0x50000000</baseAddress>
 			<access>read-write</access>
+			<addressBlock>
+				<offset>0</offset>
+				<size>0x10000</size>
+				<usage>registers</usage>
+			</addressBlock>
 			<interrupt>
 				<name>UartInt</name>
 				<description>Uart interrupt</description>
@@ -574,7 +579,7 @@
 			<registers>
 				<register>
 					<dim>2</dim>
-					<dimIncrement>0x100</dimIncrement>
+					<dimIncrement>0x4</dimIncrement>
 					<name>Reg1_[%s]</name>
 					<description>read-write reg</description>
 					<addressOffset>0x0</addressOffset>
@@ -640,7 +645,7 @@
 							<name>Boolenum</name>
 							<description>Boolean with enum</description>
 							<lsb>9</lsb>
-							<msb>16</msb>
+							<msb>15</msb>
 							<access>read-write</access>
 							<enumeratedValues>
 								<enumeratedValue>
@@ -740,7 +745,7 @@
 			<name>EscapeTest</name>
 			<version>1.0</version>
 			<description>Fake peripheral containing register with characters that may need to be escaped (and some UTF-8) when documentation is inserted.</description>
-			<baseAddress>0x60000000</baseAddress>
+			<baseAddress>0x70000000</baseAddress>
 			<access>read-write</access>
 			<addressBlock>
 				<offset>0</offset>
