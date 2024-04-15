@@ -358,11 +358,11 @@ use core::arch::tricore::intrinsics::{__mfcr, __mtcr};
 use core::arch::tricore::intrinsics::{__mfdcr, __mtdcr};
 
 /// Type of core special register of Aurix (CSFR)
-pub struct RegCore<T: RegSpec, A: Access, const ADDR: u16> {
-    phantom: PhantomData<*mut (T, A)>,
+pub struct RegCore<Q,T:RegSpec<DataType=Q>, A: Access,const ADDR:u16> {
+    phantom: PhantomData<*mut (Q,T, A)>,
 }
 
-impl<T: RegSpec, A: Access, const ADDR: u16> RegCore<T, A, ADDR> {
+impl<Q, T: RegSpec<DataType = Q>, A: Access, const ADDR: u16> RegCore<Q, T, A, ADDR> {
     pub const unsafe fn new() -> Self {
         RegCore {
             phantom: PhantomData,
@@ -370,9 +370,9 @@ impl<T: RegSpec, A: Access, const ADDR: u16> RegCore<T, A, ADDR> {
     }
 }
 
-unsafe impl<T: RegSpec, A: Access, const ADDR: u16> Send for RegCore<T, A, ADDR> {}
-unsafe impl<T: RegSpec, A: Access, const ADDR: u16> Sync for RegCore<T, A, ADDR> {}
-impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR> 
+unsafe impl<Q, T: RegSpec<DataType = Q>, A: Access, const ADDR: u16> Send for RegCore<Q, T, A, ADDR> {}
+unsafe impl<Q, T: RegSpec<DataType = Q>, A: Access, const ADDR: u16> Sync for RegCore<Q, T, A, ADDR> {}
+impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<u32, T, A, ADDR> 
 
 {
     /// Read Aurix core register (32 bit wide) and return a register value
@@ -472,7 +472,7 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
 }
 
 #[cfg(any(target_feature = "tc18", doc))]
-impl<T: RegSpec<DataType = u64>, A: Access, const ADDR: u16> RegCore<T, A, ADDR> {
+impl<T: RegSpec<DataType = u64>, A: Access, const ADDR: u16> RegCore<u64,T, A, ADDR> {
     /// Read Aurix core register (64 bit wide) and return a register value
     ///
     /// # Safety
@@ -558,7 +558,7 @@ impl<T: RegSpec<DataType = u64>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
     /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
     /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
     ///
-    pub unsafe fn modify(&self, f: impl FnOnce(T) -> T) 
+    pub unsafe fn modify(&self, f: impl FnOnce(RegValueT<T>) -> RegValueT<T>) 
     where
         A: Read + Write,
     {
