@@ -10,7 +10,7 @@ use toml_edit::{array, value, Array, Document, Table};
 /// This test requires Aurix Rust compiler pre-installed
 #[test]
 fn compile_generated_aurix() {
-    let xml_path = concat!(env!("CARGO_MANIFEST_DIR"), "/test_svd/simple_csfr.svd");
+    let xml_path = concat!(env!("CARGO_MANIFEST_DIR"), "/test_svd/simple.xml");
 
     // Temp folder that should be deleted in case of test success.
     let generated_code_folder = tempfile::tempdir_in(env::current_dir().unwrap()).unwrap();
@@ -63,7 +63,7 @@ fn compile_generated_aurix() {
 /// Generate PAC with tracing code but feature is disabled
 #[test]
 fn compile_generated_aurix_tracing() {
-    let xml_path = concat!(env!("CARGO_MANIFEST_DIR"), "/test_svd/simple_csfr.svd");
+    let xml_path = concat!(env!("CARGO_MANIFEST_DIR"), "/test_svd/simple.xml");
 
     // Temp folder that should be deleted in case of test success.
     let generated_code_folder = tempfile::tempdir_in(env::current_dir().unwrap()).unwrap();
