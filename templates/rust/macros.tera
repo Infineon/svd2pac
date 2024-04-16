@@ -101,7 +101,7 @@ impl {{reg_struct_name}} {
     {%- endfor %}
 }
 {% endif -%}
-impl core::default::Default for {{reg_struct_name}} {
+impl ::core::default::Default for {{reg_struct_name}} {
     #[inline(always)]
     fn default() -> {{reg_struct_name}} {
         <crate::RegValueT::<{{reg_struct_name}}_SPEC> as RegisterValue<_>>::new({{reg.reset_value}})
@@ -161,8 +161,8 @@ pub fn {{cluster_func}}(self) -> [{{cluster_struct_path}};{{cluster.dim}}] {
 #[doc = "{{cluster.description | svd_description_to_doc}}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct {{ cluster_struct }}(pub(super) *mut u8);
-unsafe impl core::marker::Send for {{ cluster_struct}} {}
-unsafe impl core::marker::Sync for {{ cluster_struct }} {}
+unsafe impl ::core::marker::Send for {{ cluster_struct}} {}
+unsafe impl ::core::marker::Sync for {{ cluster_struct }} {}
 impl {{cluster_struct}} {
     {% for register_name,reg in cluster.registers -%}
     {{self::register_func(types_mod=cluster_mod,reg=reg)}}
