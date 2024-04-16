@@ -91,6 +91,9 @@ fn main() -> ! {
         let value = FOO.r#in().read();
         FOO.r#in()
             .write(value._self().set(foo::r#in::_Self::_1_VALUE));
+
+        // Test 64Bit register
+        TIMER.register64bit().modify(|r| r.boolean().set(crate::timer::register64bit::Boolean::FALSE));
     }
     loop {}
 }

@@ -5,6 +5,8 @@ u8
 u16
 {%- elif bit_size=="BIT32" -%}
 u32
+{%- elif bit_size=="BIT64" -%}
+u64
 {%- else -%}
 Unsupported register size
 {%- endif -%}

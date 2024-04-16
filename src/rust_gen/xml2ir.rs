@@ -97,6 +97,7 @@ fn get_register(reg: &svd::Register) -> Register {
         .size
         .expect("All registers shall have a defined size")
     {
+        64 => BitSize::BIT64,
         32 => BitSize::BIT32,
         16 => BitSize::BIT16,
         8 => BitSize::BIT8,

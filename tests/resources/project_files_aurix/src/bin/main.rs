@@ -92,6 +92,8 @@ fn main() -> ! {
                 .biv()
                 .set(3)
         });
+        // Test 64Bit register
+        TIMER.register64bit().modify(|r| r.boolean().set(crate::timer::register64bit::Boolean::FALSE));
     }
     loop {}
 }
