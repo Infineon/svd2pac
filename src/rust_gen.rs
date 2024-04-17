@@ -431,7 +431,7 @@ fn generate_peripheral_module(
     destination_folder: &Path,
 ) -> anyhow::Result<()> {
     // Generate one module for each peripheral
-    for (peri_name, peri) in &ir.peripheral_mod {
+    for (peri_name, peri) in &ir.device.peripheral_mod {
         let mut context = tera::Context::new();
         context.insert("peri", peri);
         context.insert("ir", &ir);
@@ -449,11 +449,11 @@ fn generate_peripheral_module(
 fn change_peripheral_module_name(ir: &mut ir::IR) -> anyhow::Result<()> {
     let mut result = LinkedHashMap::<String, PeripheralMod>::new();
     // change peripheral module to have prefix csfr_
-    for (peri_name, peri) in &mut ir.peripheral_mod {
+    for (peri_name, peri) in &mut ir.device.peripheral_mod {
         peri.name = format!("{}_{}", "csfr", peri_name);
         result.insert(peri.name.clone(), std::mem::take(peri));
     }
-    ir.peripheral_mod = result;
+    ir.device.peripheral_mod = result;
     Ok(())
 }
 

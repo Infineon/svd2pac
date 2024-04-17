@@ -52,6 +52,7 @@ fn get_device(device: &svd::Device) -> Device {
     Device {
         name: device.name.clone(),
         description: device.description.clone(),
+        peripheral_mod: get_peripherals_types(device)
     }
 }
 
@@ -418,7 +419,6 @@ pub(super) fn parse_xml2ir(
 ) -> Result<IR> {
     let svd_device = parse_xml(xml, svd_validation_level)?;
     let entity_db = get_entity_db(&svd_device);
-    let peripheral_types = get_peripherals_types(&svd_device);
     // Use custom license if available otherwise use license in svd and if it not present use empty string.
     let license_text = custom_license_text.as_ref().map_or_else(
         || {
@@ -432,10 +432,10 @@ pub(super) fn parse_xml2ir(
         },
         |file_license| file_license.clone(),
     );
-    let interrupt_table = get_interrupt_table(&peripheral_types);
+    let device = get_device(&svd_device);
+    let interrupt_table = get_interrupt_table(&device.peripheral_mod);
     Ok(IR {
-        device: get_device(&svd_device),
-        peripheral_mod: peripheral_types,
+        device,
         register_addresses: entity_db.register_addresses,
         license_text,
         interrupt_table,

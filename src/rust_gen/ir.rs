@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 pub struct Device {
     pub name: String,
     pub description: String,
+    pub peripheral_mod: LinkedHashMap<String, PeripheralMod>
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -137,7 +138,6 @@ pub struct Interrupt {
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct IR {
     pub device: Device,
-    pub peripheral_mod: LinkedHashMap<String, PeripheralMod>,
     pub register_addresses: LinkedHashMap<u64, Vec<Vec<PathChunk>>>,
     pub license_text: String,
     /// Interrupt table to be created in the lib.rs. Interrupt table hole has value None

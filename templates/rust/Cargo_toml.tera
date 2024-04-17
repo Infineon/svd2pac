@@ -30,15 +30,15 @@ cortex-m = "0.7.6"
 
 
 [features]
-{%- for peri_mod_name, peri in ir.peripheral_mod %}
+{%- for peri_mod_name, peri in ir.device.peripheral_mod %}
 {{peri.name | to_mod_id}} = []
 {%- endfor %}
 {% if ir_csfr %}
-{%- for peri_mod_name, peri in ir_csfr.peripheral_mod %}
+{%- for peri_mod_name, peri in ir_csfr.device.peripheral_mod %}
 {{peri.name | to_mod_id}} = []
 {%- endfor %}
 {%- endif %}
-all = [{%- for peri_mod_name, peri in ir.peripheral_mod -%}"{{peri.name | to_mod_id }}",{%- endfor -%}]
+all = [{%- for peri_mod_name, peri in ir.device.peripheral_mod -%}"{{peri.name | to_mod_id }}",{%- endfor -%}]
 {%- if tracing %}
 tracing = ["dep:phf"]
 tracing_dummy = []
