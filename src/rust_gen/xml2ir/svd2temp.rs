@@ -4,9 +4,7 @@ use super::RegisterHelper;
 use linked_hash_map::LinkedHashMap;
 use svd_parser::svd::{self, MaybeArray};
 
-pub(super) struct EntityDb<'a> {
-    /// Flat map of peripheral names to peripherals.
-    pub peripherals: LinkedHashMap<String, &'a svd::Peripheral>,
+pub(super) struct EntityDb {
     /// Flat map of absolute addresses to paths of registers at that address.
     pub register_addresses: LinkedHashMap<u64, Vec<Vec<PathChunk>>>,
 }
@@ -195,12 +193,6 @@ impl<'svd> FQNFlatMaps<'svd> {
 }
 
 pub(super) fn get_entity_db(device: &svd::Device) -> EntityDb {
-    let peripherals: LinkedHashMap<String, &svd::Peripheral> = device
-        .peripherals
-        .iter()
-        .map(|p| (p.name.to_internal_ident(), p))
-        .collect();
-
     let flat_maps = FQNFlatMaps::generate(device);
 
     // Build flat map of enumerated_values and addresses mapping to register names.
@@ -214,8 +206,5 @@ pub(super) fn get_entity_db(device: &svd::Device) -> EntityDb {
             .push(reg_name.clone());
     }
 
-    EntityDb {
-        peripherals,
-        register_addresses,
-    }
+    EntityDb { register_addresses }
 }

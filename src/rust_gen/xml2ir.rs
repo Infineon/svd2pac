@@ -8,6 +8,7 @@ use linked_hash_map::LinkedHashMap;
 use log::{debug, error, warn};
 use svd2temp::*;
 use svd_parser::svd;
+use svd_parser::svd::Name;
 
 trait RegisterHelper {
     /// Get name of register considering the presence of alternate group
@@ -313,13 +314,11 @@ fn get_register_clusters<T: PeripheralClusterT>(
     (registers, clusters)
 }
 
-fn get_peripherals_types(
-    entity_db: &EntityDb,
-    svd_device: &svd::Device,
-) -> LinkedHashMap<String, PeripheralMod> {
+fn get_peripherals_types(svd_device: &svd::Device) -> LinkedHashMap<String, PeripheralMod> {
     let mut result = LinkedHashMap::new();
 
-    for (svd_name, &p) in &entity_db.peripherals {
+    for p in svd_device.peripherals.iter() {
+        let svd_name = p.name();
         /*I don't generate any type if the peripheral has derivedFrom attribute.
         Overriding of peripheral content is not supported*/
         assert!(
@@ -419,7 +418,7 @@ pub(super) fn parse_xml2ir(
 ) -> Result<IR> {
     let svd_device = parse_xml(xml, svd_validation_level)?;
     let entity_db = get_entity_db(&svd_device);
-    let peripheral_types = get_peripherals_types(&entity_db, &svd_device);
+    let peripheral_types = get_peripherals_types(&svd_device);
     // Use custom license if available otherwise use license in svd and if it not present use empty string.
     let license_text = custom_license_text.as_ref().map_or_else(
         || {
