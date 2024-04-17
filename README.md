@@ -14,7 +14,7 @@ This tool has a very different approach compared to `svd2rust` and it is inspire
 - No ownership because owned registers are an obstacle to writing low level drivers (LLD). Anyway writing
   LLDs requires a lot of unsafe code and ownership makes it more complex to access registers from interrupts
   and other threads. LLDs shall present safe APIs because only they can implement all logic for a safe usage of peripherals.
-- Support [tracing](#tracing) of register accesses and additionally mocking of registers on non-embedded devices through
+- Support [tracing](#tracing-feature) of register accesses and additionally mocking of registers on non-embedded devices through
   external libraries. This allows the execution unit tests for code that uses the generated libraries on non-embedded devices.
 - PAC shall have ideally 0 dependencies to any other crates.
 
