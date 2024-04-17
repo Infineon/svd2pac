@@ -1,8 +1,8 @@
 /*
 {{ir.license_text}}
 */
-use core::convert::From;
-use core::marker::PhantomData;
+use ::core::convert::From;
+use ::core::marker::PhantomData;
 
 {% if tracing %}
 #[cfg(feature = "tracing")]
@@ -22,7 +22,7 @@ pub(crate) mod sealed {
     impl Access for R {}
     impl Access for W {}
     impl Access for RW {}
-    use core::ops::{BitAnd, BitAndAssign, BitOrAssign, Not, Shl, Shr};
+    use ::core::ops::{BitAnd, BitAndAssign, BitOrAssign, Not, Shl, Shr};
     
     // It would be better with const fn
     // waiting for RFC: const functions in traits #3490
@@ -346,16 +346,16 @@ where
         #[cfg(not(feature="tracing"))]
         {% endif -%}
         unsafe {
-            core::arch::tricore::intrinsics::__ldmst(self.ptr as *mut u32, res.data, res.mask);
+            ::core::arch::tricore::intrinsics::__ldmst(self.ptr as *mut u32, res.data, res.mask);
         }
 
     }
 }
 
 #[cfg(not(feature="tracing"))]
-use core::arch::tricore::intrinsics::{__mfcr, __mtcr};
+use ::core::arch::tricore::intrinsics::{__mfcr, __mtcr};
 #[cfg(all(any(target_feature = "tc18", doc),not(feature="tracing")))]
-use core::arch::tricore::intrinsics::{__mfdcr, __mtdcr};
+use ::core::arch::tricore::intrinsics::{__mfdcr, __mtdcr};
 
 /// Type of core special register of Aurix (CSFR)
 pub struct RegCore<T: RegSpec, A: Access, const ADDR: u16> {
