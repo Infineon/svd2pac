@@ -221,7 +221,7 @@
 						</field>
 						<field>
 							<dim>8</dim>
-							<dimIncrement>1</dimIncrement>
+							<dimIncrement>2</dimIncrement>
 							<name>Field%sArray</name>
 							<description>Array of bitfields</description>
 							<bitRange>[17:16]</bitRange>
@@ -506,6 +506,12 @@
 						</field>
 					</fields>
 				</register>
+				<register>
+					<name>TIMER</name>
+					<description>Register to test when peripheral has same naem as register</description>
+					<addressOffset>0x2000</addressOffset>
+					<access>read-write</access>
+				</register>
 				<cluster>
 					<name>Cluster1</name>
 					<description>Test Cluster</description>
@@ -593,6 +599,11 @@
 			<description>Test cluster</description>
 			<baseAddress>0x50000000</baseAddress>
 			<access>read-write</access>
+			<addressBlock>
+				<offset>0</offset>
+				<size>0x1000000</size>
+				<usage>registers</usage>
+			</addressBlock>
 			<interrupt>
 				<name>UartInt</name>
 				<description>Uart interrupt</description>
@@ -601,7 +612,7 @@
 			<registers>
 				<register>
 					<dim>2</dim>
-					<dimIncrement>0x100</dimIncrement>
+					<dimIncrement>0x4</dimIncrement>
 					<name>Reg1_[%s]</name>
 					<description>read-write reg</description>
 					<addressOffset>0x0</addressOffset>
@@ -667,7 +678,7 @@
 							<name>Boolenum</name>
 							<description>Boolean with enum</description>
 							<lsb>9</lsb>
-							<msb>16</msb>
+							<msb>15</msb>
 							<access>read-write</access>
 							<enumeratedValues>
 								<enumeratedValue>
@@ -708,6 +719,24 @@
 					<resetValue>0x0000000</resetValue>
 					<resetMask>0xFFFFFFFF</resetMask>
 				</register>
+				<cluster>
+					<name>UART</name>
+					<description>Cluster to test when peripheral has same naem as register</description>
+					<addressOffset>0x1000</addressOffset>
+					<register>
+						<name>UART</name>
+						<addressOffset>0x00</addressOffset>
+						<access>read-write</access>
+						<fields>
+							<field>
+								<name>UART</name>
+								<lsb>0</lsb>
+								<msb>2</msb>
+								<access>read-write</access>
+							</field>
+						</fields>
+					</register>
+				</cluster>
 			</registers>
 		</peripheral>
 		<!-- UART 0-->
@@ -767,7 +796,7 @@
 			<name>EscapeTest</name>
 			<version>1.0</version>
 			<description>Fake peripheral containing register with characters that may need to be escaped (and some UTF-8) when documentation is inserted.</description>
-			<baseAddress>0x60000000</baseAddress>
+			<baseAddress>0x70000000</baseAddress>
 			<access>read-write</access>
 			<addressBlock>
 				<offset>0</offset>

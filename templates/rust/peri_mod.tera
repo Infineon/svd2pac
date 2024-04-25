@@ -10,12 +10,8 @@ use crate::common::{*};
 #[allow(unused_imports)]
 use crate::common::sealed;
 #[doc = r"{{peri.description | svd_description_to_doc}}"]
-#[derive(Copy, Clone, Eq, PartialEq)]
 {% set peri_struct = peri.name | to_struct_id -%}
-pub struct {{ peri_struct }}(pub(super) *mut u8);
-unsafe impl core::marker::Send for {{ peri_struct }} {}
-unsafe impl core::marker::Sync for {{ peri_struct }} {}
-impl {{ peri_struct }} {
+impl super::{{ peri_struct }} {
 {%- for register_name,reg in peri.registers %}
 {{macros::register_func(types_mod="self",reg=reg)}}
 {% endfor -%}
