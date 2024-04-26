@@ -508,7 +508,7 @@
 				</register>
 				<register>
 					<name>TIMER</name>
-					<description>Register to test when peripheral has same naem as register</description>
+					<description>Register to test when peripheral has same name as register</description>
 					<addressOffset>0x2000</addressOffset>
 					<access>read-write</access>
 				</register>
