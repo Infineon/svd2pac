@@ -38,11 +38,10 @@ pub use {{module_name}} as csfr_cpu;
 
 {% for name,p in ir.peripheral_mod %}
 {%- set module_name = p.name | to_mod_id -%}
-#[derive(Copy, Clone, Eq, PartialEq)] {# Peripheral definition#}
 {% set peri_struct = p.name | to_struct_id -%}
+#[cfg(feature = "{{module_name}}")] {# Peripheral definition #}
+#[derive(Copy, Clone, Eq, PartialEq)] 
 pub struct {{ peri_struct }}(*mut u8);
-unsafe impl core::marker::Send for {{ peri_struct }} {}
-unsafe impl core::marker::Sync for {{ peri_struct }} {}
 {# Peripheral instances #}
 {%- set module_struct = p.name | to_struct_id -%}
 {%- set full_path_struct = "self::" ~ module_struct -%}
