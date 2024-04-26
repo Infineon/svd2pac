@@ -721,7 +721,7 @@
 				</register>
 				<cluster>
 					<name>UART</name>
-					<description>Cluster to test when peripheral has same naem as register</description>
+					<description>Cluster to test when peripheral has same name as register</description>
 					<addressOffset>0x1000</addressOffset>
 					<register>
 						<name>UART</name>
