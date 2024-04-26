@@ -506,6 +506,12 @@
 						</field>
 					</fields>
 				</register>
+				<register>
+					<name>TIMER</name>
+					<description>Register to test when peripheral has same name as register</description>
+					<addressOffset>0x2000</addressOffset>
+					<access>read-write</access>
+				</register>
 				<cluster>
 					<name>Cluster1</name>
 					<description>Test Cluster</description>
@@ -595,7 +601,7 @@
 			<access>read-write</access>
 			<addressBlock>
 				<offset>0</offset>
-				<size>0x10000</size>
+				<size>0x1000000</size>
 				<usage>registers</usage>
 			</addressBlock>
 			<interrupt>
@@ -713,6 +719,24 @@
 					<resetValue>0x0000000</resetValue>
 					<resetMask>0xFFFFFFFF</resetMask>
 				</register>
+				<cluster>
+					<name>UART</name>
+					<description>Cluster to test when peripheral has same name as register</description>
+					<addressOffset>0x1000</addressOffset>
+					<register>
+						<name>UART</name>
+						<addressOffset>0x00</addressOffset>
+						<access>read-write</access>
+						<fields>
+							<field>
+								<name>UART</name>
+								<lsb>0</lsb>
+								<msb>2</msb>
+								<access>read-write</access>
+							</field>
+						</fields>
+					</register>
+				</cluster>
 			</registers>
 		</peripheral>
 		<!-- UART 0-->

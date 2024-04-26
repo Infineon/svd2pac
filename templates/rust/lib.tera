@@ -1,3 +1,4 @@
+{% import "macros.tera" as macros %}
 /*
 {{ir.license_text}}
 */
@@ -5,7 +6,7 @@
 #![cfg_attr(not(feature = "tracing"), no_std)]
 {%- else %}
 #![no_std]
-{%- endif %}
+{%- endif %} {# tracing #}
 {% if target=="Aurix" %}
 #![cfg_attr(target_arch = "tricore", feature(stdsimd))]
 {% endif %}
@@ -19,12 +20,12 @@ pub use common::*;
 pub mod reg_name;
 #[cfg(feature = "tracing")]
 pub mod tracing;
-{% endif %}
+{% endif %} {# tracing #}
 {% for peri_mod_name, peri in ir.device.peripheral_mod -%}
 {%- set module_name = peri.name | to_mod_id -%}
 #[cfg(feature = "{{module_name}}")]
 pub mod {{module_name}};
-{% endfor -%}
+{% endfor -%} {# for peri_mod_name, peri in ir.peripheral_mod #}
 {% if ir_csfr %}
 {% for peri_mod_name, peri in ir_csfr.device.peripheral_mod -%}
 {%- set module_name = peri.name | to_mod_id -%}
@@ -35,18 +36,22 @@ pub use {{module_name}} as csfr_cpu;
 {% endfor -%}
 {% endif %}
 
-
 {% for name,p in ir.device.peripheral_mod %}
 {%- set module_name = p.name | to_mod_id -%}
+{% set peri_struct = p.name | to_struct_id -%}
+#[cfg(feature = "{{module_name}}")] {# Peripheral definition #}
+#[derive(Copy, Clone, Eq, PartialEq)] 
+pub struct {{ peri_struct }}(*mut u8);
+{# Peripheral instances #}
 {%- set module_struct = p.name | to_struct_id -%}
-{%- set full_path_struct = module_name ~ "::" ~ module_struct -%}
+{%- set full_path_struct = "self::" ~ module_struct -%}
 #[cfg(feature = "{{module_name}}")]
 {%- if p.base_addr | length == 1 %}
 pub const {{name | upper}}: {{full_path_struct}} = {{full_path_struct}}({{p.base_addr[0] | to_hex }}u32 as _);
 {% else %}
 pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}({{addr | to_hex }}u32 as _), {% endfor -%}];
 {%- endif -%}
-{%- endfor -%}
+{%- endfor -%} {# for name,p in ir.device.peripheral_mod #}
 {% if ir_csfr %}
 #[cfg(any(
 {%- set module_struct = "csfr_cpu" | to_struct_id -%}
@@ -129,7 +134,7 @@ pub struct Peripherals {
     {% for name,p in ir.device.peripheral_mod %}
     {%- set module_name = p.name | to_mod_id -%}
     {%- set module_struct = p.name | to_struct_id -%}
-    {%- set full_path_struct = module_name ~ "::" ~ module_struct -%}
+    {%- set full_path_struct = "self::" ~ module_struct -%}
     #[cfg(feature = "{{module_name}}")]
     {%- if p.base_addr | length == 1 %}
     pub {{name | upper}}: {{full_path_struct}},
