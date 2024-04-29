@@ -1,4 +1,8 @@
 mod svd2temp;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
+
 use super::ir::*;
 use super::util::*;
 use crate::svd_util::*;
@@ -9,6 +13,7 @@ use log::{debug, error, warn};
 use svd2temp::*;
 use svd_parser::svd;
 use svd_parser::svd::Name;
+
 
 trait RegisterHelper {
     /// Get name of register considering the presence of alternate group
@@ -26,6 +31,30 @@ impl RegisterHelper for svd::RegisterInfo {
         }
     }
 }
+
+
+enum PeripheralClusterE<'a> {
+    Peripheral(&'a mut PeripheralMod),
+    Cluster(&'a mut Cluster)
+}
+
+impl <'a> PeripheralClusterE<'a> {
+    pub fn get_mut_registers(&mut self) -> &mut LinkedHashMap<String, Rc<RefCell<Register>>> {
+        match self {
+            PeripheralClusterE::Peripheral(p) => &mut p.registers,
+            PeripheralClusterE::Cluster(c) => &mut c.registers
+        }
+
+    }
+    pub fn get_mut_clusters(&mut self) -> &mut LinkedHashMap<String, Rc<RefCell<Cluster>>> {
+        match self {
+            PeripheralClusterE::Peripheral(p) => &mut p.clusters,
+            PeripheralClusterE::Cluster(c) => &mut c.clusters
+        }
+
+    }
+}
+
 
 /// Utility function to get number of instances and increment between the distances
 /// This function can be used anytime in svd::array::MaybeArray is used
@@ -47,116 +76,288 @@ fn get_dim_dim_increment<T>(array: &svd::array::MaybeArray<T>) -> (u32, u32) {
     }
 }
 
-/// Create the intermediate representation of device used by template engine
-fn get_device(device: &svd::Device) -> Device {
-    Device {
-        name: device.name.clone(),
-        description: device.description.clone(),
-        peripheral_mod: get_peripherals_types(device)
-    }
+enum DeviceItem {
+    Register(Rc<RefCell<Register>>),
+    Cluster(Rc<RefCell<Cluster>>),
+    Peripheral(Rc<RefCell<PeripheralMod>>),
+    Field(Rc<RefCell<FieldGetterSetter>>),
 }
 
-fn get_register(reg: &svd::Register) -> Register {
-    let register_name = reg.get_name_id_internal();
-    let (dim, dim_increment) = get_dim_dim_increment(reg);
-    // Get fields
-    let mut fields = vec![];
-    for field in reg.fields() {
-        let description = field.description.clone().unwrap_or_default();
-        let offset = field.bit_range.offset;
-        let mask = (0..field.bit_range.width - 1).fold(0x1u32, |acc, _| (acc << 1) | 0x1);
-        let name = field.name.to_internal_ident();
-        let svd_field_access = match field.access {
-            None => {
-                error!("Inheritance of access is not supported. Bitfield: {} access shall be specified. Bitfield skipped",name);
-                continue;
-            }
-            Some(acc) => acc,
-        };
-        let access = match svd_field_access {
-            svd::Access::ReadOnly => RegisterBitfieldAccess::R,
-            svd::Access::WriteOnly => RegisterBitfieldAccess::W,
-            svd::Access::ReadWrite => RegisterBitfieldAccess::RW,
-            svd::Access::WriteOnce => RegisterBitfieldAccess::W,
-            svd::Access::ReadWriteOnce => RegisterBitfieldAccess::RW,
-        };
-        let enum_type = get_values_types(field);
-        let (dim, dim_increment) = get_dim_dim_increment(field);
-        fields.push(FieldGetterSetter {
-            name,
-            description,
-            offset,
-            mask,
-            enum_type,
-            access,
-            size: BitSize::val_2_bit_size(mask.into()),
-            dim,
-            dim_increment,
-        })
-    }
-    let size = match reg
-        .properties
-        .size
-        .expect("All registers shall have a defined size")
-    {
-        64 => BitSize::BIT64,
-        32 => BitSize::BIT32,
-        16 => BitSize::BIT16,
-        8 => BitSize::BIT8,
-        register_size => {
-            panic!("Unsupported register size {register_size}")
-        }
-    };
-    let reset_value = reg
-        .properties
-        .reset_value
-        .expect("All registers shall have a reset value defined");
-    let has_enumerated_fields = fields.iter().any(|f| f.enum_type.is_some());
+#[derive(Default)]
+struct Visitor {
+    device: Device,
+    svd_ref_to_ir_item: HashMap<String, DeviceItem>,
+    // Current item svd path that is used to build 
+    // the key of svd_ref_to_ir_item. In case of array only the first item will be considered
+    current_item_svd_path: Vec<String>,
+    // Path to the module of item in Rust code 
+    current_mod_ir_path:Vec<String>
+}
+impl Visitor {
+    /// Create the intermediate representation of device used by template engine
+    fn visit_device(&mut self, device: &svd::Device) {
+        self.device.name = device.name.clone();
+        self.device.description = device.description.clone();
 
-    let access = match reg.properties.access {
-        Some(reg_access) => match reg_access {
-            svd::Access::ReadOnly => RegisterAccess::R,
-            svd::Access::WriteOnly => RegisterAccess::W,
-            svd::Access::ReadWrite => RegisterAccess::RW,
-            svd::Access::WriteOnce => RegisterAccess::W,
-            svd::Access::ReadWriteOnce => RegisterAccess::RW,
-        },
-        // If register access mode is not defined. The value is inferred from access mode of bitfields
-        None => {
-            warn!(
-                "Access mode is not defined for register ({}) inferring from bitfield",
-                register_name
+        for peripheral in device.peripherals.iter() {
+            let name = peripheral.name().to_internal_ident();
+            let mut peripheral_mod = PeripheralMod {
+                name: name.clone(),
+                ..Default::default()
+            };
+            self.push_current_item_svd_path(peripheral);
+            self.visit_peripheral(peripheral, &mut peripheral_mod);
+            let peripheral_mod = Rc::new(RefCell::new(peripheral_mod));
+            self.device
+                .peripheral_mod
+                .insert(name, peripheral_mod.clone());
+
+            self.svd_ref_to_ir_item.insert(
+                peripheral.name().to_string(),
+                DeviceItem::Peripheral(peripheral_mod.clone()),
             );
-            let is_register_writable = fields.iter().any(|f| {
-                f.access == RegisterBitfieldAccess::W || f.access == RegisterBitfieldAccess::RW
+            self.pop_current_item_svd_path(DeviceItem::Peripheral(peripheral_mod));
+            
+        }
+    }
+    fn visit_peripheral(
+        &mut self,
+        peripheral: &svd::Peripheral,
+        target_peripheral: &mut PeripheralMod,
+    ) {
+        /*I don't generate any type if the peripheral has derivedFrom attribute.
+        Overriding of peripheral content is not supported*/
+        assert!(
+            peripheral.derived_from.is_none(),
+            "derived_from is not supported in peripherals"
+        );
+        debug!("Parsing peripheral: {}", &target_peripheral.name);
+
+        let (dim, dim_increment) = get_dim_dim_increment(peripheral);
+        target_peripheral.base_addr = (0..dim)
+            .map(|index| peripheral.base_address + (index * dim_increment) as u64)
+            .collect();
+        target_peripheral.interrupts = peripheral
+            .interrupt
+            .iter()
+            .map(|x| Interrupt {
+                name: x.name.clone(),
+                value: x.value,
+                description: x
+                    .description
+                    .as_ref()
+                    .map_or_else(String::new, |x| x.clone()),
+            })
+            .collect();
+        target_peripheral.description = peripheral.description.clone().unwrap_or_default();
+        
+        for cluster_register in peripheral.registers.as_ref().unwrap_or(&Vec::new()) {
+            self.visit_cluster_register(cluster_register,PeripheralClusterE::Peripheral(target_peripheral));
+        }
+    }
+
+
+    fn visit_register(&mut self,reg: &svd::Register,register:&mut Register ) {
+        register.name = reg.get_name_id_internal();
+        register.description = reg.description.clone().unwrap_or_default();
+        (register.dim, register.dim_increment) = get_dim_dim_increment(reg);
+        // Get fields
+        let mut fields = Vec::new();
+        for field in reg.fields() {
+            let description = field.description.clone().unwrap_or_default();
+            let offset = field.bit_range.offset;
+            let mask = (0..field.bit_range.width - 1).fold(0x1u32, |acc, _| (acc << 1) | 0x1);
+            let name = field.name.to_internal_ident();
+            let svd_field_access = match field.access {
+                None => {
+                    error!("Inheritance of access is not supported. Bitfield: {} access shall be specified. Bitfield skipped",name);
+                    continue;
+                }
+                Some(acc) => acc,
+            };
+            let access = match svd_field_access {
+                svd::Access::ReadOnly => RegisterBitfieldAccess::R,
+                svd::Access::WriteOnly => RegisterBitfieldAccess::W,
+                svd::Access::ReadWrite => RegisterBitfieldAccess::RW,
+                svd::Access::WriteOnce => RegisterBitfieldAccess::W,
+                svd::Access::ReadWriteOnce => RegisterBitfieldAccess::RW,
+            };
+            let enum_type = get_values_types(field);
+            let (dim, dim_increment) = get_dim_dim_increment(field);
+            fields.push(FieldGetterSetter {
+                name,
+                description,
+                offset,
+                mask,
+                enum_type,
+                access,
+                size: BitSize::val_2_bit_size(mask.into()),
+                dim,
+                dim_increment,
             });
-            let is_register_readable = fields.iter().any(|f| {
-                f.access == RegisterBitfieldAccess::R || f.access == RegisterBitfieldAccess::RW
-            });
-            match (is_register_readable, is_register_writable) {
-                (true, true) => RegisterAccess::RW,
-                (true, false) => RegisterAccess::R,
-                (false, true) => RegisterAccess::W,
-                (false, false) => {
-                    error!("No bitfield in register '{}' specifies an access mode. Not able to infer register access mode", &register_name);
-                    RegisterAccess::R
+        }
+        register.size= match reg
+            .properties
+            .size
+            .expect("All registers shall have a defined size")
+        {
+            64 => BitSize::BIT64,
+            32 => BitSize::BIT32,
+            16 => BitSize::BIT16,
+            8 => BitSize::BIT8,
+            register_size => {
+                panic!("Unsupported register size {register_size}")
+            }
+        };
+        register.reset_value = reg
+            .properties
+            .reset_value
+            .expect("All registers shall have a reset value defined");
+        register.has_enumerated_fields = fields.iter().any(|f| f.enum_type.is_some());
+    
+        register.access = match reg.properties.access {
+            Some(reg_access) => match reg_access {
+                svd::Access::ReadOnly => RegisterAccess::R,
+                svd::Access::WriteOnly => RegisterAccess::W,
+                svd::Access::ReadWrite => RegisterAccess::RW,
+                svd::Access::WriteOnce => RegisterAccess::W,
+                svd::Access::ReadWriteOnce => RegisterAccess::RW,
+            },
+            // If register access mode is not defined. The value is inferred from access mode of bitfields
+            None => {
+                warn!(
+                    "Access mode is not defined for register ({}) inferring from bitfield",
+                    &register.name
+                );
+                let is_register_writable = fields.iter().any(|f| {
+                    f.access == RegisterBitfieldAccess::W || f.access == RegisterBitfieldAccess::RW
+                });
+                let is_register_readable = fields.iter().any(|f| {
+                    f.access == RegisterBitfieldAccess::R || f.access == RegisterBitfieldAccess::RW
+                });
+                match (is_register_readable, is_register_writable) {
+                    (true, true) => RegisterAccess::RW,
+                    (true, false) => RegisterAccess::R,
+                    (false, true) => RegisterAccess::W,
+                    (false, false) => {
+                        error!("No bitfield in register '{}' specifies an access mode. Not able to infer register access mode", &register.name);
+                        RegisterAccess::R
+                    }
                 }
             }
+        };
+        register.fields = fields
+            .into_iter()
+            .map(|f| (f.name.clone(), Rc::new(RefCell::new(f))))
+            .collect();
+ 
+    }
+
+    fn visit_cluster(&mut self, cluster_svd: &svd::Cluster,cluster:&mut Cluster) {
+        cluster.name=cluster_svd.name.to_internal_ident();
+        cluster.description =  cluster_svd.description.clone().unwrap_or_default();
+        cluster.offset= cluster_svd.address_offset;
+        (cluster.dim, cluster.dim_increment) = get_dim_dim_increment(cluster_svd);
+        
+        if let Some(header_struct_name) = &cluster_svd.header_struct_name {
+            cluster.struct_module_path = Vec::with_capacity(10);
+            cluster.struct_module_path.extend_from_slice(&self.current_mod_ir_path[0..self.current_mod_ir_path.len()-1]);
+            cluster.struct_id= header_struct_name.to_sanitized_struct_ident();
+        } else if cluster.struct_id.is_empty() {
+            cluster.struct_module_path = Vec::with_capacity(10);
+            cluster.struct_module_path.extend_from_slice(&self.current_mod_ir_path[0..self.current_mod_ir_path.len()-1]);
+            cluster.struct_id = cluster.name.to_sanitized_struct_ident();
+        } 
+        for cluster_register in &cluster_svd.children {
+            self.visit_cluster_register(cluster_register,PeripheralClusterE::Cluster(cluster));
         }
-    };
-    Register {
-        name: register_name,
-        offset: reg.address_offset,
-        dim,
-        dim_increment,
-        access,
-        description: reg.description.clone().unwrap_or_default(),
-        fields,
-        size,
-        reset_value,
-        has_enumerated_fields,
+       
+
+    }
+    fn visit_cluster_register(
+        &mut self,
+        register_cluster: &svd::RegisterCluster,
+        mut parent_peripheral_cluster :PeripheralClusterE
+    )  {
+        match register_cluster {
+            svd::RegisterCluster::Register(ref reg_svd) => {
+                let mut register: Register = if let Some(derived_ref) =
+                    register_cluster.derived_from()
+                {
+                    if let Some(ref_register) = parent_peripheral_cluster.get_mut_registers().get(derived_ref) {
+                        ref_register.borrow().clone()
+                    } else if let Some(ref_item) = self.svd_ref_to_ir_item.get(derived_ref) {
+                        if let DeviceItem::Register(ref_register) = ref_item {
+                            ref_register.borrow().clone()
+                        } else {
+                            panic!("Wrong reference type");
+                        }
+                    } else {
+                        panic!("Missing reference")
+                    }
+                } else {
+                    Register::default()
+                };
+
+                self.visit_register(reg_svd, &mut register);
+                let name = register.name.clone();
+
+                let register = Rc::new(RefCell::new(register));
+                parent_peripheral_cluster
+                    .get_mut_registers()
+                    .insert(name, register);
+            }
+            svd::RegisterCluster::Cluster(ref cluster_svd) => {
+                let derived_cluster:Option<Cluster> = if let Some(derived_ref) = register_cluster.derived_from()
+                {
+                    if let Some(ref_cluster) = parent_peripheral_cluster.get_mut_clusters().get(derived_ref) {
+                        Some(ref_cluster.borrow().clone())
+                    } else if let Some(ref_item) = self.svd_ref_to_ir_item.get(derived_ref) {
+                        if let DeviceItem::Cluster(ref_cluster) = ref_item {
+                            Some(ref_cluster.borrow().clone())
+                        } else {
+                            panic!("Wrong reference type");
+                        }
+                    } else {
+                        panic!("Missing reference")
+                    }
+                } else {
+                    None
+                }; 
+                
+                // Push the target cluster svd and ir path in corresponding FIFO stack
+                self.push_current_item_svd_path(cluster_svd);
+                let mut cluster= derived_cluster.as_ref().map_or_else(Cluster::default, |x| x.clone());
+                self.visit_cluster(cluster_svd, &mut cluster);
+                // If after visiting the svd node and updating the cluster_svd we get cluster that has the same type
+                // set derived_cluster and replace the struct id
+                cluster.is_derived_from=derived_cluster.is_some_and(|derived_cluster| cluster.has_same_type(&derived_cluster));
+       
+                let name = cluster.name.clone();
+                let cluster = Rc::new(RefCell::new(cluster));
+                parent_peripheral_cluster
+                    .get_mut_clusters()
+                    .insert(name, cluster.clone());
+                // Pop out the paths and the just updated cluster in svd to it index
+                self.pop_current_item_svd_path(DeviceItem::Cluster(cluster));
+            }
+        }
+
+    
+    }
+
+    fn pop_current_item_svd_path(&mut self,ir_item:DeviceItem) {
+            self.svd_ref_to_ir_item.insert(self.current_item_svd_path.join("."),ir_item);
+            assert!(self.current_item_svd_path.pop().is_some());
+            assert!(self.current_mod_ir_path.pop().is_some());
+    }
+    fn push_current_item_svd_path(&mut self, svd_item: &impl ExpandedName) {
+        self.current_item_svd_path.push(svd_item.get_expanded_name());
+        self.current_mod_ir_path.push(svd_item.name().to_sanitized_mod_ident());
     }
 }
+
+
 
 fn get_values_types(field: &svd::Field) -> Option<EnumeratedValueType> {
     if field.enumerated_values.is_empty() {
@@ -185,7 +386,7 @@ fn get_values_types(field: &svd::Field) -> Option<EnumeratedValueType> {
                 panic!("Unsupport is default, all value in enumeration shall have a value defined")
             };
 
-            values.push(EnumeratedSigleValue {
+            values.push(EnumeratedSingleValue {
                 name: val_name,
                 value,
                 description,
@@ -198,165 +399,6 @@ fn get_values_types(field: &svd::Field) -> Option<EnumeratedValueType> {
         size: BitSize::val_2_bit_size(max_value),
         values,
     })
-}
-
-fn get_parent_struct_name_cluster<T: PeripheralClusterT>(
-    device: &svd::Device,
-    container: &T,
-    derived_from: &str,
-) -> String {
-    let splitted: Vec<&str> = derived_from.split('.').collect();
-    if splitted.len() == 1 {
-        /* Accordingly with cmsis svd spec when there is a single string. The name shall be found in
-           the container scope
-        */
-        if let Some(parent) = container.get_clusters().find(|&c| c.name == splitted[0]) {
-            let mut struct_name = parent.struct_name().to_sanitized_struct_ident();
-            struct_name.insert_str(0, "self::");
-            struct_name
-        } else {
-            panic!("{} is referenced in a derivedFrom attribute but it doesn't exist a cluster with this name",derived_from);
-        }
-    } else {
-        let mut result: Vec<String> = Vec::new();
-        // In this case we expect an absolute path starting from device level
-        let mut present_item: &dyn PeripheralClusterT =
-            match device.peripherals.iter().find(|p| p.name == splitted[0]) {
-                Some(item) => item,
-                None => panic!(
-                    "in a derivedFrom={} attribute is referenced an item {} that cannot be found",
-                    derived_from, splitted[0]
-                ),
-            };
-
-        result.push(present_item.struct_name());
-
-        splitted.iter().skip(1).for_each(|&item| {
-            let item = match present_item.get_clusters().find(|c| c.name == item) {
-                Some(item) => item,
-                None => panic!(
-                    "in a derivedFrom={} attribute is referenced an item {} that cannot be found",
-                    derived_from, item
-                ),
-            };
-            result.push(item.struct_name());
-            present_item = item;
-        });
-        /*
-        Modules and struct have different coding guidelines
-         */
-        for x in 0..result.len() {
-            if x == result.len() - 1 {
-                result[x] = result[x].to_sanitized_struct_ident()
-            } else {
-                result[x] = result[x].to_sanitized_mod_ident()
-            }
-        }
-        result.insert(0, "crate".to_string());
-        result.join("::")
-    }
-}
-
-fn get_cluster<T: PeripheralClusterT>(
-    device: &svd::Device,
-    container: &T,
-    cluster: &svd::Cluster,
-) -> Cluster {
-    let name = cluster.name.to_internal_ident();
-    let (dim, dim_increment) = get_dim_dim_increment(cluster);
-    let (registers, clusters) = get_register_clusters(device, container, &cluster.children);
-    let struct_id = cluster.struct_name();
-    let struct_path: String = if let Some(ref derived_path) = cluster.derived_from {
-        if !registers.is_empty() || !clusters.is_empty() {
-            error!("Cluster with derivedFrom attributes are supported only if they doesn't contains registers and/or clusters. Included registers and clusters are ignored")
-        }
-        get_parent_struct_name_cluster(device, container, derived_path)
-    } else {
-        let mut struct_name = cluster.struct_name().to_sanitized_struct_ident();
-        struct_name.insert_str(0, "self::");
-        struct_name
-    };
-    Cluster {
-        name,
-        description: cluster.description.clone().unwrap_or_default(),
-        offset: cluster.address_offset,
-        dim,
-        dim_increment,
-        registers,
-        clusters,
-        is_derived_from: cluster.derived_from.as_ref().cloned(),
-        struct_id,
-        struct_path,
-    }
-}
-
-fn get_register_clusters<T: PeripheralClusterT>(
-    device: &svd::Device,
-    container: &T,
-    registers_clusters: &Vec<svd::RegisterCluster>,
-) -> (
-    LinkedHashMap<String, Register>,
-    LinkedHashMap<String, Cluster>,
-) {
-    let mut registers = LinkedHashMap::new();
-    let mut clusters = LinkedHashMap::new();
-    for reg_clu in registers_clusters {
-        match reg_clu {
-            svd::RegisterCluster::Register(reg_svd) => {
-                let register = get_register(reg_svd);
-                registers.insert(register.name.clone(), register);
-            }
-            svd::RegisterCluster::Cluster(cluster_svd) => {
-                let cluster = get_cluster(device, container, cluster_svd);
-                clusters.insert(cluster_svd.name.clone(), cluster);
-            }
-        }
-    }
-    (registers, clusters)
-}
-
-fn get_peripherals_types(svd_device: &svd::Device) -> LinkedHashMap<String, PeripheralMod> {
-    let mut result = LinkedHashMap::new();
-
-    for p in svd_device.peripherals.iter() {
-        let svd_name = p.name();
-        /*I don't generate any type if the peripheral has derivedFrom attribute.
-        Overriding of peripheral content is not supported*/
-        assert!(
-            p.derived_from.is_none(),
-            "derived_from is not supported in peripherals"
-        );
-        debug!("Parsing peripheral: {}", svd_name);
-        let (registers, clusters) =
-            get_register_clusters(svd_device, p, p.registers.as_ref().unwrap_or(&Vec::new()));
-        let peripheral_struct_name = svd_name.to_internal_ident();
-        let (dim, dim_increment) = get_dim_dim_increment(p);
-        let base_addr = (0..dim)
-            .map(|index| p.base_address + (index * dim_increment) as u64)
-            .collect();
-        let interrupts = p
-            .interrupt
-            .iter()
-            .map(|x| Interrupt {
-                name: x.name.clone(),
-                value: x.value,
-                description: x
-                    .description
-                    .as_ref()
-                    .map_or_else(String::new, |x| x.clone()),
-            })
-            .collect();
-        let peripheral_mod = PeripheralMod {
-            name: peripheral_struct_name,
-            description: p.description.clone().unwrap_or_default(),
-            clusters,
-            registers,
-            base_addr,
-            interrupts,
-        };
-        result.insert(peripheral_mod.name.clone(), peripheral_mod);
-    }
-    result
 }
 
 /// Parse xml and trasform to device description of svd_rs module
@@ -388,24 +430,34 @@ fn parse_xml(xml: &mut str, svd_validation_level: SvdValidationLevel) -> Result<
 
 /// Generate interrupt table including holes that will be used to create required function for cortex-m-rt
 fn get_interrupt_table(
-    peripheral_types: &LinkedHashMap<String, PeripheralMod>,
+    peripheral_types: &LinkedHashMap<String, Rc<RefCell<PeripheralMod>>>,
 ) -> Vec<Option<Interrupt>> {
     match peripheral_types
         .values()
-        .flat_map(|x| x.interrupts.iter().map(|x| x.value))
+        .flat_map(|x| {
+            x.borrow()
+                .interrupts
+                .iter()
+                .map(|x| x.value)
+                .collect::<Vec<_>>()
+        })
         .max()
     {
         None => Vec::new(),
         Some(max_int_index) => {
             let mut result = vec![None; max_int_index as usize + 1];
-            for interrupt in peripheral_types.values().flat_map(|x| x.interrupts.iter()) {
-                if result[interrupt.value as usize].is_some() {
+            for interrupt in peripheral_types
+                .values()
+                .flat_map(|x| x.borrow().interrupts.clone())
+            {
+                let interrupt_id = interrupt.value as usize;
+                if result[interrupt_id].is_some() {
                     error!(
                         "Duplicated interrupt definition at index {}",
                         interrupt.value
                     );
                 }
-                result[interrupt.value as usize] = Some(interrupt.clone());
+                result[interrupt_id] = Some(interrupt);
             }
             result
         }
@@ -432,7 +484,9 @@ pub(super) fn parse_xml2ir(
         },
         |file_license| file_license.clone(),
     );
-    let device = get_device(&svd_device);
+    let mut visitor = Visitor::default();
+    visitor.visit_device(&svd_device);
+    let device = visitor.device;
     let interrupt_table = get_interrupt_table(&device.peripheral_mod);
     Ok(IR {
         device,

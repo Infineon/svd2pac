@@ -447,11 +447,12 @@ fn generate_peripheral_module(
 }
 
 fn change_peripheral_module_name(ir: &mut ir::IR) -> anyhow::Result<()> {
-    let mut result = LinkedHashMap::<String, PeripheralMod>::new();
+    let mut result = LinkedHashMap::new();
     // change peripheral module to have prefix csfr_
     for (peri_name, peri) in &mut ir.device.peripheral_mod {
-        peri.name = format!("{}_{}", "csfr", peri_name);
-        result.insert(peri.name.clone(), std::mem::take(peri));
+        let new_name = format!("{}_{}", "csfr", peri_name);
+        peri.borrow_mut().name = new_name.clone();
+        result.insert(new_name, std::mem::take(peri));
     }
     ir.device.peripheral_mod = result;
     Ok(())

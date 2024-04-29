@@ -1,15 +1,37 @@
 use linked_hash_map::LinkedHashMap;
 use serde::{Deserialize, Serialize};
+use std::cell::RefCell;
+use std::rc::Rc;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub trait HasSameType {
+    fn has_same_type(&self,other:&Self) -> bool;
+}
+
+impl HasSameType for PeripheralMod {
+    fn has_same_type(&self,other:&Self) ->bool {
+        self.clusters == other.clusters && self.registers == other.registers
+    }
+}
+
+impl HasSameType for Cluster {
+    fn has_same_type(&self,other:&Self) -> bool {
+        self.clusters == other.clusters && self.registers == other.registers && self.struct_id == other.struct_id && self.struct_module_path==other.struct_module_path
+    }
+}
+
+
+#[derive(Default,Clone, Debug, PartialEq, Serialize)]
 pub struct Device {
     pub name: String,
     pub description: String,
-    pub peripheral_mod: LinkedHashMap<String, PeripheralMod>
+    pub peripheral_mod: LinkedHashMap<String, Rc<RefCell<PeripheralMod>>>
 }
 
+
+
+
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct EnumeratedSigleValue {
+pub struct EnumeratedSingleValue {
     pub name: String,
     pub value: u64,
     pub description: String,
@@ -19,7 +41,7 @@ pub struct EnumeratedSigleValue {
 pub struct EnumeratedValueType {
     pub name: String,
     pub size: BitSize, // Used generate the smallest numeric type to contain the value
-    pub values: Vec<EnumeratedSigleValue>,
+    pub values: Vec<EnumeratedSingleValue>,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -82,11 +104,13 @@ pub struct Register {
     pub dim: u32,
     pub dim_increment: u32,
     pub access: RegisterAccess,
-    pub fields: Vec<FieldGetterSetter>,
+    pub fields: LinkedHashMap<String,Rc<RefCell<FieldGetterSetter>>>,
     pub size: BitSize,
     pub reset_value: u64,
     pub has_enumerated_fields: bool,
 }
+
+
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Cluster {
@@ -95,21 +119,29 @@ pub struct Cluster {
     pub offset: u32,
     pub dim: u32,
     pub dim_increment: u32,
-    pub registers: LinkedHashMap<String, Register>,
-    pub clusters: LinkedHashMap<String, Cluster>,
-    pub is_derived_from: Option<String>,
+    pub registers: LinkedHashMap<String, Rc<RefCell<Register>>>,
+    pub clusters: LinkedHashMap<String, Rc<RefCell<Cluster>>>,
+    pub is_derived_from: bool,
+    /// Full Rust path to module that contains the struct
+    pub struct_module_path: Vec<String>,
+    /// Id of the struct
     pub struct_id: String,
-    pub struct_path: String,
 }
 
+
+/// Describe Rust module that maps to a peripheral
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PeripheralMod {
     pub name: String,
     pub description: String,
-    pub clusters: LinkedHashMap<String, Cluster>,
-    pub registers: LinkedHashMap<String, Register>,
+    pub clusters: LinkedHashMap<String, Rc<RefCell<Cluster>>>,
+    pub registers: LinkedHashMap<String, Rc<RefCell<Register>>>,
     pub base_addr: Vec<u64>,
     pub interrupts: Vec<Interrupt>,
+    // pub is_derived_from: bool,
+    // /// Struct identifier of the peripheral.
+    // /// It can be different from cluster name in case derivedFrom and/or headerStructName are used
+    // pub struct_id: String, 
 }
 
 /// Represents a part of a fully qualified path name for registers.

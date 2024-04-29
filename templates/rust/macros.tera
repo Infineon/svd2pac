@@ -84,7 +84,7 @@ pub type  {{reg_struct_name}} = crate::RegValueT<{{reg_struct_name}}_SPEC>;
 impl NoBitfieldReg<{{reg_struct_name}}_SPEC> for {{reg_struct_name}} {}
 {% else -%}
 impl {{reg_struct_name}} {
-    {%- for field in reg.fields %}
+    {%- for field_name,field in reg.fields %}
     #[doc = "{{field.description | svd_description_to_doc}}"]
     #[inline(always)]
     {%- if field.dim > 1 -%}
@@ -109,7 +109,7 @@ impl ::core::default::Default for {{reg_struct_name}} {
 }
 {% if reg.has_enumerated_fields -%}
 pub mod {{reg_mod_name}} {
-    {% for field in reg.fields -%}
+    {% for field_name,field in reg.fields -%}
     {%-if field.enum_type -%}
     {%- set enum_name_type= field.enum_type.name | to_struct_id %}
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -129,12 +129,9 @@ pub mod {{reg_mod_name}} {
 
 {# Generate getter for clusters #}
 {%- macro cluster_func(types_mod,cluster) -%}
-{%- if cluster.is_derived_from -%}
-{%- set cluster_struct_path = cluster.struct_path -%}
-{%- else -%}
+{%- set mod_struct_path = cluster.struct_module_path | join(sep="::") -%}
 {%- set cluster_struct_id = cluster.struct_id | to_struct_id -%}
-{%- set cluster_struct_path = types_mod ~ "::" ~ cluster_struct_id -%}
-{%- endif -%}
+{%- set cluster_struct_path = "crate" ~ "::" ~ mod_struct_path ~ "::" ~ cluster_struct_id -%}
 {%- set cluster_func = cluster.name | to_func_id -%}
 #[doc = "{{cluster.description | svd_description_to_doc}}"]
 #[inline(always)]
@@ -181,5 +178,5 @@ pub mod {{cluster_mod}} {
     {{self::cluster_struct(cluster=cluster) }}
     {% endfor -%}
 }
-{%- endif -%}
+{%- endif -%} {# if not cluster.is_derived_from #}
 {%- endmacro -%}
