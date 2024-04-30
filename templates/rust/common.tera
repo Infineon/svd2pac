@@ -354,8 +354,6 @@ where
 
 #[cfg(not(feature="tracing"))]
 use ::core::arch::tricore::intrinsics::{__mfcr, __mtcr};
-#[cfg(all(any(target_feature = "tc18", doc),not(feature="tracing")))]
-use ::core::arch::tricore::intrinsics::{__mfdcr, __mtdcr};
 
 /// Type of core special register of Aurix (CSFR)
 pub struct RegCore<T: RegSpec, A: Access, const ADDR: u16> {
@@ -470,104 +468,6 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
         self.write(res);
     }
 }
-
-#[cfg(any(target_feature = "tc18", doc))]
-impl<T: RegSpec<DataType = u64>, A: Access, const ADDR: u16> RegCore<T, A, ADDR> {
-    /// Read Aurix core register (64 bit wide) and return a register value
-    ///
-    /// # Safety
-    /// Read operation could cause undefined behavior for some core register. Developer shall read device user manual.
-    /// Function must be executed from proper core.
-    /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
-    ///
-    #[inline(always)]
-    #[must_use]
-    pub unsafe fn read(&self) -> RegValueT<T>
-    where
-        A: Read,
-    {
-        #[cfg(feature = "tracing")]
-        let val = {
-            let mut buf: u64 = 0x0;
-            tracing::READ_FN.with(|rf| {
-                buf = rf.get().unwrap()(self.addr(), std::mem::size_of::<T::DataType>());
-            });
-            T::DataType::cast_from(buf)
-        };
-        #[cfg(not(feature = "tracing"))]
-        let val: T::DataType = __mfdcr::<ADDR>();
-        RegValueT::<T>::new(val)
-    }
-    /// Write Aurix core register (64 bit wide) value back to register
-    ///
-    /// # Arguments
-    ///
-    /// * `reg_value` - A string slice that holds the name of the person
-    ///
-    /// # Safety
-    /// Write operation could cause undefined behavior for some core register. Developer shall read device user manual.
-    /// Function must be executed from proper core.
-    /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
-    ///
-    #[inline(always)]
-    pub unsafe fn write(&self, reg_value: RegValueT<T>) 
-    where
-        A: Write,
-    {
-        
-        #[cfg(feature = "tracing")]
-        tracing::WRITE_FN.with(|wf| {
-            wf.get().unwrap()(
-                self.addr(),
-                std::mem::size_of::<T::DataType>(),
-                reg_value.data().into(),
-            )
-        });
-        #[cfg(not(feature = "tracing"))]
-        __mtdcr::<ADDR>(reg_value.data);
-    }
-    /// Init register with value returned by the closure.
-    ///
-    /// # Arguments
-    ///
-    /// * `f` - Closure that receive as input a register value initialized with register value at Power On Reset.
-    ///
-    /// # Safety
-    /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
-    /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
-    ///
-    #[inline(always)]
-    /// Write value computed by closure that receive as input the reset value of register
-    pub unsafe fn init(&self, f: impl FnOnce(RegValueT<T>) -> RegValueT<T>) 
-    where
-        A: Write,
-        RegValueT<T>: Default,
-    {
-        let val = Default::default();
-        let res = f(val);
-        self.write(res);
-    }
-    #[inline(always)]
-    /// Write register with value returned by the closure.
-    ///
-    /// # Arguments
-    ///
-    /// * `f` - Closure that receive as input a register value read from register.
-    ///
-    /// # Safety
-    /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
-    /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
-    ///
-    pub unsafe fn modify(&self, f: impl FnOnce(T) -> T) 
-    where
-        A: Read + Write,
-    {
-        let val = self.read();
-        let res = f(val);
-        self.write(res);
-    }
-}
-
 {% endif %}
 #[repr(transparent)]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
