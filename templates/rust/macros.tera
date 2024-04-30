@@ -157,7 +157,7 @@ pub fn {{cluster_func}}(self) -> [{{cluster_struct_path}};{{cluster.dim}}] {
 {%- set cluster_mod = cluster.struct_id | to_mod_id -%}
 #[doc = "{{cluster.description | svd_description_to_doc}}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
-pub struct {{ cluster_struct }}(pub(super) *mut u8);
+pub struct {{ cluster_struct }}(pub(crate) *mut u8);
 unsafe impl ::core::marker::Send for {{ cluster_struct}} {}
 unsafe impl ::core::marker::Sync for {{ cluster_struct }} {}
 impl {{cluster_struct}} {

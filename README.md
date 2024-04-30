@@ -14,7 +14,7 @@ This tool has a very different approach compared to `svd2rust` and it is inspire
 - No ownership because owned registers are an obstacle to writing low level drivers (LLD). Anyway writing
   LLDs requires a lot of unsafe code and ownership makes it more complex to access registers from interrupts
   and other threads. LLDs shall present safe APIs because only they can implement all logic for a safe usage of peripherals.
-- Support [tracing](#tracing-feature) of register accesses and additionally mocking of registers on non-embedded devices through
+- Support [tracing](#tracing) of register accesses and additionally mocking of registers on non-embedded devices through
   external libraries. This allows the execution unit tests for code that uses the generated libraries on non-embedded devices.
 - PAC shall have ideally 0 dependencies to any other crates.
 
@@ -38,9 +38,8 @@ This tool has a very different approach compared to `svd2rust` and it is inspire
 
 ## Limitations
 
-* Inheritance via `derivedFrom` attribute is supported only in `cluster` declaration and requires
- that child is not overriding anything except `name`, `description` and `offset`
-* `headerStructName` tag is considered only in `cluster`` tag
+* Inheritance via `derivedFrom` attribute is supported only in `cluster` and register declaration and requires.
+in case that parent is an element of an array only the first element is supported.
 * `resetMask` tag is ignored
 * `protection` tag is ignored
 * `writeConstraint` tag is ignored
@@ -111,7 +110,7 @@ Extra feature compared to `generic` target
 - Re-export of cortex-m core peripherals
 - Peripherals type but now it is possible to call Peripheral::take without limitations.
 - Interrupt table
-
+---
 #### Enable register mocking: `--tracing` option
 Enable with the `--tracing` cli flag.
 Generate the PAC with a non-default feature flag to allow for tracing reads/writes, [see below](#tracing-feature)
@@ -365,7 +364,7 @@ an optional feature flag `tracing`. Enabling the feature provides the following
 additional functionalities:
 - an interface where register accesses can be piped though, enabling
   developers to log accesses to registers or even mock registers outright.
-  An implementation of that interface for unittests will be published in the near future.
+  An implementaion of that interface is provided by [`regmock-rs`](https://bitbucket.vih.infineon.com/projects/OXIDE/repos/regmock-rs/browse).
 - a special `RegisterValue` trait that allows constructing values of
   registers from integers.
 - an additional `insanely_unsafe` module which allows reading and writing, write-only and
@@ -373,17 +372,10 @@ additional functionalities:
 - an additional `reg_name` module that contains a perfect hash map of physical
   addresses to string names of all registers that reside at an address.
 
-`tracing` is intended for testing, etc. on a host machine and uses additional
-crates that are not embedded-friendly.
-
-The second feature flag that is added is `tracing_dummy`. By default tracing requires
-callbacks to be registered for logging. If no callbacks are registered the code will
-panic. If `tracing_dummy` is enabled the code will not panic and silently drop logs
-if no callbacks are registerd.
-
 ### Examples
 Below, some simple examples on how to use the tracing APIs are shown.
-For a more complete example 
+For a complete example of how to use the tracing features for
+e.g. unittesting see the documentation of [`regmock-rs`](https://bitbucket.vih.infineon.com/projects/OXIDE/repos/regmock-rs/browse).
 
 #### Construcing a register value from a raw value with tracing
 When implementing tests using the tracing feature we want to be

@@ -79,7 +79,7 @@
 			<access>read-write</access>
 			<addressBlock>
 				<offset>0</offset>
-				<size>0x100</size>
+				<size>0x100000</size>
 				<usage>registers</usage>
 			</addressBlock>
 			<interrupt>
@@ -458,7 +458,7 @@
 				<register>
 					<name>PRESCALE_WR</name>
 					<description>The Prescale Register stores the Value for the prescaler. The cont event gets divided by this value</description>
-					<addressOffset>0x28</addressOffset>
+					<addressOffset>0x2C</addressOffset>
 					<access>write-only</access>
 					<resetValue>0x00000000</resetValue>
 					<resetMask>0xFFFFFFFF</resetMask>
@@ -846,10 +846,49 @@
 			<access>read-write</access>
 			<addressBlock>
 				<offset>0</offset>
-				<size>0x100</size>
+				<size>0x2000</size>
 				<usage>registers</usage>
 			</addressBlock>
 			<registers>
+				<register>
+					<name>BaseRegister</name>
+					<description>BaseRegister</description>
+					<addressOffset>0x1000</addressOffset>
+					<size>16</size>
+					<access>read-write</access>
+					<resetValue>0x00000000</resetValue>
+					<resetMask>0xD701</resetMask>
+					<fields>
+						<!-- RUN: Shows if Timer is running -->
+						<field>
+							<name>RUN</name>
+							<description>Shows if Timer is running or not</description>
+							<bitRange>[0:0]</bitRange>
+							<access>read-only</access>
+							<enumeratedValues>
+								<enumeratedValue>
+									<name>Stopped</name>
+									<description>Timer is not running</description>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>Running</name>
+									<description>Timer is running</description>
+									<value>1</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
+						<!-- MATCH: Shows if a Match was hit -->
+					</fields>
+				</register>
+				<register derivedFrom="BaseRegister">
+					<name>DerivedRegister</name>
+					<addressOffset>0x1002</addressOffset>
+				</register>
+				<register derivedFrom="TIMER.Cluster1.CR">
+					<name>DerivedFromFarAway</name>
+					<addressOffset>0x1004</addressOffset>
+				</register>
 				<cluster>
 					<name>BaseCluster</name>
 					<description>Cluster that defines the base type</description>
@@ -877,6 +916,11 @@
 					<name>DerivedDerivedCluster[%s]</name>
 					<description/>
 					<addressOffset>0x100</addressOffset>
+				</cluster>
+				<cluster derivedFrom="TIMER.Cluster1.Cluster1">
+					<name>DerivedFromFarAwayCluster</name>
+					<description/>
+					<addressOffset>0x200</addressOffset>
 				</cluster>
 			</registers>
 		</peripheral>

@@ -9,7 +9,6 @@ use std::{
 use self::util::ToSanitizedSymbol;
 use crate::{SvdValidationLevel, Target};
 use anyhow::{anyhow, Context, Result};
-use ir::PeripheralMod;
 use lazy_regex::regex;
 use linked_hash_map::LinkedHashMap;
 use log::{error, info, warn};

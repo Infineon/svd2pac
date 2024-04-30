@@ -14,7 +14,6 @@ use svd2temp::*;
 use svd_parser::svd;
 use svd_parser::svd::Name;
 
-
 trait RegisterHelper {
     /// Get name of register considering the presence of alternate group
     /// Alternate group is appended to the id of register
@@ -32,29 +31,25 @@ impl RegisterHelper for svd::RegisterInfo {
     }
 }
 
-
 enum PeripheralClusterE<'a> {
     Peripheral(&'a mut PeripheralMod),
-    Cluster(&'a mut Cluster)
+    Cluster(&'a mut Cluster),
 }
 
-impl <'a> PeripheralClusterE<'a> {
+impl<'a> PeripheralClusterE<'a> {
     pub fn get_mut_registers(&mut self) -> &mut LinkedHashMap<String, Rc<RefCell<Register>>> {
         match self {
             PeripheralClusterE::Peripheral(p) => &mut p.registers,
-            PeripheralClusterE::Cluster(c) => &mut c.registers
+            PeripheralClusterE::Cluster(c) => &mut c.registers,
         }
-
     }
     pub fn get_mut_clusters(&mut self) -> &mut LinkedHashMap<String, Rc<RefCell<Cluster>>> {
         match self {
             PeripheralClusterE::Peripheral(p) => &mut p.clusters,
-            PeripheralClusterE::Cluster(c) => &mut c.clusters
+            PeripheralClusterE::Cluster(c) => &mut c.clusters,
         }
-
     }
 }
-
 
 /// Utility function to get number of instances and increment between the distances
 /// This function can be used anytime in svd::array::MaybeArray is used
@@ -80,19 +75,21 @@ fn get_dim_dim_increment<T>(array: &svd::array::MaybeArray<T>) -> (u32, u32) {
 enum DeviceItem {
     Register(Rc<RefCell<Register>>),
     Cluster(Rc<RefCell<Cluster>>),
+    //TODO Remove the allow
+    #[allow(dead_code)]
     Peripheral(Rc<RefCell<PeripheralMod>>),
-    Field(Rc<RefCell<FieldGetterSetter>>),
+    //Field(Rc<RefCell<FieldGetterSetter>>),
 }
 
 #[derive(Default)]
 struct Visitor {
     device: Device,
     svd_ref_to_ir_item: HashMap<String, DeviceItem>,
-    // Current item svd path that is used to build 
+    // Current item svd path that is used to build
     // the key of svd_ref_to_ir_item. In case of array only the first item will be considered
     current_item_svd_path: Vec<String>,
-    // Path to the module of item in Rust code 
-    current_mod_ir_path:Vec<String>
+    // Path to the module of item in Rust code
+    current_mod_ir_path: Vec<String>,
 }
 impl Visitor {
     /// Create the intermediate representation of device used by template engine
@@ -118,7 +115,6 @@ impl Visitor {
                 DeviceItem::Peripheral(peripheral_mod.clone()),
             );
             self.pop_current_item_svd_path(DeviceItem::Peripheral(peripheral_mod));
-            
         }
     }
     fn visit_peripheral(
@@ -151,20 +147,35 @@ impl Visitor {
             })
             .collect();
         target_peripheral.description = peripheral.description.clone().unwrap_or_default();
-        
+
         for cluster_register in peripheral.registers.as_ref().unwrap_or(&Vec::new()) {
-            self.visit_cluster_register(cluster_register,PeripheralClusterE::Peripheral(target_peripheral));
+            self.visit_cluster_register(
+                cluster_register,
+                PeripheralClusterE::Peripheral(target_peripheral),
+            );
         }
     }
 
-
-    fn visit_register(&mut self,reg: &svd::Register,register:&mut Register ) {
+    fn visit_register(&mut self, reg: &svd::Register, register: &mut Register) {
         register.name = reg.get_name_id_internal();
         register.description = reg.description.clone().unwrap_or_default();
+        register.offset = reg.address_offset;
         (register.dim, register.dim_increment) = get_dim_dim_increment(reg);
+
+        if register.struct_id.is_empty() {
+            register.struct_module_path = Vec::with_capacity(10);
+            register.struct_module_path.extend_from_slice(
+                &self.current_mod_ir_path[0..self.current_mod_ir_path.len() - 1],
+            );
+            register.struct_id = register.name.to_sanitized_struct_ident();
+        }
         // Get fields
         let mut fields = Vec::new();
         for field in reg.fields() {
+            assert!(
+                field.derived_from.is_none(),
+                "derived_from is not supported in field"
+            );
             let description = field.description.clone().unwrap_or_default();
             let offset = field.bit_range.offset;
             let mask = (0..field.bit_range.width - 1).fold(0x1u32, |acc, _| (acc << 1) | 0x1);
@@ -197,52 +208,69 @@ impl Visitor {
                 dim_increment,
             });
         }
-        register.size= match reg
-            .properties
-            .size
-            .expect("All registers shall have a defined size")
-        {
-            64 => BitSize::BIT64,
-            32 => BitSize::BIT32,
-            16 => BitSize::BIT16,
-            8 => BitSize::BIT8,
-            register_size => {
-                panic!("Unsupported register size {register_size}")
+        match reg.properties.size {
+            Some(value) => {
+                register.size = match value {
+                    64 => BitSize::BIT64,
+                    32 => BitSize::BIT32,
+                    16 => BitSize::BIT16,
+                    8 => BitSize::BIT8,
+                    register_size => {
+                        panic!("Unsupported register size {register_size}")
+                    }
+                }
             }
-        };
-        register.reset_value = reg
-            .properties
-            .reset_value
-            .expect("All registers shall have a reset value defined");
+            None => assert!(
+                reg.derived_from.is_some(),
+                "register {} is not derived and it has no specified size",
+                &register.name
+            ),
+        }
+        match reg.properties.reset_value {
+            Some(value) => register.reset_value = value,
+            None => assert!(
+                reg.derived_from.is_some(),
+                "register {} is not derived and it has no specified reset value",
+                &register.name
+            ),
+        }
+
         register.has_enumerated_fields = fields.iter().any(|f| f.enum_type.is_some());
-    
-        register.access = match reg.properties.access {
-            Some(reg_access) => match reg_access {
-                svd::Access::ReadOnly => RegisterAccess::R,
-                svd::Access::WriteOnly => RegisterAccess::W,
-                svd::Access::ReadWrite => RegisterAccess::RW,
-                svd::Access::WriteOnce => RegisterAccess::W,
-                svd::Access::ReadWriteOnce => RegisterAccess::RW,
-            },
+
+        match reg.properties.access {
+            Some(reg_access) => {
+                register.access = match reg_access {
+                    svd::Access::ReadOnly => RegisterAccess::R,
+                    svd::Access::WriteOnly => RegisterAccess::W,
+                    svd::Access::ReadWrite => RegisterAccess::RW,
+                    svd::Access::WriteOnce => RegisterAccess::W,
+                    svd::Access::ReadWriteOnce => RegisterAccess::RW,
+                }
+            }
             // If register access mode is not defined. The value is inferred from access mode of bitfields
             None => {
-                warn!(
-                    "Access mode is not defined for register ({}) inferring from bitfield",
-                    &register.name
-                );
-                let is_register_writable = fields.iter().any(|f| {
-                    f.access == RegisterBitfieldAccess::W || f.access == RegisterBitfieldAccess::RW
-                });
-                let is_register_readable = fields.iter().any(|f| {
-                    f.access == RegisterBitfieldAccess::R || f.access == RegisterBitfieldAccess::RW
-                });
-                match (is_register_readable, is_register_writable) {
-                    (true, true) => RegisterAccess::RW,
-                    (true, false) => RegisterAccess::R,
-                    (false, true) => RegisterAccess::W,
-                    (false, false) => {
-                        error!("No bitfield in register '{}' specifies an access mode. Not able to infer register access mode", &register.name);
-                        RegisterAccess::R
+                // If the register is derived from we relay on parent value
+                if reg.derived_from.is_none() {
+                    warn!(
+                        "Access mode is not defined for register ({}) inferring from bitfield",
+                        &register.name
+                    );
+                    let is_register_writable = fields.iter().any(|f| {
+                        f.access == RegisterBitfieldAccess::W
+                            || f.access == RegisterBitfieldAccess::RW
+                    });
+                    let is_register_readable = fields.iter().any(|f| {
+                        f.access == RegisterBitfieldAccess::R
+                            || f.access == RegisterBitfieldAccess::RW
+                    });
+                    register.access = match (is_register_readable, is_register_writable) {
+                        (true, true) => RegisterAccess::RW,
+                        (true, false) => RegisterAccess::R,
+                        (false, true) => RegisterAccess::W,
+                        (false, false) => {
+                            error!("No bitfield in register '{}' specifies an access mode. Not able to infer register access mode", &register.name);
+                            RegisterAccess::R
+                        }
                     }
                 }
             }
@@ -251,87 +279,114 @@ impl Visitor {
             .into_iter()
             .map(|f| (f.name.clone(), Rc::new(RefCell::new(f))))
             .collect();
- 
     }
 
-    fn visit_cluster(&mut self, cluster_svd: &svd::Cluster,cluster:&mut Cluster) {
-        cluster.name=cluster_svd.name.to_internal_ident();
-        cluster.description =  cluster_svd.description.clone().unwrap_or_default();
-        cluster.offset= cluster_svd.address_offset;
+    fn visit_cluster(&mut self, cluster_svd: &svd::Cluster, cluster: &mut Cluster) {
+        cluster.name = cluster_svd.name.to_internal_ident();
+        cluster.description = cluster_svd.description.clone().unwrap_or_default();
+        cluster.offset = cluster_svd.address_offset;
         (cluster.dim, cluster.dim_increment) = get_dim_dim_increment(cluster_svd);
-        
+
         if let Some(header_struct_name) = &cluster_svd.header_struct_name {
             cluster.struct_module_path = Vec::with_capacity(10);
-            cluster.struct_module_path.extend_from_slice(&self.current_mod_ir_path[0..self.current_mod_ir_path.len()-1]);
-            cluster.struct_id= header_struct_name.to_sanitized_struct_ident();
+            cluster.struct_module_path.extend_from_slice(
+                &self.current_mod_ir_path[0..self.current_mod_ir_path.len() - 1],
+            );
+            cluster.struct_id = header_struct_name.to_sanitized_struct_ident();
         } else if cluster.struct_id.is_empty() {
             cluster.struct_module_path = Vec::with_capacity(10);
-            cluster.struct_module_path.extend_from_slice(&self.current_mod_ir_path[0..self.current_mod_ir_path.len()-1]);
+            cluster.struct_module_path.extend_from_slice(
+                &self.current_mod_ir_path[0..self.current_mod_ir_path.len() - 1],
+            );
             cluster.struct_id = cluster.name.to_sanitized_struct_ident();
-        } 
-        for cluster_register in &cluster_svd.children {
-            self.visit_cluster_register(cluster_register,PeripheralClusterE::Cluster(cluster));
         }
-       
-
+        for cluster_register in &cluster_svd.children {
+            self.visit_cluster_register(cluster_register, PeripheralClusterE::Cluster(cluster));
+        }
     }
     fn visit_cluster_register(
         &mut self,
         register_cluster: &svd::RegisterCluster,
-        mut parent_peripheral_cluster :PeripheralClusterE
-    )  {
+        mut parent_peripheral_cluster: PeripheralClusterE,
+    ) {
         match register_cluster {
             svd::RegisterCluster::Register(ref reg_svd) => {
-                let mut register: Register = if let Some(derived_ref) =
+                let derived_register: Option<Register> = if let Some(derived_ref) =
                     register_cluster.derived_from()
                 {
-                    if let Some(ref_register) = parent_peripheral_cluster.get_mut_registers().get(derived_ref) {
-                        ref_register.borrow().clone()
-                    } else if let Some(ref_item) = self.svd_ref_to_ir_item.get(derived_ref) {
+                    let absolute_reference_path = self.get_absolute_svd_path(derived_ref);
+                    if let Some(ref_item) = self.svd_ref_to_ir_item.get(&absolute_reference_path) {
                         if let DeviceItem::Register(ref_register) = ref_item {
-                            ref_register.borrow().clone()
+                            Some(ref_register.borrow().clone())
                         } else {
-                            panic!("Wrong reference type");
+                            panic!(
+                                "reference {:} in {:} point to not register svd item",
+                                derived_ref, reg_svd.name
+                            );
                         }
                     } else {
-                        panic!("Missing reference")
+                        panic!("Missing reference {:} in {:}", derived_ref, reg_svd.name);
                     }
                 } else {
-                    Register::default()
+                    None
                 };
+                // Push the target register svd and ir path in corresponding FIFO stack
+                self.push_current_item_svd_path(reg_svd);
+                let mut register = derived_register
+                    .as_ref()
+                    .map_or_else(Register::default, |x| x.clone());
 
                 self.visit_register(reg_svd, &mut register);
+
                 let name = register.name.clone();
+                // If after visiting the svd node and updating the cluster_svd we get cluster that has the same type
+                // set derived_register and replace the struct id
+                register.is_derived_from = derived_register
+                    .is_some_and(|derived_register| register.has_same_type(&derived_register));
 
                 let register = Rc::new(RefCell::new(register));
+
                 parent_peripheral_cluster
                     .get_mut_registers()
-                    .insert(name, register);
+                    .insert(name, register.clone());
+                // Pop out the paths and the just updated cluster in svd to it index
+                self.pop_current_item_svd_path(DeviceItem::Register(register));
             }
             svd::RegisterCluster::Cluster(ref cluster_svd) => {
-                let derived_cluster:Option<Cluster> = if let Some(derived_ref) = register_cluster.derived_from()
-                {   let absolute_reference_path = self.get_absolute_svd_path(derived_ref);
+                let derived_cluster: Option<Cluster> = if let Some(derived_ref) =
+                    register_cluster.derived_from()
+                {
+                    let absolute_reference_path = self.get_absolute_svd_path(derived_ref);
                     if let Some(ref_item) = self.svd_ref_to_ir_item.get(&absolute_reference_path) {
                         if let DeviceItem::Cluster(ref_cluster) = ref_item {
                             Some(ref_cluster.borrow().clone())
                         } else {
-                            panic!("reference {:} in cluster {:} point to not cluster svd item",derived_ref,cluster_svd.name);
+                            panic!(
+                                "reference {:} in {:} point to not cluster svd item",
+                                derived_ref, cluster_svd.name
+                            );
                         }
                     } else {
-                        panic!("Missing reference {:} in cluster {:}",derived_ref,cluster_svd.name);
+                        panic!(
+                            "Missing reference {:} in {:}",
+                            derived_ref, cluster_svd.name
+                        );
                     }
                 } else {
                     None
-                }; 
-                
+                };
+
                 // Push the target cluster svd and ir path in corresponding FIFO stack
                 self.push_current_item_svd_path(cluster_svd);
-                let mut cluster= derived_cluster.as_ref().map_or_else(Cluster::default, |x| x.clone());
+                let mut cluster = derived_cluster
+                    .as_ref()
+                    .map_or_else(Cluster::default, |x| x.clone());
                 self.visit_cluster(cluster_svd, &mut cluster);
                 // If after visiting the svd node and updating the cluster_svd we get cluster that has the same type
                 // set derived_cluster and replace the struct id
-                cluster.is_derived_from=derived_cluster.is_some_and(|derived_cluster| cluster.has_same_type(&derived_cluster));
-       
+                cluster.is_derived_from = derived_cluster
+                    .is_some_and(|derived_cluster| cluster.has_same_type(&derived_cluster));
+
                 let name = cluster.name.clone();
                 let cluster = Rc::new(RefCell::new(cluster));
                 parent_peripheral_cluster
@@ -341,34 +396,33 @@ impl Visitor {
                 self.pop_current_item_svd_path(DeviceItem::Cluster(cluster));
             }
         }
-
-    
     }
 
-    fn pop_current_item_svd_path(&mut self,ir_item:DeviceItem) {
-            self.svd_ref_to_ir_item.insert(self.current_item_svd_path.join("."),ir_item);
-            assert!(self.current_item_svd_path.pop().is_some());
-            assert!(self.current_mod_ir_path.pop().is_some());
+    fn pop_current_item_svd_path(&mut self, ir_item: DeviceItem) {
+        self.svd_ref_to_ir_item
+            .insert(self.current_item_svd_path.join("."), ir_item);
+        assert!(self.current_item_svd_path.pop().is_some());
+        assert!(self.current_mod_ir_path.pop().is_some());
     }
     fn push_current_item_svd_path(&mut self, svd_item: &impl ExpandedName) {
-        self.current_item_svd_path.push(svd_item.get_expanded_name());
-        self.current_mod_ir_path.push(svd_item.name().to_sanitized_mod_ident());
+        self.current_item_svd_path
+            .push(svd_item.get_expanded_name());
+        self.current_mod_ir_path
+            .push(svd_item.name().to_sanitized_mod_ident());
     }
-    fn get_absolute_svd_path(&self,local_svd_name:&str) -> String {
-        if local_svd_name.contains(".") {
+    fn get_absolute_svd_path(&self, local_svd_name: &str) -> String {
+        if local_svd_name.contains('.') {
             local_svd_name.to_string()
         } else {
-            let mut result:Vec<&str> = Vec::with_capacity(self.current_item_svd_path.len()+1);
-            self.current_item_svd_path.iter().for_each(|s| result.push(s));
+            let mut result: Vec<&str> = Vec::with_capacity(self.current_item_svd_path.len() + 1);
+            self.current_item_svd_path
+                .iter()
+                .for_each(|s| result.push(s));
             result.push(local_svd_name);
             result.join(".")
         }
     }
-
- 
 }
-
-
 
 fn get_values_types(field: &svd::Field) -> Option<EnumeratedValueType> {
     if field.enumerated_values.is_empty() {

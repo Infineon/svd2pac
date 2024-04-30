@@ -36,9 +36,8 @@
 //!
 //! # Limitations
 //!
-//! * Inheritance via `derivedFrom` attribute is supported only in `cluster` declaration and requires
-//!  that child is not overriding anything except `name`, `description` and `offset`
-//! * `headerStructName` tag is considered only in `cluster`` tag
+//! * Inheritance via `derivedFrom` attribute is supported only in `cluster` and register declaration and requires.
+//! in case that parent is an element of an array only the first element is supported.
 //! * `resetMask` tag is ignored
 //! * `protection` tag is ignored
 //! * `writeConstraint` tag is ignored
