@@ -10,7 +10,6 @@ use self::util::ToSanitizedSymbol;
 use crate::{SvdValidationLevel, Target};
 use anyhow::{anyhow, Context, Result};
 use lazy_regex::regex;
-use linked_hash_map::LinkedHashMap;
 use log::{error, info, warn};
 use std::collections::HashMap;
 use std::error::Error;
@@ -445,18 +444,6 @@ fn generate_peripheral_module(
     Ok(())
 }
 
-fn change_peripheral_module_name(ir: &mut ir::IR) -> anyhow::Result<()> {
-    let mut result = LinkedHashMap::new();
-    // change peripheral module to have prefix csfr_
-    for (peri_name, peri) in &mut ir.device.peripheral_mod {
-        let new_name = format!("{}_{}", "csfr", peri_name);
-        peri.borrow_mut().name = new_name.clone();
-        result.insert(new_name, std::mem::take(peri));
-    }
-    ir.device.peripheral_mod = result;
-    Ok(())
-}
-
 fn generate_aurix_core_ir(
     xml_path: &Path,
     settings: &GenPkgSettings,
@@ -480,9 +467,12 @@ fn generate_aurix_core_ir(
     if result {
         let svd_csfr_xml = &mut String::with_capacity(500);
         get_aurix_csfr_svd(xml_path, svd_csfr_xml)?;
-        let mut ir_csfr =
-            xml2ir::parse_xml2ir(svd_csfr_xml, *svd_validation_level, &custom_license_text)?;
-        change_peripheral_module_name(&mut ir_csfr)?;
+        let mut svd_device = xml2ir::parse_xml(svd_csfr_xml, *svd_validation_level)?;
+        // Rename peripherals
+        for peri in svd_device.peripherals.iter_mut() {
+            peri.name = "csfr_".to_string() + &peri.name
+        }
+        let ir_csfr = xml2ir::svd_device2ir(&svd_device, &custom_license_text)?;
         Ok(Some(ir_csfr))
     } else {
         Ok(None)
@@ -511,7 +501,8 @@ pub(crate) fn generate_rust_package(
 
     let xml = &mut String::new();
     get_xml_string(xml_path, xml)?;
-    let ir = xml2ir::parse_xml2ir(xml, svd_validation_level, &custom_license_text)?;
+    let svd_device = xml2ir::parse_xml(xml, svd_validation_level)?;
+    let ir = xml2ir::svd_device2ir(&svd_device, &custom_license_text)?;
     //Precompile templates
     let mut tera = get_tera_instance()?;
     precompile_tera(&mut tera);

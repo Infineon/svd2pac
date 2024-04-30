@@ -475,7 +475,10 @@ fn get_values_types(field: &svd::Field) -> Option<EnumeratedValueType> {
 /// # Result
 ///
 /// Device containing all information of svd file
-fn parse_xml(xml: &mut str, svd_validation_level: SvdValidationLevel) -> Result<svd::Device> {
+pub(super) fn parse_xml(
+    xml: &mut str,
+    svd_validation_level: SvdValidationLevel,
+) -> Result<svd::Device> {
     let mut parser_config = svd_parser::Config::default();
     parser_config.expand_properties = true;
     parser_config.ignore_enums = false;
@@ -529,13 +532,11 @@ fn get_interrupt_table(
     }
 }
 
-pub(super) fn parse_xml2ir(
-    xml: &mut str,
-    svd_validation_level: SvdValidationLevel,
+pub(super) fn svd_device2ir(
+    svd_device: &svd::Device,
     custom_license_text: &Option<String>,
 ) -> Result<IR> {
-    let svd_device = parse_xml(xml, svd_validation_level)?;
-    let entity_db = get_entity_db(&svd_device);
+    let entity_db = get_entity_db(svd_device);
     // Use custom license if available otherwise use license in svd and if it not present use empty string.
     let license_text = custom_license_text.as_ref().map_or_else(
         || {
@@ -550,7 +551,7 @@ pub(super) fn parse_xml2ir(
         |file_license| file_license.clone(),
     );
     let mut visitor = Visitor::default();
-    visitor.visit_device(&svd_device);
+    visitor.visit_device(svd_device);
     let device = visitor.device;
     let interrupt_table = get_interrupt_table(&device.peripheral_mod);
     Ok(IR {
