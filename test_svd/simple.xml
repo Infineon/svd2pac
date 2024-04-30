@@ -866,10 +866,17 @@
 				</cluster>
 				<cluster derivedFrom="BaseCluster">
 					<dim>4</dim>
-					<dimIncrement>16</dimIncrement>
+					<dimIncrement>8</dimIncrement>
 					<name>ArrayCluster[%s]</name>
 					<description>ArrayCluster</description>
 					<addressOffset>0x8</addressOffset>
+				</cluster>
+				<cluster derivedFrom="ArrayCluster0">
+					<dim>1</dim>
+					<dimIncrement>16</dimIncrement>
+					<name>DerivedDerivedCluster[%s]</name>
+					<description/>
+					<addressOffset>0x100</addressOffset>
 				</cluster>
 			</registers>
 		</peripheral>

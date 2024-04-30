@@ -76,6 +76,7 @@ fn get_dim_dim_increment<T>(array: &svd::array::MaybeArray<T>) -> (u32, u32) {
     }
 }
 
+#[derive(Debug)]
 enum DeviceItem {
     Register(Rc<RefCell<Register>>),
     Cluster(Rc<RefCell<Cluster>>),
@@ -309,17 +310,15 @@ impl Visitor {
             }
             svd::RegisterCluster::Cluster(ref cluster_svd) => {
                 let derived_cluster:Option<Cluster> = if let Some(derived_ref) = register_cluster.derived_from()
-                {
-                    if let Some(ref_cluster) = parent_peripheral_cluster.get_mut_clusters().get(derived_ref) {
-                        Some(ref_cluster.borrow().clone())
-                    } else if let Some(ref_item) = self.svd_ref_to_ir_item.get(derived_ref) {
+                {   let absolute_reference_path = self.get_absolute_svd_path(derived_ref);
+                    if let Some(ref_item) = self.svd_ref_to_ir_item.get(&absolute_reference_path) {
                         if let DeviceItem::Cluster(ref_cluster) = ref_item {
                             Some(ref_cluster.borrow().clone())
                         } else {
-                            panic!("Wrong reference type");
+                            panic!("reference {:} in cluster {:} point to not cluster svd item",derived_ref,cluster_svd.name);
                         }
                     } else {
-                        panic!("Missing reference")
+                        panic!("Missing reference {:} in cluster {:}",derived_ref,cluster_svd.name);
                     }
                 } else {
                     None
@@ -355,6 +354,18 @@ impl Visitor {
         self.current_item_svd_path.push(svd_item.get_expanded_name());
         self.current_mod_ir_path.push(svd_item.name().to_sanitized_mod_ident());
     }
+    fn get_absolute_svd_path(&self,local_svd_name:&str) -> String {
+        if local_svd_name.contains(".") {
+            local_svd_name.to_string()
+        } else {
+            let mut result:Vec<&str> = Vec::with_capacity(self.current_item_svd_path.len()+1);
+            self.current_item_svd_path.iter().for_each(|s| result.push(s));
+            result.push(local_svd_name);
+            result.join(".")
+        }
+    }
+
+ 
 }
 
 
