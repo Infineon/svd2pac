@@ -362,7 +362,7 @@
 //! additional functionalities:
 //! - an interface where register accesses can be piped though, enabling
 //!   developers to log accesses to registers or even mock registers outright.
-//!   An implementaion of that interface is provided by [`regmock-rs`](https://bitbucket.vih.infineon.com/projects/OXIDE/repos/regmock-rs/browse).
+//!   An implementaion of that interface is provided by [`regmock-rs`](https://github.com/Infineon/regmock-rs).
 //! - a special `RegisterValue` trait that allows constructing values of
 //!   registers from integers.
 //! - an additional `insanely_unsafe` module which allows reading and writing, write-only and
@@ -373,7 +373,7 @@
 //! ## Examples
 //! Below, some simple examples on how to use the tracing APIs are shown.
 //! For a complete example of how to use the tracing features for
-//! e.g. unittesting see the documentation of [`regmock-rs`](https://bitbucket.vih.infineon.com/projects/OXIDE/repos/regmock-rs/browse).
+//! e.g. unittesting see the documentation of [`regmock-rs`](https://github.com/Infineon/regmock-rs).
 //!
 //! ### Construcing a register value from a raw value with tracing
 //! When implementing tests using the tracing feature we want to be
