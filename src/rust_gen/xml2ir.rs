@@ -94,8 +94,8 @@ struct Visitor {
 impl Visitor {
     /// Create the intermediate representation of device used by template engine
     fn visit_device(&mut self, device: &svd::Device) {
-        self.device.name = device.name.clone();
-        self.device.description = device.description.clone();
+        self.device.name.clone_from(&device.name);
+        self.device.description.clone_from(&device.description);
 
         for peripheral in device.peripherals.iter() {
             let name = peripheral.name().to_internal_ident();
@@ -448,7 +448,7 @@ fn get_values_types(field: &svd::Field) -> Option<EnumeratedValueType> {
             let value = if let Some(value) = val_entry.value {
                 value
             } else {
-                panic!("Unsupport is default, all value in enumeration shall have a value defined")
+                panic!("Default value is unsupported, all value in enumeration shall have a value defined")
             };
 
             values.push(EnumeratedSingleValue {
