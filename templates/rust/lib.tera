@@ -41,15 +41,15 @@ pub use {{module_name}} as csfr_cpu;
 {% set peri_struct = p.name | to_struct_id -%}
 #[cfg(feature = "{{module_name}}")] {# Peripheral definition #}
 #[derive(Copy, Clone, Eq, PartialEq)] 
-pub struct {{ peri_struct }}(*mut u8);
+pub struct {{ peri_struct }}{ptr:*mut u8}
 {# Peripheral instances #}
 {%- set module_struct = p.name | to_struct_id -%}
 {%- set full_path_struct = "self::" ~ module_struct -%}
 #[cfg(feature = "{{module_name}}")]
 {%- if p.base_addr | length == 1 %}
-pub const {{name | upper}}: {{full_path_struct}} = {{full_path_struct}}({{p.base_addr[0] | to_hex }}u32 as _);
+pub const {{name | upper}}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{p.base_addr[0] | to_hex }}u32 as _};
 {% else %}
-pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}({{addr | to_hex }}u32 as _), {% endfor -%}];
+pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}{ptr:{{addr | to_hex }}u32 as _}, {% endfor -%}];
 {%- endif -%}
 {%- endfor -%} {# for name,p in ir.device.peripheral_mod #}
 {% if ir_csfr %}
@@ -60,9 +60,9 @@ pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [
 {%- set module_name = p.name | to_mod_id -%}
 {% if not loop.last %}feature = "{{module_name}}",{% else %}feature = "{{module_name}}"))]
 {%- if p.base_addr | length == 1 %}
-pub const {{"csfr_cpu" | upper}}: {{full_path_struct}} = {{full_path_struct}}({{p.base_addr[0] | to_hex }}u32 as _);
+pub const {{"csfr_cpu" | upper}}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{p.base_addr[0] | to_hex }}u32 as _};
 {% else %}
-pub const {{"csfr_cpu" | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}({{addr | to_hex }}u32 as _), {% endfor -%}];
+pub const {{"csfr_cpu" | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}{ptr:{{addr | to_hex }}u32 as _}, {% endfor -%}];
 {% endif %}
 {% endif %}
 {%- endfor -%}

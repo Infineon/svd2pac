@@ -30,7 +30,7 @@ pub(crate) mod sealed {
             fn cast_from(val: A) -> Self;
         }
         
-            impl CastFrom<u64> for u8 {
+    impl CastFrom<u64> for u8 {
         #[inline(always)]
         fn cast_from(val: u64) -> Self {
             val as Self

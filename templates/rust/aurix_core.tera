@@ -13,7 +13,7 @@ use crate::common::sealed;
 #[derive(Copy, Clone, Eq, PartialEq)]
 {% set peri_struct = "CsfrCpu" | to_struct_id -%}
 {% set reg_base_addr = peri.base_addr[0]  -%}
-pub struct {{ peri_struct }}(pub(super) *mut u8);
+pub struct {{ peri_struct }}{pub(super) ptr: *mut u8}
 unsafe impl core::marker::Send for CsfrCpu  {}
 unsafe impl core::marker::Sync for CsfrCpu  {}
 impl CsfrCpu {
