@@ -21,13 +21,13 @@ Unsupported register size
 #[inline(always)]
 {% if reg.dim == 1 -%}
 pub const fn {{reg.name | to_func_id }}(&self) -> crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}> {
-    unsafe { crate::common::Reg::from_ptr(self.0.add({{reg.offset}}usize)) }
+    unsafe { crate::common::Reg::from_ptr(self.ptr.add({{reg.offset}}usize)) }
 }
 {%- else -%}
 pub const fn {{reg.name | to_func_id }}(&self) -> [crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>;{{reg.dim}}] {
     unsafe {  [
     {%- for index in range(end=reg.dim) -%}
-    crate::common::Reg::from_ptr(self.0.add({{reg.offset | to_hex }}usize + {{index * reg.dim_increment | to_hex }}usize )),
+    crate::common::Reg::from_ptr(self.ptr.add({{reg.offset | to_hex }}usize + {{index * reg.dim_increment | to_hex }}usize )),
     {% endfor -%}
     ] }
 }
@@ -143,13 +143,13 @@ pub mod {{reg_mod_name}} {
 #[inline(always)]
 {%- if cluster.dim == 1 %}
 pub fn {{cluster_func}}(self) -> {{cluster_struct_path}}{
-    unsafe {   {{cluster_struct_path}}(self.0.add({{cluster.offset}}usize)) }
+    unsafe {   {{cluster_struct_path}}{ptr:self.ptr.add({{cluster.offset}}usize)} }
 }
 {%- else %}
 pub fn {{cluster_func}}(self) -> [{{cluster_struct_path}};{{cluster.dim}}] {
     unsafe {  [
         {%- for index in range(end=cluster.dim) -%}
-        {{cluster_struct_path}}(self.0.add({{cluster.offset | to_hex}}usize + {{index*cluster.dim_increment | to_hex }}usize)),
+        {{cluster_struct_path}}{ptr:self.ptr.add({{cluster.offset | to_hex}}usize + {{index*cluster.dim_increment | to_hex }}usize)},
         {% endfor -%}
         ] }
 }
@@ -163,7 +163,7 @@ pub fn {{cluster_func}}(self) -> [{{cluster_struct_path}};{{cluster.dim}}] {
 {%- set cluster_mod = cluster.struct_id | to_mod_id -%}
 #[doc = "{{cluster.description | svd_description_to_doc}}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
-pub struct {{ cluster_struct }}(pub(crate) *mut u8);
+pub struct {{ cluster_struct }}{pub(crate) ptr: *mut u8}
 unsafe impl ::core::marker::Send for {{ cluster_struct}} {}
 unsafe impl ::core::marker::Sync for {{ cluster_struct }} {}
 impl {{cluster_struct}} {
