@@ -924,6 +924,33 @@
 				</cluster>
 			</registers>
 		</peripheral>
+		<peripheral>
+			<name>P33</name>
+			<description>Port naming peripheral struct and peripheral const are the same</description>
+			<baseAddress>0x70100000</baseAddress>
+			<access>read-write</access>
+			<addressBlock>
+				<offset>0</offset>
+				<size>0x2000</size>
+				<usage>registers</usage>
+			</addressBlock>
+			<registers>
+				<cluster>
+					<name>I2C2</name>
+					<description>Cluster that defines the base type</description>
+					<headerStructName/>
+					<addressOffset>0x0</addressOffset>
+					<register>
+						<name>Reg1</name>
+						<addressOffset>0x00</addressOffset>
+					</register>
+					<register>
+						<name>Reg2</name>
+						<addressOffset>0x4</addressOffset>
+					</register>
+				</cluster>
+			</registers>
+		</peripheral>
 	</peripherals>
 	<vendorExtensions>
 		<aurixCSFR>
