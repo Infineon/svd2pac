@@ -12,7 +12,6 @@ use linked_hash_map::LinkedHashMap;
 use log::{debug, error, warn};
 use svd2temp::*;
 use svd_parser::svd;
-use svd_parser::svd::Name;
 
 trait RegisterHelper {
     /// Get name of register considering the presence of alternate group
@@ -97,44 +96,76 @@ impl Visitor {
         self.device.name.clone_from(&device.name);
         self.device.description.clone_from(&device.description);
 
-        for peripheral in device.peripherals.iter() {
-            let name = peripheral.name().to_internal_ident();
-            let mut peripheral_mod = PeripheralMod {
-                name: name.clone(),
-                ..Default::default()
-            };
-            self.push_current_item_svd_path(peripheral);
-            self.visit_peripheral(peripheral, &mut peripheral_mod);
-            let peripheral_mod = Rc::new(RefCell::new(peripheral_mod));
+        for svd_peripheral in device.peripherals.iter() {
+            let derived_peripheral: Option<PeripheralMod> =
+                if let Some(derived_ref) = &svd_peripheral.derived_from {
+                    if let Some(ref_item) = self.svd_ref_to_ir_item.get(derived_ref) {
+                        if let DeviceItem::Peripheral(ref_peripheral) = ref_item {
+                            Some(ref_peripheral.borrow().clone())
+                        } else {
+                            panic!(
+                                "reference {:} in {:} doesn't point to a peripheral",
+                                derived_ref, svd_peripheral.name
+                            )
+                        }
+                    } else {
+                        panic!(
+                            "Missing reference {:} in {:}",
+                            derived_ref, svd_peripheral.name
+                        );
+                    }
+                } else {
+                    None
+                };
+
+            // Push the peripheral svd and ir path in corresponding FIFO stack
+            self.push_current_item_svd_path(svd_peripheral);
+            // If derivedFrom point to some peripheral get a clone of this peripheral
+            // other wise create a new one
+            let mut peripheral = derived_peripheral
+                .as_ref()
+                .map_or_else(PeripheralMod::default, |x| x.clone());
+            // Update the peripheral_mod with data from svd::peripheral
+            self.visit_peripheral(svd_peripheral, &mut peripheral);
+
+            let name = peripheral.name.clone();
+
+            peripheral.is_derived_from = derived_peripheral
+                .is_some_and(|derived_peri| peripheral.has_same_type(&derived_peri));
+            let peripheral_mod = Rc::new(RefCell::new(peripheral));
             self.device
                 .peripheral_mod
                 .insert(name, peripheral_mod.clone());
-
-            self.svd_ref_to_ir_item.insert(
-                peripheral.name().to_string(),
-                DeviceItem::Peripheral(peripheral_mod.clone()),
-            );
+            // Pop out the paths and the just updated peripheral in svd to it index
             self.pop_current_item_svd_path(DeviceItem::Peripheral(peripheral_mod));
         }
     }
     fn visit_peripheral(
         &mut self,
-        peripheral: &svd::Peripheral,
-        target_peripheral: &mut PeripheralMod,
+        svd_peripheral: &svd::Peripheral,
+        peripheral: &mut PeripheralMod,
     ) {
-        /*I don't generate any type if the peripheral has derivedFrom attribute.
-        Overriding of peripheral content is not supported*/
-        assert!(
-            peripheral.derived_from.is_none(),
-            "derived_from is not supported in peripherals"
-        );
-        debug!("Parsing peripheral: {}", &target_peripheral.name);
+        debug!("Parsing peripheral: {}", &svd_peripheral.name);
+        peripheral.name = svd_peripheral.name.to_internal_ident();
+        peripheral.description = svd_peripheral.description.clone().unwrap_or_default();
 
-        let (dim, dim_increment) = get_dim_dim_increment(peripheral);
-        target_peripheral.base_addr = (0..dim)
-            .map(|index| peripheral.base_address + (index * dim_increment) as u64)
+        if let Some(header_struct) = &svd_peripheral.header_struct_name {
+            // defined headerStructName has priority for struct ide definition.
+            peripheral.struct_id = header_struct.to_sanitized_struct_ident()
+        } else if peripheral.struct_id.is_empty() {
+            // If the peripheral has no parent create Rust struct id
+            peripheral.struct_id = svd_peripheral.name.to_sanitized_struct_ident();
+        }
+
+        if peripheral.module_id.is_empty() {
+            peripheral.module_id = svd_peripheral.name.to_sanitized_mod_ident();
+        }
+
+        let (dim, dim_increment) = get_dim_dim_increment(svd_peripheral);
+        peripheral.base_addr = (0..dim)
+            .map(|index| svd_peripheral.base_address + (index * dim_increment) as u64)
             .collect();
-        target_peripheral.interrupts = peripheral
+        peripheral.interrupts = svd_peripheral
             .interrupt
             .iter()
             .map(|x| Interrupt {
@@ -146,17 +177,21 @@ impl Visitor {
                     .map_or_else(String::new, |x| x.clone()),
             })
             .collect();
-        target_peripheral.description = peripheral.description.clone().unwrap_or_default();
 
-        for cluster_register in peripheral.registers.as_ref().unwrap_or(&Vec::new()) {
+        for cluster_register in svd_peripheral.registers.as_ref().unwrap_or(&Vec::new()) {
             self.visit_cluster_register(
                 cluster_register,
-                PeripheralClusterE::Peripheral(target_peripheral),
+                PeripheralClusterE::Peripheral(peripheral),
             );
         }
     }
 
     fn visit_register(&mut self, reg: &svd::Register, register: &mut Register) {
+        //TODO Review this call. If alternate_group is used
+        // inheritance resolver will not work
+        //TODO It is not clear what is happen with inheritance.
+        // In derivedFrom, shall I refer to a register in alterante group with name prefixed ?
+        // need reverse engineering of svd_conv.
         register.name = reg.get_name_id_internal();
         register.description = reg.description.clone().unwrap_or_default();
         register.offset = reg.address_offset;

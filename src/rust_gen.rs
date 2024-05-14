@@ -429,7 +429,13 @@ fn generate_peripheral_module(
     destination_folder: &Path,
 ) -> anyhow::Result<()> {
     // Generate one module for each peripheral
-    for (peri_name, peri) in &ir.device.peripheral_mod {
+    for (_, peri) in &ir.device.peripheral_mod {
+        // No need to generate a module if the peripheral is derived
+        let borrowed_peri = peri.borrow();
+        if borrowed_peri.is_derived_from {
+            continue;
+        }
+        let module_name = borrowed_peri.module_id.clone();
         let mut context = tera::Context::new();
         context.insert("peri", peri);
         context.insert("ir", &ir);
@@ -437,7 +443,7 @@ fn generate_peripheral_module(
             tera,
             template_name,
             &context,
-            &destination_folder.join(format!("src/{}.rs", peri_name.to_lowercase())),
+            &destination_folder.join(format!("src/{}.rs", module_name)),
         )
         .context("Failed generation of code")?;
     }

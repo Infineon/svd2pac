@@ -150,10 +150,11 @@ pub struct PeripheralMod {
     pub registers: LinkedHashMap<String, Rc<RefCell<Register>>>,
     pub base_addr: Vec<u64>,
     pub interrupts: Vec<Interrupt>,
-    // pub is_derived_from: bool,
-    // /// Struct identifier of the peripheral.
-    // /// It can be different from cluster name in case derivedFrom and/or headerStructName are used
-    // pub struct_id: String,
+    pub is_derived_from: bool,
+    // Struct identifier of the peripheral.
+    pub struct_id: String,
+    // It could be different from name lower case if derived_from is used.
+    pub module_id: String,
 }
 
 /// Represents a part of a fully qualified path name for registers.

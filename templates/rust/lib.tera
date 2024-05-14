@@ -22,6 +22,7 @@ pub mod reg_name;
 pub mod tracing;
 {% endif %} {# tracing #}
 {% for peri_mod_name, peri in ir.device.peripheral_mod -%}
+{%- if peri.is_derived_from %} {% continue %} {% endif %} {# module that are derived doesn't have a module #}
 {%- set module_name = peri.name | to_mod_id -%}
 #[cfg(feature = "{{module_name}}")]
 pub mod {{module_name}};

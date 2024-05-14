@@ -36,8 +36,8 @@
 //!
 //! # Limitations
 //!
-//! * Inheritance via `derivedFrom` attribute is supported only in `cluster` and register declaration and requires.
-//! in case that parent is an element of an array only the first element is supported.
+//! * Inheritance via `derivedFrom` attribute is presently not supported for bitfields declaration.
+//! Moreover in case that parent is an element of an array only the first element is supported.
 //! * `resetMask` tag is ignored
 //! * `protection` tag is ignored
 //! * `writeConstraint` tag is ignored

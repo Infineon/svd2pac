@@ -951,6 +951,11 @@
 				</cluster>
 			</registers>
 		</peripheral>
+		<peripheral derivedFrom="P33">
+			<name>DerivedPeripheral</name>
+			<description>DerivedPeripheral</description>
+			<baseAddress>0x70200000</baseAddress>
+		</peripheral>
 	</peripherals>
 	<vendorExtensions>
 		<aurixCSFR>
