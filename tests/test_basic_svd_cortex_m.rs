@@ -3,7 +3,7 @@ mod common;
 use common::*;
 use fs_extra::dir::CopyOptions;
 use std::env;
-use svd2pac::main;
+use svd2pac::main_parse_arguments;
 
 /// Test generic target code generation.
 #[test]
@@ -26,7 +26,7 @@ fn compile_generated_cortex_m() {
         xml_path,
         generated_pack_folder.to_str().unwrap(),
     ];
-    main(args);
+    main_parse_arguments(args);
 
     let license_path = generated_pack_folder.join("LICENSE.txt");
     assert!(license_path.exists(), "Not found LICENSE.txt");

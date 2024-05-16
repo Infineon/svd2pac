@@ -1,43 +1,32 @@
 //! Tool to generate Peripheral Access Crates from SVD files
 //!
-//! # Why another PAC generator ?
+//! This tool has a very different approach compared to `svd2rust` because the requirement are different and are quite similar to [chiptool](https://github.com/embassy-rs/chiptool).
 //!
-//! This tool has a very different approach compared to `svd2rust` and it is inspired by [chiptool](https://github.com/embassy-rs/chiptool).
+//! ## Major Requirements
 //!
-//! ## Motivation
-//!
-//! - Register access should be unsafe because we consider it as C FFI and many times theres HW undefined behaviour that can be solved
+//! - Register access should be unsafe because we consider it as C FFI and many times theres HW undefined behavior that can be solved
 //!   only at driver level. (e.g. sometimes also the order of writing register bitfields is important.
 //!   discussion on this topic available here <https://github.com/rust-embedded/svd2rust/issues/714>).
 //! - No ownership because owned registers are an obstacle to writing low level drivers (LLD). Anyway writing
 //!   LLDs requires a lot of unsafe code and ownership makes it more complex to access registers from interrupts
 //!   and other threads. LLDs shall present safe APIs because only they can implement all logic for a safe usage of peripherals.
+//!   Moreover for many peripherals the splitting of peripheral is smaller unit is not obvious and depends on use cases.
 //! - Support [tracing](#tracing) of register accesses and additionally mocking of registers on non-embedded devices through
 //!   external libraries. This allows the execution unit tests for code that uses the generated libraries on non-embedded devices.
-//! - PAC shall have ideally 0 dependencies to any other crates.
+//! - No macros. Absence of macros make easier the debugging.
+//! - PAC shall have 0 dependencies to any other crates.
+//!    - Exception: `--target=cortex-m`. In this case the generated PAC has some dependencies in order to be usable in ARM Cortex Rust ecosystem.
+//! - Use associated constant instead of `Enum` for bitfield values so user can easily create new values.
+//!   Enumeration constrains the possible value of a bitfield but many times the SVD
+//!   enum description has missing enumeration values. There are multiple reasons:
+//!   * Too many values for documentation/SVD.
+//!   * Valid values depends on other register values or condition so user documentation writer could decided to not describe in table.
+//!   * Lazyness of user manual writer. (Sorry but it sometimes happens ;-))
 //!
-//! #  chiptool features implemented by `svd2pac`
-//!
-//! - No owned data structure -> unsafe api that can be used from any interrupts or thread.
-//! - Register values are represented by structs. No write to register when updating a bitfield.
-//! - Enumerated values are represented with a struct + associated constants.
-//! - Essentially same API to access registers that chiptool uses.
-//! - Logging of register accesses.
-//!
-//! # Major differences to chiptool
-//!
-//! - Support for modify atomic assembly instruction (only Aurix).
-//! - Bitfields are structs with setters and getters. This prevents naming conflicts with bitfield names like `set_xxx`.
-//! - Bitfield setters consume the register struct and support a fluent api. Lower coding in closure.
-//! - Support for the "Cluster" tag in SVD files.
-//! - Support also for 8,16,64 bit size registers.
-//! - Avoid long type and bitfield names (chiptool concatenates identifiers) by generating modules for registers and svd clusters.
-//! - No support for SVD transformation.
-//!
-//! # Limitations
+//! # Known Limitations
 //!
 //! * Inheritance via `derivedFrom` attribute is presently not supported for bitfields declaration.
-//! Moreover in case that parent is an element of an array only the first element is supported.
+//!   Moreover in case that parent is an element of an array only the first element is supported.
 //! * `resetMask` tag is ignored
 //! * `protection` tag is ignored
 //! * `writeConstraint` tag is ignored
@@ -57,7 +46,6 @@
 //! ```bash
 //! rustup component add rustfmt
 //! ```
-//!
 //!
 //! # How to use the tool
 //!
@@ -407,6 +395,9 @@
 //! println!("{regs_at_c0ffee:?}");
 //! ```
 //!
+//! # How to use in your `build.rs`
+//!
+//! It is possible generate the PAC during application build using [`main`] or [`main_parse_arguments`]
 //!
 //! # Running tests
 //!
@@ -454,35 +445,35 @@ pub enum Target {
 
 /// Generate peripheral access crate from SVD file
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
+#[command(author, version=env!("CARGO_PKG_VERSION"), about="Tool to generate peripheral access crate from SVD file", long_about = None)]
+pub struct Args {
     /// Disable formatting of generated code using rustfmt mainly for debugging
     #[arg(long,value_parser=clap::value_parser!(bool),default_value_t=false)]
-    disable_rust_fmt: bool,
+    pub disable_rust_fmt: bool,
     /// Register description file
     #[arg(value_parser=clap::value_parser!(PathBuf))]
-    register_description_file_name: PathBuf,
+    pub register_description_file_name: PathBuf,
     /// Destination folder of package
     #[arg(value_parser=clap::value_parser!(PathBuf))]
-    destination_folder: PathBuf,
+    pub destination_folder: PathBuf,
     //SVD validation level
     #[arg(long,value_enum,default_value_t=SvdValidationLevel::Weak)]
-    svd_validation_level: SvdValidationLevel,
+    pub svd_validation_level: SvdValidationLevel,
     /// Architecture target of the PAC.
     #[arg(long,value_enum,default_value_t=Target::Generic)]
-    target: Target,
+    pub target: Target,
     /// Enable the generation of a PAC with the tracing interface.
     #[arg(long,value_parser=clap::value_parser!(bool),default_value_t=false)]
-    tracing: bool,
+    pub tracing: bool,
     /// Define package name in toml. Default is name stored in register description file
     #[arg(long,value_parser=clap::value_parser!(String),default_value=None)]
-    package_name: Option<String>,
+    pub package_name: Option<String>,
     /// Specify a license file whose content is used instead of one defined in SVD.
     #[arg(long,value_parser=clap::value_parser!(PathBuf),default_value=None)]
-    license_file: Option<PathBuf>,
+    pub license_file: Option<PathBuf>,
 }
 
-/// Main function that parses command line parameters.
+/// Main function that parses command line parameters after parsing it invoking [`main`]
 ///
 /// # Arguments
 ///
@@ -492,13 +483,19 @@ struct Args {
 ///
 /// ```ignore
 /// let args = ["", "./test_svd/simple.xml", "./generated_code"];
-/// main(args);
+/// main_parse_arguments(args);
 /// ```
-pub fn main<I, T>(args: I)
+
+pub fn main_parse_arguments<I, T>(args: I)
 where
     I: IntoIterator<Item = T>,
     T: Into<OsString> + Clone,
 {
+    self::main(Args::parse_from(args));
+}
+
+/// Convert SVD file to PAC
+pub fn main(args: Args) {
     // Use
     let env = Env::default()
         .filter_or("PAL_LOG_LEVEL", "info")
@@ -509,7 +506,7 @@ where
     if let Err(error) = env_logger::try_init_from_env(env) {
         warn!("{}", error);
     }
-    let args = Args::parse_from(args);
+
     info!(
         "Reading register description file {}",
         args.register_description_file_name.to_str().unwrap()

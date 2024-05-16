@@ -3,7 +3,7 @@ use common::*;
 use fs_extra::dir::CopyOptions;
 use std::fs;
 use std::{env, path::Path};
-use svd2pac::main;
+use svd2pac::main_parse_arguments;
 use toml_edit::{array, value, Array, Document, Table};
 
 /// Test generic target code generation.
@@ -14,7 +14,7 @@ fn compile_generated_generic() {
     // Temp folder that should be deleted in case of test success.
     let generated_code_folder = tempfile::tempdir_in(env::current_dir().unwrap()).unwrap();
     let args = ["", xml_path, generated_code_folder.path().to_str().unwrap()];
-    main(args);
+    main_parse_arguments(args);
 
     //Patch toml and add required files.
     let old_toml = fs::read_to_string(Path::new(&generated_code_folder.path().join("Cargo.toml")))
@@ -66,7 +66,7 @@ fn test_license_text_option() {
         "--license-file",
         "./tests/resources/LICENSE.txt",
     ];
-    main(args);
+    main_parse_arguments(args);
     let license_path = generated_code_folder.path().join("LICENSE.txt");
     assert!(license_path.exists(), "Not found LICENSE.txt");
     assert_files_eq("./tests/resources/LICENSE.txt", license_path);
