@@ -57,6 +57,39 @@ pub const fn {{reg.name~index| to_func_id }}(&self)-> crate::common::RegCore<{{r
 {%- endmacro -%}
 
 
+{# Generated core cluster unrolled into register function #}
+{%- macro cluster_register_core_func(types_mod,reg,base_addr,cluster_index,cluster) -%}
+{%- set reg_struct = cluster.name~"_"~reg.name | to_struct_id -%}
+{%- set reg_struct_name = types_mod ~ "::" ~  reg_struct  -%}
+{%- set reg_addr = base_addr+reg.offset | to_hex -%}
+#[doc = r"{{reg.description | svd_description_to_doc}}"]
+#[inline(always)]
+{% if reg.dim == 1 -%}
+{% if cluster.dim == 1 -%}
+pub const fn {{cluster.name~"_"~reg.name| to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{reg_addr}}> {
+    unsafe { crate::common::RegCore::new() }
+}
+{%- else -%}
+pub const fn {{cluster.name~"_"~reg.name~cluster_index| to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{reg_addr}}> {
+    unsafe { crate::common::RegCore::new() }
+}
+{%- endif -%}
+{%- else -%}
+{%- for reg_index in range(end=reg.dim) -%}
+{% if cluster.dim == 1 -%}
+pub const fn {{cluster.name~"_"~reg.name~reg_index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{base_addr+reg.offset+reg_index*reg.dim_increment | to_hex }}> {
+    unsafe { crate::common::RegCore::new() }
+}
+{%- else -%}
+pub const fn {{cluster.name~"_"~reg.name~"_"~cluster_index~"_"~reg_index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{base_addr+reg.offset+reg_index*reg.dim_increment | to_hex }}> {
+    unsafe { crate::common::RegCore::new() }
+}
+{%- endif -%}
+{% endfor -%}
+{%- endif -%}
+{%- endmacro -%}
+
+
 {%- macro bitfield_type(field,reg_struct_name,reg_mod_name,turbofish) -%}
 {%-if turbofish %}{%set separator = "::"%}{%else%}{%set separator = ""%}{%endif-%}
 {%- if not field.enum_type and field.mask == 1 %}
@@ -73,9 +106,10 @@ pub const fn {{reg.name~index| to_func_id }}(&self)-> crate::common::RegCore<{{r
 {%- endmacro -%}
 
 
-{%- macro register_struct(reg) -%}
-{%- set reg_struct_name = reg.name | to_struct_id -%}
-{%- set reg_mod_name = reg.name | to_mod_id -%}
+{%- macro register_struct(reg_name,reg) -%}
+{%- set reg_struct_name = reg_name | to_struct_id -%}
+{%- set reg_mod_name = reg_name | to_mod_id -%}
+
 
 #[doc(hidden)]
 #[derive(Copy, Clone,Eq, PartialEq)]
@@ -156,6 +190,7 @@ pub fn {{cluster_func}}(self) -> [{{cluster_struct_path}};{{cluster.dim}}] {
 {%- endif -%}
 {%- endmacro -%}
 
+
 {# Macro to generate structure and module for a cluster#}
 {%- macro cluster_struct(cluster) -%}
 {%- if not cluster.is_derived_from -%}
@@ -178,11 +213,32 @@ pub mod {{cluster_mod}} {
     #[allow(unused_imports)]
     use crate::common::{*};
     {% for register_name,reg in cluster.registers -%}
-    {{self::register_struct(reg=reg)}}
+    {{self::register_struct(reg_name=reg.name,reg=reg)}}
     {% endfor -%}
     {% for cluster_name,cluster in cluster.clusters -%}
     {{self::cluster_struct(cluster=cluster) }}
     {% endfor -%}
 }
 {%- endif -%} {# if not cluster.is_derived_from #}
+{%- endmacro -%}
+
+
+{# Unroll the cluster register for aurix csfr #}
+{%- macro cluster_func_csfr(types_mod,cluster, base_addr) -%}
+{%- set cluster_struct_id = cluster.name | to_struct_id -%}
+{%- set cluster_base_addr = base_addr+cluster.offset -%}
+#[doc = "{{cluster.description | svd_description_to_doc}}"]
+#[inline(always)]
+{%- if cluster.dim == 1 %}
+{% for register_name,reg in cluster.registers -%}
+{{self::cluster_register_core_func(types_mod="self",reg=reg, base_addr=cluster_base_addr,cluster_index=0,cluster=cluster)}}
+{% endfor -%}
+{%- else %}
+{%- for index in range(end=cluster.dim) -%}
+{%- set current_cluster_addr = cluster_base_addr+index*cluster.dim_increment -%}
+{% for register_name,reg in cluster.registers -%}
+{{self::cluster_register_core_func(types_mod="self",reg=reg, base_addr=current_cluster_addr,cluster_index=index,cluster=cluster)}}
+{% endfor -%}
+{% endfor -%}
+{%- endif -%}
 {%- endmacro -%}
