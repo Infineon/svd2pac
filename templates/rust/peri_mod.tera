@@ -22,7 +22,7 @@ impl super::{{ peri_struct }} {
 {% endfor %}
 }
 {% for register_name,reg in peri.registers -%}
-{{macros::register_struct(reg=reg)}}
+{{macros::register_struct(reg_name=reg.name,reg=reg)}}
 {% endfor %}
 {% for cluster_name,cluster in peri.clusters -%}
 {{macros::cluster_struct(cluster=cluster)}}

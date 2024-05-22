@@ -10,25 +10,27 @@ use crate::common::{*};
 #[allow(unused_imports)]
 use crate::common::sealed;
 #[doc = r"{{peri.description | svd_description_to_doc}}"]
-#[derive(Copy, Clone, Eq, PartialEq)]
 {% set peri_struct = "CsfrCpu" | to_struct_id -%}
-{% set reg_base_addr = peri.base_addr[0]  -%}
-pub struct {{ peri_struct }}{pub(super) ptr: *mut u8}
-unsafe impl core::marker::Send for CsfrCpu  {}
-unsafe impl core::marker::Sync for CsfrCpu  {}
-impl CsfrCpu {
+{% set peri_base_addr = peri.base_addr[0]  -%}
+unsafe impl core::marker::Send for super::CsfrCpu  {}
+unsafe impl core::marker::Sync for super::CsfrCpu  {}
+impl super::CsfrCpu {
 {%- for register_name,reg in peri.registers %}
-{{macros::register_core_func(types_mod="self",reg=reg, base_addr=reg_base_addr)}}
+{{macros::register_core_func(types_mod="self",reg=reg, base_addr=peri_base_addr)}}
 {% endfor -%}
 {% for cluster_name,cluster in peri.clusters -%}
-{{macros::cluster_func(types_mod="self",cluster=cluster)}}
+{{macros::cluster_func_csfr(types_mod="self",cluster=cluster, base_addr=peri_base_addr)}}
 {% endfor %}
+
 }
 {% for register_name,reg in peri.registers -%}
-{{macros::register_struct(reg=reg)}}
+{{macros::register_struct(reg_name=reg.name,reg=reg)}}
 {% endfor %}
 {% for cluster_name,cluster in peri.clusters -%}
-{{macros::cluster_struct(cluster=cluster)}}
+{% for register_name,reg in cluster.registers -%}
+{% set cluster_reg_name = cluster.name~"_"~reg.name  -%}
+{{macros::register_struct(reg_name=cluster_reg_name,reg=reg)}}
+{% endfor %}
 {% endfor %}
 
 
