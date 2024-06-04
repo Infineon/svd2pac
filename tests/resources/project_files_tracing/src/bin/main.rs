@@ -1,4 +1,4 @@
-use arm_example::{timer::bitfield_reg, tracing, *};
+use test_pac::{timer::bitfield_reg, tracing, *};
 fn read_fn(addr: usize, len: usize) -> u64 {
     println!("r addr=0x{:X}\tlen={:?}", addr, len);
     0x0

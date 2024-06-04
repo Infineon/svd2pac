@@ -1,5 +1,4 @@
-use arm_example::timer;
-use arm_example::*;
+use test_pac::*;
 fn main() -> ! {
     unsafe {
         // Verbose read modify

@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use arm_example::{timer::bitfield_reg, *};
+use test_pac::{timer::bitfield_reg, *};
 use tc162_rt::entry;
 entry!(main);
 fn main() -> ! {
