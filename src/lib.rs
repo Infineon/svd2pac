@@ -163,7 +163,7 @@
 //! The closure must modify the passed value and return the value to be written.
 //!
 //! ```rust,ignore
-//! use test_pac::{timer, TIMER}
+//! use test_pac::{timer, TIMER};
 //!
 //! // read `BITFIELD_REG` register, set `BoolRw` to true, `BitfieldRw` to 0x3,
 //! // then write back to register
@@ -198,7 +198,7 @@
 //! register read/write.
 //!
 //! ```rust,ignore
-//! use test_pac::{timer, TIMER}
+//! use test_pac::{timer, TIMER};
 //!
 //! // start with default value, configure some stuff and write to
 //! // register.
@@ -228,7 +228,7 @@
 //! the return value of the closure to the register.
 //!
 //! ```rust,ignore
-//! use test_pac::{timer, TIMER}
+//! use test_pac::{timer, TIMER};
 //!
 //! // do some initializations, write `BoolW` and `BoolRW` with given values,
 //! // write others with defaults
@@ -265,7 +265,7 @@
 //!
 //! ```rust,ignore
 //! // get register value as integer value
-//! let to_log:u32 = unsafe { TIMER.sr().read().get_raw() };
+//! let to_log = unsafe { TIMER.sr().read().get_raw() };
 //!
 //! // write register with integer value, e.g. read from table
 //! unsafe { TIMER.bitfield_reg().modify(|r| r.set_raw(0x1234)) };
@@ -277,9 +277,10 @@
 //! the transaction. Therefore it affects the other masters on the bus.
 //!
 //! ```rust,ignore
+//! use test_pac::{timer, TIMER};
 //! TIMER.bitfield_reg().modify_atomic(|f| {
 //!     f.bitfieldenumerated()
-//!         .set(bitfield_reg::BitfieldEnumerated::GPIOA_0)
+//!         .set(timer::bitfield_reg::BitfieldEnumerated::GPIOA_0)
 //!         .bitfieldw()
 //!         .set(3)
 //! });
@@ -291,6 +292,7 @@
 //! SVD arrays of peripherals are modeled using Rust arrays.
 //!
 //! ```rust,ignore
+//! use test_pac::{UART,uart};
 //! for peri in UART {
 //!     unsafe {
 //!         peri.reg16bitenum().modify(|r| {
@@ -305,11 +307,12 @@
 //! Arrays of registers are modeled as an array of register structs in the module.
 //!
 //! ```rust,ignore
+//! use test_pac::*;
 //! let reg_array = TIMER.arrayreg();
 //! for reg in reg_array {
-//!     let reg_val = unsafe { r.read() };
+//!     let reg_val = unsafe { reg.read() };
 //!     let old_val = reg_val.get();
-//!     unsafe { r.write(reg_val.set(old_val + 1)) };
+//!     unsafe { reg.write(reg_val.set(old_val + 1)) };
 //! }
 //! ```
 //!
@@ -319,7 +322,7 @@
 //! ```rust,ignore
 //!  let mut reg_value = unsafe { TIMER.bitfield_reg().read() };
 //!  for x in 0..2 {
-//!     reg_value = reg_value.fieldarray(x).set(bitfield_reg::FieldArray::FALLING);
+//!     reg_value = reg_value.fieldarray(x).set(timer::bitfield_reg::FieldArray::FALLING);
 //!  }
 //!  unsafe { TIMER.bitfield_reg().write(reg_value) };
 //! ```
@@ -330,18 +333,24 @@
 //! as the `From` trait implementation is available for the bitfield structure.
 //!
 //! ```rust,ignore
-//! TIMER.bitfield_reg().modify(|f| {
-//!     f.bitfieldenumerated()
-//!         .set(0.into())
-//! });
+//! use test_pac::{timer, TIMER};
+//! unsafe {
+//!     TIMER.bitfield_reg().modify(|f| {
+//!         f.bitfieldenumerated()
+//!             .set(0.into())
+//!     });
+//! }
 //! ```
 //!
 //! ### Get mask and offset of a bitfield
 //! It is possible to get mask and offset of a single bitfield using `mask` and `offset`. The returned mask is aligned to the LSB and not shifted (i.e. a 3-bit wide field has a mask of `0x7`, independent of position of the field).
 //! ```rust,ignore
-//!  let register_bitfield = TIMER.bitfield_reg().read().bitfieldr();
-//!  let _offset = register_bitfield.offset();
-//!  let _mask = register_bitfield.mask();
+//!  use test_pac::{timer, TIMER};
+//!  unsafe { 
+//!     let register_bitfield = TIMER.bitfield_reg().read().bitfieldr();
+//!     let _offset = register_bitfield.offset();
+//!     let _mask = register_bitfield.mask();
+//! }
 //! ```
 //!
 //! # Tracing feature

@@ -4,7 +4,7 @@ use common::*;
 use fs_extra::dir::CopyOptions;
 use std::fs;
 use std::{env, path::Path};
-use svd2pac::main;
+use svd2pac::main_parse_arguments;
 use toml_edit::{array, value, Array, Document, Table};
 
 /// This test requires Aurix Rust compiler pre-installed
@@ -21,7 +21,7 @@ fn compile_generated_aurix() {
         xml_path,
         generated_code_folder.path().to_str().unwrap(),
     ];
-    main(args);
+    main_parse_arguments(args);
     //Patch toml and add required files.
     let old_toml = fs::read_to_string(Path::new(&generated_code_folder.path().join("Cargo.toml")))
         .expect("Unable to read toml file");
@@ -75,7 +75,7 @@ fn compile_generated_aurix_tracing() {
         xml_path,
         generated_code_folder.path().to_str().unwrap(),
     ];
-    main(args);
+    main_parse_arguments(args);
 
     //Patch toml and add required files.
     let old_toml = fs::read_to_string(Path::new(&generated_code_folder.path().join("Cargo.toml")))

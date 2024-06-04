@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
 members = [
-    "arm_example",
+    "test_pac",
     "cortex_test"
 ]

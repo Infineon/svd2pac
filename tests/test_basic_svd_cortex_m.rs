@@ -19,7 +19,7 @@ fn compile_generated_cortex_m() {
     )
     .expect("Failed to copy required files to build cargo project");
 
-    let generated_pack_folder = workspace_folder.path().join("arm_example");
+    let generated_pack_folder = workspace_folder.path().join("test_pac");
     let args = [
         "",
         "--target=cortex-m",
