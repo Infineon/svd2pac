@@ -1,14 +1,13 @@
 use svd_parser::svd;
 
-
 pub trait ExpandedName: svd_parser::svd::Name {
     /// Generate an identifier that can be used in derivedFrom tags
     /// CMSIS svd.xsd specification is not consisted with svdconv.exe.
-    /// In xsd file derivedFrom is of type dimableIdentifierType and 
+    /// In xsd file derivedFrom is of type dimableIdentifierType and
     /// this means that we can use the name of an array including the index placeholder.
     /// This is not supported by svdconv.exe. svdconv.exe want to have name of register after array unrolling.
     /// This function shall return the name of first element after array unrolling
-    /// If the element is not an array it return just a clone of the name. 
+    /// If the element is not an array it return just a clone of the name.
     fn get_expanded_name(&self) -> String;
 }
 

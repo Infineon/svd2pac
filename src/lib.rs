@@ -346,7 +346,7 @@
 //! It is possible to get mask and offset of a single bitfield using `mask` and `offset`. The returned mask is aligned to the LSB and not shifted (i.e. a 3-bit wide field has a mask of `0x7`, independent of position of the field).
 //! ```rust,ignore
 //!  use test_pac::{timer, TIMER};
-//!  unsafe { 
+//!  unsafe {
 //!     let register_bitfield = TIMER.bitfield_reg().read().bitfieldr();
 //!     let _offset = register_bitfield.offset();
 //!     let _mask = register_bitfield.mask();
