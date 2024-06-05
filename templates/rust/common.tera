@@ -115,18 +115,55 @@ pub struct RegValueT<Reg: sealed::RegSpec> {
 }
 
 pub trait RegisterValue<T: RegSpec> {
+    /// Create a register value that could be written to a register from raw integer
+    ///
+    /// ```rust, ignore
+    /// // example with generic names
+    /// // needs: use test_pac::{timer, RegisterValue, TIMER}
+    /// let to_write = timer::BitfieldReg::new(0xdeadbeef);
+    /// TIMER.bitfield_reg().write(to_write);
+    /// let to_write = to_write.boolw().set(true);
+    /// TIMER.bitfield_reg().write(to_write);
+    /// ```
     #[must_use]
     fn new(data: T::DataType) -> Self;
-    /// Get raw register value
+
+    /// Get raw integer from value read from register
+    ///
+    /// ```rust,ignore
+    /// // example with generic names
+    /// // needs: use pac::{RegisterValue, TIMER}
+    /// let x = TIMER.bitfield_reg().read().get_raw();
+    /// ```
     #[must_use]
     fn get_raw(&self) -> T::DataType;
-    /// Return a copy with register value set to `value` and write mask fully set
+
+    /// Prepare a register value that could be written to a register with an arbitrary value
+    ///
+    /// Use this function for setting a register to a custom value, independent
+    /// of bitfields, enumerations, etc. No checks are performed on the passed
+    /// value. The whole register is updated on write.
+    ///
+    /// ```rust,ignore
+    /// // example with generic names
+    /// // needs: use pac::{RegisterValue, TIMER}
+    /// TIMER.bitfield_reg().init(|r| r.set_raw(0xdeadbeef))
+    /// ```
     #[must_use]
     fn set_raw(self, value: T::DataType) -> Self;
 }
 
 impl<T: RegSpec> RegisterValue<T> for RegValueT<T> {
-/// Create a register value from raw value
+    /// Create a register value that could be written to a register from raw integer
+    ///
+    /// ```rust, ignore
+    /// // example with generic names
+    /// // needs: use pac::{timer, RegisterValue, TIMER}
+    /// let to_write = timer::BitfieldReg::new(0xdeadbeef);
+    /// TIMER.bitfield_reg().write(to_write);
+    /// let to_write = to_write.boolw().set(true);
+    /// TIMER.bitfield_reg().write(to_write);
+    /// ```
     #[inline(always)]
     fn new(data: T::DataType) -> RegValueT<T> {
         Self {
@@ -134,12 +171,30 @@ impl<T: RegSpec> RegisterValue<T> for RegValueT<T> {
             mask: 0x0u8.into(),
         }
     }
-    /// Get raw register value
+
+    /// Get raw integer from value read from register
+    ///
+    /// ```rust,ignore
+    /// // example with generic names
+    /// // needs: use pac::{RegisterValue, TIMER}
+    /// let x = TIMER.bitfield_reg().read().get_raw();
+    /// ```
     #[inline(always)]
     fn get_raw(&self) -> T::DataType {
         self.data
     }
-    /// Return a copy with register value set to `value` and write mask fully set
+
+    /// Prepare a register value that could be written to a register with an arbitrary value
+    ///
+    /// Use this function for setting a register to a custom value, independent
+    /// of bitfields, enumerations, etc. No checks are performed on the passed
+    /// value.
+    ///
+    /// ```rust,ignore
+    /// // example with generic names
+    /// // needs: use pac::{RegisterValue, TIMER}
+    /// TIMER.bitfield_reg().init(|r| r.set_raw(0xdeadbeef))
+    /// ```
     #[inline(always)]
     fn set_raw(mut self, value: T::DataType) -> Self {
         self.data = value;
@@ -152,11 +207,26 @@ pub trait NoBitfieldReg<Reg: RegSpec>: RegisterValue<Reg>
 where
     Self: Sized,
 {
+    /// Get value read from register
+    ///
+    /// ```rust,ignore
+    /// // example with generic names
+    /// // needs: use pac::{NoBitfieldReg, TIMER}
+    /// let x = TIMER.nobitfield_reg().read().get();
+    /// ```
     #[inline(always)]
     #[must_use]
     fn get(&self) -> Reg::DataType {
         self.get_raw()
     }
+
+    /// Prepare value to be written to register
+    ///
+    /// ```rust,ignore
+    /// // example with generic names
+    /// // needs: use pac::{NoBitfieldReg, TIMER}
+    /// TIMER.nobitfield_reg().init(|r| r.set(0xc0ffee));
+    /// ```
     #[inline(always)]
     #[must_use]
     fn set(self, value: Reg::DataType) -> Self {
@@ -190,6 +260,7 @@ where
     }
     {% endif %}
 }
+
 impl<T, A> Reg<T, A>
 where
     T: RegSpec,
@@ -201,6 +272,12 @@ where
     /// Read operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
     /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
     ///
+    /// # Example
+    /// ```rust,ignore
+    /// // example with generic names
+    /// let reg = unsafe { TIMER.bitfield_reg().read() };
+    /// if reg.boolr().get() { /* ... */ }
+    /// ```
     #[inline(always)]
     #[must_use]
     pub unsafe fn read(&self) -> RegValueT<T> {
@@ -240,6 +317,22 @@ where
     /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
     /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
     ///
+    /// # Example
+    /// ```rust,ignore
+    /// // example with generic names
+    /// // write with a previously read value
+    /// let reg = unsafe { TIMER.bitfield_reg().read() };
+    /// // or start with a known value
+    /// let reg = timer::BitfieldReg::new(0).bitfieldw().set(0x55);
+    /// // or start with the register default
+    /// let reg = timer::BitfieldReg::default();
+    ///
+    /// let reg = reg.bitfieldrw().set(0x77);
+    ///
+    /// // no change has taken place to the register due to `set` calls - do that now by writing back the result
+    /// unsafe { TIMER.bitfield_reg().write(reg) }
+    /// ```
+    /// See also: [`Reg<T, A>::init`] which provides the default value to a closure
     #[inline(always)]
     pub unsafe fn write(&self, reg_value: RegValueT<T>) {
         {% if tracing %}
@@ -268,7 +361,7 @@ where
     A: Write,
 RegValueT<T>: Default,
 {
-    /// Init register with value returned by the closure.
+    /// Write register with register value built from default register value
     ///
     /// # Arguments
     ///
@@ -278,6 +371,13 @@ RegValueT<T>: Default,
     /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
     /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
     ///
+    /// # Example
+    /// ```rust,ignore
+    /// // example with generic names
+    /// TIMER
+    ///     .bitfield_reg()
+    ///     .init(|r| r.bitfieldw().set(0b1010).boolw().set(true));
+    /// ```
     #[inline(always)]
     /// Write value computed by closure that receive as input the reset value of register
     pub unsafe fn init(&self, f: impl FnOnce(RegValueT<T>) -> RegValueT<T>) {
@@ -292,17 +392,25 @@ where
     T: RegSpec,
     A: Read + Write,
 {
-    #[inline(always)]
-    /// Write register with value returned by the closure.
+    /// Read/modify/write register
     ///
     /// # Arguments
     ///
-    /// * `f` - Closure that receive as input a register value read from register.
+    /// * `f` - Closure that receive as input a register value read from register. The result of the closure
+    ///   is written back to the register.
     ///
     /// # Safety
     /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
     /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
     ///
+    /// # Example
+    /// ```rust,ignore
+    /// // example with generic names
+    /// TIMER
+    ///     .bitfield_reg()
+    ///     .modify(|r| r.boolrw().set(!r.boolrw().get()));
+    /// ```
+    #[inline(always)]
     pub unsafe fn modify(&self, f: impl FnOnce(RegValueT<T>) -> RegValueT<T>) {
         let val = self.read();
         let res = f(val);
@@ -316,8 +424,8 @@ where
     RegValueT<T>: Default,
     A: Write,
 {
-    #[inline(always)]
-    /// Write register bitfield atomically using value returned by closure.
+    /// Read/modify/write register atomically
+    ///
     /// Only the bitfield updated by closure are written back to the register.
     /// `modify_atomic` use `ldmst` assembly instruction that stall the bus until update completion.
     /// This function can be used only with 32 bits register.
@@ -329,7 +437,15 @@ where
     /// # Safety
     /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
     /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
-    ///
+    /// 
+    /// # Example
+    /// ```rust,ignore
+    /// // example with generic names
+    /// TIMER
+    ///     .bitfield_reg()
+    ///     .modify_atomic(|r| r.boolrw().set(!r.boolrw().get()));
+    /// ```
+    #[inline(always)]
     pub unsafe fn modify_atomic(&self, f: impl FnOnce(RegValueT<T>) -> RegValueT<T>) {
         let val = RegValueT::<T>::default();
         let res = f(val);
@@ -380,6 +496,12 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
     /// Function must be executed from proper core.
     /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
     ///
+    /// # Example
+    /// ```rust,ignore
+    /// // example with generic names
+    /// let id = CSFR_CPU.cpu_id().read();
+    /// if id.mod_rev().get() == 0 { /* ... */ }
+    /// ```
     #[inline(always)]
     #[must_use]
     pub unsafe fn read(&self) -> RegValueT<T>
@@ -400,6 +522,7 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
         let val: T::DataType = __mfcr::<ADDR>();
         RegValueT::<T>::new(val)
             }
+
     /// Write Aurix core register (32 bit wide) value back to register
     ///
     /// # Arguments
@@ -411,6 +534,17 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
     /// Function must be executed from proper core.
     /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
     ///
+    /// # Example
+    /// ```rust,ignore
+    /// // example with generic names
+    /// // write with value read from register earlier
+    /// let dy0 = CSFR_CPU.dy0().read().data().get() + 1;
+    /// CSFR_CPU.dy0().write(dy0);
+    /// 
+    /// // or write with new value
+    /// let dy0 = csfr_cpu0::Dy0::new(0x1234);
+    /// CSFR_CPU.dy0().write(dy0);
+    /// ```
     #[inline(always)]
     pub unsafe fn write(&self, reg_value: RegValueT<T>) 
     where
@@ -427,7 +561,8 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
         #[cfg(not(feature = "tracing"))]
         __mtcr::<ADDR>(reg_value.data);
     }
-    /// Init register with value returned by the closure.
+
+    /// Write Aurix core register (32 bit wide) with value built from default register value
     ///
     /// # Arguments
     ///
@@ -437,8 +572,12 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
     /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
     /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
     ///
+    /// # Example
+    /// ```rust,ignore
+    /// // example with generic names
+    /// CSFR_CPU.dy0().init(|r| r.data().set(0x1234_5678));
+    /// ```
     #[inline(always)]
-    /// Write value computed by closure that receive as input the reset value of register
     pub unsafe fn init(&self, f: impl FnOnce(RegValueT<T>) -> RegValueT<T>) 
     where
         A: Write,
@@ -448,8 +587,8 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
         let res = f(val);
         self.write(res);
     }
-    #[inline(always)]
-    /// Write register with value returned by the closure.
+
+    /// Read/modify/write Aurix core register (32 bit wide)
     ///
     /// # Arguments
     ///
@@ -459,6 +598,14 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
     /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
     /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
     ///
+    /// # Example
+    /// ```rust,ignore
+    /// // example with generic names
+    /// CSFR_CPU
+    ///     .dy0()
+    ///     .modify(|r| r.data().set(r.data().get() + 0x1234_5678));
+    /// ```
+    #[inline(always)]
     pub unsafe fn modify(&self, f: impl FnOnce(RegValueT<T>) -> RegValueT<T>) 
     where
         A: Read + Write,
@@ -469,6 +616,8 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
     }
 }
 {% endif %}
+
+/// Proxy struct for enumerated bitfields
 #[repr(transparent)]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct EnumBitfieldStruct<Q: RegNumberT, T>(pub Q, PhantomData<T>);
@@ -498,6 +647,8 @@ impl<Q: RegNumberT, T> From<Q> for EnumBitfieldStruct<Q, T> {
         Self(value, PhantomData)
     }
 }
+
+/// Proxy struct for numeric bitfields
 pub struct RegisterField<
     const START_OFFSET: usize,
     const MASK: u64,
@@ -538,12 +689,20 @@ where
         }
     }
 
+    /// Get mask for bitfield, the mask is unshifted and at offset 0
+    ///
+    /// Prefer the use of [`RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueType, T, A>::get()`] to
+    /// extract a bitfield value.
     #[inline(always)]
     #[must_use]
     pub fn mask(&self) -> T::DataType {
         T::DataType::cast_from(MASK)
     }
 
+    /// Get offset of bitfield in containing register
+    ///
+    /// Prefer the use of [`RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueType, T, A>::get()`] to
+    /// extract a bitfield value.
     #[inline(always)]
     #[must_use]
     pub const fn offset(&self) -> usize {
@@ -565,6 +724,7 @@ where
     A: Read,
     ValueType: CastFrom<u64>,
 {
+    /// Extract bitfield from read register value
     #[inline(always)]
     pub fn get(&self) -> ValueType {
         let offset = START_OFFSET + (self.index * DIM_INCREMENT) as usize;
@@ -587,6 +747,33 @@ where
     A: Write,
     u64: From<ValueType>,
 {
+    /// Prepare bitfield value that could be written to register
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// // example with generic names
+    /// // get an instance by reading
+    /// let values = TIMER.bitfield_reg().read();
+    /// // or by starting with a known value
+    /// let value = timer::BitfieldReg::new(0);
+    /// // or by starting with the default
+    /// let value = timer::BitfieldReg::default();
+    /// 
+    /// // set bitfields
+    /// let value = value
+    ///     // set numeric bitfield
+    ///     .bitfieldw()
+    ///     .set(0x55)
+    ///     // set enumerated bitfield with enumeration
+    ///     .bitfieldenumerated()
+    ///     .set(timer::bitfield_reg::BitfieldEnumerated::GPIOA_0)
+    ///     // set enumerated bitfield from integer
+    ///     .bitfieldenumerated()
+    ///     .set(1.into());
+    /// 
+    /// // up until now no hardware change has taken place, do that now by writing
+    /// TIMER.bitfield_reg().write(value);
+    /// ```
     #[inline(always)]
     #[must_use]
     pub fn set(mut self, value: ValueType) -> RegValueT<T> {
@@ -601,6 +788,7 @@ where
     }
 }
 
+/// Proxy struct for boolean bitfields
 pub struct RegisterFieldBool<
     const START_OFFSET: usize,
     const DIM: u8,
@@ -622,6 +810,7 @@ where
     T: RegSpec,
     A: Read,
 {
+    /// Extract bitfield from read register value
     #[inline(always)]
     pub fn get(&self) -> bool {
         let offset = START_OFFSET + (self.index * DIM_INCREMENT) as usize;
@@ -636,6 +825,26 @@ where
     T: RegSpec,
     A: Write,
 {
+    /// Prepare bitfield value to be written to register
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// // example with generic names
+    /// // get an instance by reading
+    /// let values = TIMER.bitfield_reg().read();
+    /// // or by starting with a known value
+    /// let value = timer::BitfieldReg::new(0);
+    /// // or by starting with the default
+    /// let value = timer::BitfieldReg::default();
+    /// 
+    /// // set bitfield
+    /// let value = value
+    ///     .boolrw()
+    ///     .set(true);
+    /// 
+    /// // up until now no hardware change has taken place, do that now by writing
+    /// TIMER.bitfield_reg().write(value);
+    /// ```
     #[inline(always)]
     #[must_use]
     pub fn set(mut self, value: bool) -> RegValueT<T> {
@@ -668,12 +877,21 @@ where
             marker: PhantomData,
         }
     }
+
+    /// Get mask for bitfield, the mask is unshifted and at offset 0
+    ///
+    /// Prefer the use of [`RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueType, T, A>::get()`] to
+    /// extract a bitfield value.
     #[inline(always)]
     #[must_use]
     pub fn mask(&self) -> T::DataType {
         T::DataType::cast_from(1)
     }
 
+    /// Get offset of bitfield in containing register
+    ///
+    /// Prefer the use of [`RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueType, T, A>::get()`] to
+    /// extract a bitfield value.
     #[inline(always)]
     #[must_use]
     pub const fn offset(&self) -> usize {
