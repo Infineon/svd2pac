@@ -185,6 +185,7 @@ pub struct IR {
     pub device: Device,
     pub register_addresses: LinkedHashMap<u64, Vec<Vec<PathChunk>>>,
     pub license_text: String,
+    pub version: String,
     /// Interrupt table to be created in the lib.rs. Interrupt table hole has value None
     pub interrupt_table: Vec<Option<Interrupt>>,
     /// used only for cortex m target

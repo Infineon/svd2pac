@@ -2,6 +2,8 @@
 /*
 {{ir.license_text}}
 */
+// Generated from SVD {{ir.version}}, with svd2pac {{svd2pac_version}} on {{now}}
+
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
 #![allow(clippy::derivable_impls)]

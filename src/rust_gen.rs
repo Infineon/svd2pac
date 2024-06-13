@@ -319,6 +319,7 @@ pub struct GenPkgSettings {
     pub tracing: bool,
     pub package_name: Option<String>,
     pub license_file: Option<PathBuf>,
+    pub svd2pac_version: String,
 }
 
 fn precompile_tera(tera: &mut Tera) {
@@ -368,6 +369,9 @@ fn generate_tracing_module(
     let lib_path = destination_folder.join("src/tracing.rs");
     execute_template(tera, "tracing.tera", context, &lib_path)
         .context("Failed generation of tracing.rs")?;
+
+    let svd2pac_version = context.get("svd2pac_version").unwrap().as_str();
+    let now = context.get("now").unwrap().as_str();
     // reg_name module
     //
     // # Issue
@@ -405,6 +409,8 @@ fn generate_tracing_module(
     let lib_path = destination_folder.join("src/reg_name.rs");
     context.insert("register_addresses", &ir.register_addresses);
     context.insert("ir", &ir);
+    context.insert("svd2pac_version", &svd2pac_version);
+    context.insert("now", &now);
     execute_template(tera, "reg_name.tera", &context, &lib_path)
         .context("Failed generation of reg_name.rs")?;
     Ok(())
@@ -427,6 +433,8 @@ fn generate_peripheral_module(
     ir: &ir::IR,
     template_name: &str,
     destination_folder: &Path,
+    svd2pac_version: &str,
+    now: &str,
 ) -> anyhow::Result<()> {
     // Generate one module for each peripheral
     for (_, peri) in &ir.device.peripheral_mod {
@@ -439,6 +447,8 @@ fn generate_peripheral_module(
         let mut context = tera::Context::new();
         context.insert("peri", peri);
         context.insert("ir", &ir);
+        context.insert("svd2pac_version", svd2pac_version);
+        context.insert("now", now);
         execute_template(
             tera,
             template_name,
@@ -461,6 +471,7 @@ fn generate_aurix_core_ir(
         tracing: _,
         package_name: _,
         license_file,
+        svd2pac_version: _,
     } = settings;
 
     info!("Start generating csfr rust code");
@@ -497,6 +508,7 @@ pub(crate) fn generate_rust_package(
         tracing,
         ref package_name,
         ref license_file,
+        ref svd2pac_version,
     } = settings;
 
     info!("Start generating rust code");
@@ -518,15 +530,26 @@ pub(crate) fn generate_rust_package(
         Some(ref package_name) => package_name.clone(),
     };
 
+    let now = chrono::Utc::now().to_rfc2822();
+
     let mut context = tera::Context::new();
     context.insert("ir", &ir);
     context.insert("target", &target);
     context.insert("tracing", &tracing);
     context.insert("package_name", &package_name);
     context.insert("description", "Description tests");
+    context.insert("svd2pac_version", svd2pac_version);
+    context.insert("now", &now);
 
     // Generate peripheral modules
-    generate_peripheral_module(&tera, &ir, "peri_mod.tera", destination_folder)?;
+    generate_peripheral_module(
+        &tera,
+        &ir,
+        "peri_mod.tera",
+        destination_folder,
+        svd2pac_version,
+        &now,
+    )?;
 
     //Generate common module
     generate_common_module(&tera, &ir, destination_folder, &context)?;
@@ -542,7 +565,14 @@ pub(crate) fn generate_rust_package(
 
         // Generate cpu peripheral modules
         if let Some(ref ir) = ir_csfr {
-            generate_peripheral_module(&tera, ir, "aurix_core.tera", destination_folder)?;
+            generate_peripheral_module(
+                &tera,
+                ir,
+                "aurix_core.tera",
+                destination_folder,
+                svd2pac_version,
+                &now,
+            )?;
             context.insert("ir_csfr", &ir_csfr);
         }
     }

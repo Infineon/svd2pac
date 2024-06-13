@@ -435,6 +435,8 @@ use std::ffi::OsString;
 use std::fs;
 use std::path::PathBuf;
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
 pub enum SvdValidationLevel {
     Disabled,
@@ -540,6 +542,7 @@ pub fn main(args: Args) {
             tracing: args.tracing,
             package_name: args.package_name,
             license_file: args.license_file,
+            svd2pac_version: VERSION.to_owned(),
         },
     ) {
         error!("Failed to generate code with err {}", err);

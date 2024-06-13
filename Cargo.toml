@@ -24,7 +24,7 @@ serde_json = {version = "1.0.96", features = ["preserve_order"]}
 serde = { version = "1.0.160", features = ["derive","rc"] }
 syn = "2.0.33"
 linked-hash-map = {version="0.5",features =["serde_impl"]}
-
+chrono = "0.4"
 
 [dev-dependencies]
 similar = "2.2"
