@@ -16,7 +16,8 @@ lazy-regex = "3.0"
 thiserror = "1.0.40"
 svd-parser = { version = "0.14", features = ["derive-from", "expand"] }
 tera = "1.19.0"
-clap = { version = "4.2.4", features = ["derive", "cargo"] }
+# clap is limited to to support Aurix Rust compiler 1.72 version
+clap = { version = "~4.4", features = ["derive", "cargo"] }
 log = { version = "0.4.17", features = ["std"] }
 env_logger = "0.10.0"
 convert_case = "0.6"
