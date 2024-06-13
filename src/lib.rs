@@ -510,8 +510,8 @@ where
 pub fn main(args: Args) {
     // Use
     let env = Env::default()
-        .filter_or("PAL_LOG_LEVEL", "info")
-        .write_style_or("PAL_LOG_STYLE", "always");
+        .filter_or("SVD2PAC_LOG_LEVEL", "info")
+        .write_style_or("SVD2PAC_LOG_STYLE", "always");
 
     // During test cases the logger is already initialized.
     // Just show a warn
