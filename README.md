@@ -104,6 +104,11 @@ Extra feature compared to `generic` target
 Enable with the `--tracing` cli flag.
 Generate the PAC with a non-default feature flag to allow for tracing reads/writes, [see below](#tracing-feature)
 
+### Environment variables
+
+- `SVD2PAC_LOG_LEVEL` sets the log level (see [log](https://docs.rs/log/0.4.21/log/enum.LevelFilter.html))
+- `SVD2PAC_LOG_STYLE` sets whether or not to print styles with records (see [env_logger](https://docs.rs/env_logger/latest/env_logger/fmt/enum.WriteStyle.html))
+
 ## How to use the generated code
 
 The generator outputs a complete crate into the provided folder.
