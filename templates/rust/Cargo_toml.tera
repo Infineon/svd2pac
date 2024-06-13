@@ -1,6 +1,8 @@
 {% for line in  ir.license_text | prepend_lines(prefix="# ") -%}
 {{line}}
 {% endfor -%}
+# Generated from SVD {{ir.version}}, with svd2pac {{svd2pac_version}} on {{now}}
+
 [package]
 name = "{{package_name}}"
 version = "0.0.1"

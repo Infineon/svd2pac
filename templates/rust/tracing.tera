@@ -1,6 +1,8 @@
 /*
 {{ir.license_text}}
 */
+// Generated from SVD {{ir.version}}, with svd2pac {{svd2pac_version}} on {{now}}
+
 use std::sync::OnceLock;
 
 thread_local! {
