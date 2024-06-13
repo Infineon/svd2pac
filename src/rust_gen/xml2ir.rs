@@ -593,6 +593,7 @@ pub(super) fn svd_device2ir(
         device,
         register_addresses: entity_db.register_addresses,
         license_text,
+        version: svd_device.version.clone(),
         interrupt_table,
         nvic_prio_bits: svd_device.cpu.as_ref().map(|x| x.nvic_priority_bits),
         vendor_systick_config: svd_device.cpu.as_ref().map(|x| x.has_vendor_systick),
