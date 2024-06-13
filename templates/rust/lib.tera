@@ -56,7 +56,17 @@ pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [
 {% if ir_csfr %}
 #[cfg(any(
 {%- set module_struct = "csfr_cpu" | to_struct_id -%}
-{%- set full_path_struct = "csfr_cpu" ~ "::" ~ module_struct -%}
+{%- set full_path_struct = "self::" ~ module_struct -%}
+{% for name,p in ir_csfr.device.peripheral_mod %}
+{%- set module_name = p.name | to_mod_id -%}
+{% if not loop.last %}feature = "{{module_name}}",{% else %}feature = "{{module_name}}"))]
+#[derive(Copy, Clone, Eq, PartialEq)] 
+pub struct {{ module_struct }}{ptr:*mut u8}
+{% endif %}
+{%- endfor -%}
+#[cfg(any(
+{%- set module_struct = "csfr_cpu" | to_struct_id -%}
+{%- set full_path_struct = "self::" ~ module_struct -%}
 {% for name,p in ir_csfr.device.peripheral_mod %}
 {%- set module_name = p.name | to_mod_id -%}
 {% if not loop.last %}feature = "{{module_name}}",{% else %}feature = "{{module_name}}"))]

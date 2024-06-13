@@ -1,4 +1,79 @@
 {% import "macros.tera" as macros %}
+
+{# Generated core register function #}
+{%- macro register_core_func(types_mod,reg, base_addr) -%}
+{%- set reg_struct = reg.name | to_struct_id -%}
+{%- set reg_struct_name = types_mod ~ "::" ~  reg_struct  -%}
+{%- set reg_mod_name = reg.name | to_mod_id -%}
+{%- set reg_addr = base_addr+reg.offset | to_hex -%}
+#[doc = r"{{reg.description | svd_description_to_doc}}"]
+#[inline(always)]
+{% if reg.dim == 1 -%}
+pub const fn {{reg.name | to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{reg_addr}}> {
+    unsafe { crate::common::RegCore::new() }
+}
+{%- else -%}
+{%- for index in range(end=reg.dim) -%}
+pub const fn {{reg.name~index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{base_addr+reg.offset+index*reg.dim_increment | to_hex }}> {
+    unsafe { crate::common::RegCore::new() }
+}
+{% endfor -%}
+{%- endif -%}
+{%- endmacro -%}
+
+
+{# Generated core cluster unrolled into register function #}
+{%- macro cluster_register_core_func(types_mod,reg,base_addr,cluster_index,cluster) -%}
+{%- set reg_struct = cluster.name~"_"~reg.name | to_struct_id -%}
+{%- set reg_struct_name = types_mod ~ "::" ~  reg_struct  -%}
+{%- set reg_addr = base_addr+reg.offset | to_hex -%}
+#[doc = r"{{reg.description | svd_description_to_doc}}"]
+#[inline(always)]
+{% if reg.dim == 1 -%}
+{% if cluster.dim == 1 -%}
+pub const fn {{cluster.name~"_"~reg.name| to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{reg_addr}}> {
+    unsafe { crate::common::RegCore::new() }
+}
+{%- else -%}
+pub const fn {{cluster.name~"_"~reg.name~cluster_index| to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{reg_addr}}> {
+    unsafe { crate::common::RegCore::new() }
+}
+{%- endif -%}
+{%- else -%}
+{%- for reg_index in range(end=reg.dim) -%}
+{% if cluster.dim == 1 -%}
+pub const fn {{cluster.name~"_"~reg.name~reg_index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{base_addr+reg.offset+reg_index*reg.dim_increment | to_hex }}> {
+    unsafe { crate::common::RegCore::new() }
+}
+{%- else -%}
+pub const fn {{cluster.name~"_"~reg.name~"_"~cluster_index~"_"~reg_index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{base_addr+reg.offset+reg_index*reg.dim_increment | to_hex }}> {
+    unsafe { crate::common::RegCore::new() }
+}
+{%- endif -%}
+{% endfor -%}
+{%- endif -%}
+{%- endmacro -%}
+
+{# Unroll the cluster register for aurix csfr #}
+{%- macro cluster_func_csfr(types_mod,cluster, base_addr) -%}
+{%- set cluster_struct_id = cluster.name | to_struct_id -%}
+{%- set cluster_base_addr = base_addr+cluster.offset -%}
+#[doc = "{{cluster.description | svd_description_to_doc}}"]
+#[inline(always)]
+{%- if cluster.dim == 1 %}
+{% for register_name,reg in cluster.registers -%}
+{{self::cluster_register_core_func(types_mod="self",reg=reg, base_addr=cluster_base_addr,cluster_index=0,cluster=cluster)}}
+{% endfor -%}
+{%- else %}
+{%- for index in range(end=cluster.dim) -%}
+{%- set current_cluster_addr = cluster_base_addr+index*cluster.dim_increment -%}
+{% for register_name,reg in cluster.registers -%}
+{{self::cluster_register_core_func(types_mod="self",reg=reg, base_addr=current_cluster_addr,cluster_index=index,cluster=cluster)}}
+{% endfor -%}
+{% endfor -%}
+{%- endif -%}
+{%- endmacro -%}
+
 /*
 {{ir.license_text}}
 */
@@ -10,25 +85,27 @@ use crate::common::{*};
 #[allow(unused_imports)]
 use crate::common::sealed;
 #[doc = r"{{peri.description | svd_description_to_doc}}"]
-#[derive(Copy, Clone, Eq, PartialEq)]
 {% set peri_struct = "CsfrCpu" | to_struct_id -%}
-{% set reg_base_addr = peri.base_addr[0]  -%}
-pub struct {{ peri_struct }}{pub(super) ptr: *mut u8}
-unsafe impl core::marker::Send for CsfrCpu  {}
-unsafe impl core::marker::Sync for CsfrCpu  {}
-impl CsfrCpu {
+{% set peri_base_addr = peri.base_addr[0]  -%}
+unsafe impl core::marker::Send for super::CsfrCpu  {}
+unsafe impl core::marker::Sync for super::CsfrCpu  {}
+impl super::CsfrCpu {
 {%- for register_name,reg in peri.registers %}
-{{macros::register_core_func(types_mod="self",reg=reg, base_addr=reg_base_addr)}}
+{{self::register_core_func(types_mod="self",reg=reg, base_addr=peri_base_addr)}}
 {% endfor -%}
 {% for cluster_name,cluster in peri.clusters -%}
-{{macros::cluster_func(types_mod="self",cluster=cluster)}}
+{{self::cluster_func_csfr(types_mod="self",cluster=cluster, base_addr=peri_base_addr)}}
 {% endfor %}
+
 }
 {% for register_name,reg in peri.registers -%}
 {{macros::register_struct(reg=reg)}}
 {% endfor %}
 {% for cluster_name,cluster in peri.clusters -%}
-{{macros::cluster_struct(cluster=cluster)}}
+{% for register_name,reg in cluster.registers -%}
+{% set cluster_reg_name = cluster.name~"_"~reg.name  -%}
+{{macros::register_struct(reg=reg,reg_name=cluster_reg_name)}}
+{% endfor %}
 {% endfor %}
 
 

@@ -34,29 +34,6 @@ pub const fn {{reg.name | to_func_id }}(&self) -> [crate::common::Reg<{{reg_stru
 {%- endif -%}
 {%- endmacro -%}
  
-
-{# Generated core register function #}
-{%- macro register_core_func(types_mod,reg, base_addr) -%}
-{%- set reg_struct = reg.name | to_struct_id -%}
-{%- set reg_struct_name = types_mod ~ "::" ~  reg_struct  -%}
-{%- set reg_mod_name = reg.name | to_mod_id -%}
-{%- set reg_addr = base_addr+reg.offset | to_hex -%}
-#[doc = r"{{reg.description | svd_description_to_doc}}"]
-#[inline(always)]
-{% if reg.dim == 1 -%}
-pub const fn {{reg.name | to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{reg_addr}}> {
-    unsafe { crate::common::RegCore::new() }
-}
-{%- else -%}
-{%- for index in range(end=reg.dim) -%}
-pub const fn {{reg.name~index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}, {{base_addr+reg.offset+index*reg.dim_increment | to_hex }}> {
-    unsafe { crate::common::RegCore::new() }
-}
-{% endfor -%}
-{%- endif -%}
-{%- endmacro -%}
-
-
 {%- macro bitfield_type(field,reg_struct_name,reg_mod_name,turbofish) -%}
 {%-if turbofish %}{%set separator = "::"%}{%else%}{%set separator = ""%}{%endif-%}
 {%- if not field.enum_type and field.mask == 1 %}
@@ -73,9 +50,14 @@ pub const fn {{reg.name~index| to_func_id }}(&self)-> crate::common::RegCore<{{r
 {%- endmacro -%}
 
 
-{%- macro register_struct(reg) -%}
+{%- macro register_struct(reg,reg_name="") -%}
+{%-if reg_name %}
+{%- set reg_struct_name = reg_name | to_struct_id -%}
+{%- set reg_mod_name = reg_name | to_mod_id -%}
+{%- else -%}
 {%- set reg_struct_name = reg.name | to_struct_id -%}
 {%- set reg_mod_name = reg.name | to_mod_id -%}
+{%- endif -%}
 
 #[doc(hidden)]
 #[derive(Copy, Clone,Eq, PartialEq)]
@@ -156,6 +138,7 @@ pub fn {{cluster_func}}(self) -> [{{cluster_struct_path}};{{cluster.dim}}] {
 {%- endif -%}
 {%- endmacro -%}
 
+
 {# Macro to generate structure and module for a cluster#}
 {%- macro cluster_struct(cluster) -%}
 {%- if not cluster.is_derived_from -%}
@@ -186,3 +169,5 @@ pub mod {{cluster_mod}} {
 }
 {%- endif -%} {# if not cluster.is_derived_from #}
 {%- endmacro -%}
+
+
