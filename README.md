@@ -2,12 +2,13 @@
 
 Tool to generate Peripheral Access Crates from SVD files
 
-This tool has a very different approach compared to `svd2rust` because the requirement are different and are quite similar to [chiptool](https://github.com/embassy-rs/chiptool).
+This tool has a very different approach compared to `svd2rust` because our requirements are different and are quite similar to [chiptool](https://github.com/embassy-rs/chiptool).
 
 ### Major Requirements
 
-- Register access should be unsafe because we consider it as C FFI and many times theres HW undefined behavior that can be solved
-  only at driver level. (e.g. sometimes also the order of writing register bitfields is important.
+- Register access should be unsafe because we consider akin to C FFI.
+  Inherent undefined behavior should be dealt with at the driver layers, trying to handle safety in the PAC often does either not help or make it hard to use.
+  (e.g. sometimes also the order of writing register bitfields is important.
   discussion on this topic available here <https://github.com/rust-embedded/svd2rust/issues/714>).
 - No ownership because owned registers are an obstacle to writing low level drivers (LLD). Anyway writing
   LLDs requires a lot of unsafe code and ownership makes it more complex to access registers from interrupts
@@ -18,17 +19,17 @@ This tool has a very different approach compared to `svd2rust` because the requi
 - No macros. Absence of macros make easier the debugging.
 - PAC shall have 0 dependencies to any other crates.
    - Exception: `--target=cortex-m`. In this case the generated PAC has some dependencies in order to be usable in ARM Cortex Rust ecosystem.
-- Use associated constant instead of `Enum` for bitfield values so user can easily create new values.
-  Enumeration constrains the possible value of a bitfield but many times the SVD
-  enum description has missing enumeration values. There are multiple reasons:
-  * Too many values for documentation/SVD.
-  * Valid values depends on other register values or condition so user documentation writer could decided to not describe in table.
-  * Lazyness of user manual writer. (Sorry but it sometimes happens ;-))
+- Use associated constants instead of `Enum` for bitfield values so users can easily create new values.
+  Enumerations constrain the possible values of a bitfield but many times the SVD enum description has missing enumeration values.
+  There are multiple reasons:
+    * Too many values for documentation/SVD.
+    * Valid values depend on other register values or conditions so documentation writers could decided to not list them in the SVD.
+    * Lazyness of user manual writer. (Sorry but it sometimes happens ;-))
 
 ## Known Limitations
 
 * Inheritance via `derivedFrom` attribute is presently not supported for bitfields declaration.
-  Moreover in case that parent is an element of an array only the first element is supported.
+  Moreover in the case that a parent is an element of an array, inheritance can only refer to the first element.
 * `resetMask` tag is ignored
 * `protection` tag is ignored
 * `writeConstraint` tag is ignored
@@ -408,7 +409,7 @@ println!("{regs_at_c0ffee:?}");
 
 ## How to use in your `build.rs`
 
-It is possible generate the PAC during application build using [`main`] or [`main_parse_arguments`]
+It is possible to generate the PAC during the build of an application by calling [`main`] or [`main_parse_arguments`].
 
 ## Running tests
 
