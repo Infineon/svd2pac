@@ -4,7 +4,7 @@
 //!
 //! ## Major Requirements
 //!
-//! - Register access should be unsafe because we consider akin to C FFI. 
+//! - Register access should be unsafe because we consider akin to C FFI.
 //!   Inherent undefined behavior should be dealt with at the driver layers, trying to handle safety in the PAC often does either not help or make it hard to use.
 //!   (e.g. sometimes also the order of writing register bitfields is important.
 //!   discussion on this topic available here <https://github.com/rust-embedded/svd2rust/issues/714>).
@@ -17,8 +17,8 @@
 //! - No macros. Absence of macros make easier the debugging.
 //! - PAC shall have 0 dependencies to any other crates.
 //!    - Exception: `--target=cortex-m`. In this case the generated PAC has some dependencies in order to be usable in ARM Cortex Rust ecosystem.
-//! - Use associated constants instead of `Enum` for bitfield values so users can easily create new values. 
-//!   Enumerations constrain the possible values of a bitfield but many times the SVD enum description has missing enumeration values. 
+//! - Use associated constants instead of `Enum` for bitfield values so users can easily create new values.
+//!   Enumerations constrain the possible values of a bitfield but many times the SVD enum description has missing enumeration values.
 //!   There are multiple reasons:
 //!     * Too many values for documentation/SVD.
 //!     * Valid values depend on other register values or conditions so documentation writers could decided to not list them in the SVD.
