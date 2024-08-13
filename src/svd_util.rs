@@ -52,24 +52,23 @@ impl ExpandedName for svd::Peripheral {
 
 /// Trait to ger headerStructName field
 pub(crate) trait HeaderStructName {
-    fn header_struct_name(&self)->Option<String>;
+    fn header_struct_name(&self) -> Option<String>;
 }
 
 impl HeaderStructName for svd::Peripheral {
-    fn header_struct_name(&self)->Option<String> {
+    fn header_struct_name(&self) -> Option<String> {
         self.header_struct_name.clone()
     }
 }
 
 impl HeaderStructName for svd::Cluster {
-    fn header_struct_name(&self)->Option<String> {
+    fn header_struct_name(&self) -> Option<String> {
         self.header_struct_name.clone()
     }
 }
 
 impl HeaderStructName for svd::Register {
-    fn header_struct_name(&self)->Option<String> {
+    fn header_struct_name(&self) -> Option<String> {
         None
-        
     }
 }
