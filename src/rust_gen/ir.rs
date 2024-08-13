@@ -140,7 +140,7 @@ pub struct Cluster {
     /// Id of the struct
     pub struct_id: String,
     /// Id of module containing nested cluster
-    pub module_id:String
+    pub module_id: String,
 }
 
 /// Describe Rust module that maps to a peripheral
