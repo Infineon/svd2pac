@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- edited with XMLSpy v2024 rel. 2 (x64) (https://www.altova.com) by Infineon Technologies AG (Infineon Technologies AG) -->
 <!-- File naming: <part/series name>.svd -->
 <!--
   Copyright (C) 2012-2014 ARM Limited. All rights reserved.
@@ -527,6 +528,31 @@
 							<resetValue>0x12345</resetValue>
 						</register>
 					</cluster>
+					<cluster>
+						<dim>1</dim>
+						<dimIncrement>16</dimIncrement>
+						<name>HSSL[%s]</name>
+						<description>HSSL</description>
+						<headerStructName>HSSL_HSSL</headerStructName>
+						<addressOffset>0x200</addressOffset>
+						<cluster>
+							<dim>2</dim>
+							<dimIncrement>4</dimIncrement>
+							<name>CH[%s]</name>
+							<description>CH</description>
+							<headerStructName>HSSL_HSSL_CH</headerStructName>
+							<addressOffset>0x0</addressOffset>
+							<register>
+								<name>HSSLxCOKy</name>
+								<description>HSSL0 Channel 0 OK Service Request
+ resetvalue={Application Reset:0x0}</description>
+								<addressOffset>0x0</addressOffset>
+								<size>32</size>
+								<resetValue>0x0</resetValue>
+								<resetMask>0x0FFFFFFFF</resetMask>
+							</register>
+						</cluster>
+					</cluster>
 					<register>
 						<name>CR</name>
 						<addressOffset>0x00</addressOffset>
@@ -559,7 +585,7 @@
 					<dimIncrement>0x100</dimIncrement>
 					<name>ClusterDim[%s]</name>
 					<description>Test Cluster array </description>
-					<addressOffset>0x200</addressOffset>
+					<addressOffset>0x1000</addressOffset>
 					<register>
 						<name>CR</name>
 						<addressOffset>0x00</addressOffset>
