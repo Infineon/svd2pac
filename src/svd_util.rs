@@ -1,6 +1,6 @@
-use svd_parser::svd;
+use svd_parser::svd::{self};
 
-pub trait ExpandedName: svd_parser::svd::Name {
+pub(crate) trait ExpandedName: svd_parser::svd::Name {
     /// Generate an identifier that can be used in derivedFrom tags
     /// CMSIS svd.xsd specification is not consisted with svdconv.exe.
     /// In xsd file derivedFrom is of type dimableIdentifierType and
@@ -47,5 +47,29 @@ impl ExpandedName for svd::Peripheral {
                 .name
                 .to_string(),
         }
+    }
+}
+
+/// Trait to ger headerStructName field
+pub(crate) trait HeaderStructName {
+    fn header_struct_name(&self)->Option<String>;
+}
+
+impl HeaderStructName for svd::Peripheral {
+    fn header_struct_name(&self)->Option<String> {
+        self.header_struct_name.clone()
+    }
+}
+
+impl HeaderStructName for svd::Cluster {
+    fn header_struct_name(&self)->Option<String> {
+        self.header_struct_name.clone()
+    }
+}
+
+impl HeaderStructName for svd::Register {
+    fn header_struct_name(&self)->Option<String> {
+        None
+        
     }
 }

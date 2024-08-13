@@ -143,7 +143,7 @@ pub fn {{cluster_func}}(self) -> [{{cluster_struct_path}};{{cluster.dim}}] {
 {%- macro cluster_struct(cluster) -%}
 {%- if not cluster.is_derived_from -%}
 {%- set cluster_struct = cluster.struct_id | to_struct_id -%}
-{%- set cluster_mod = cluster.struct_id | to_mod_id -%}
+{%- set cluster_mod = cluster.module_id -%}
 #[doc = "{{cluster.description | svd_description_to_doc}}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct {{ cluster_struct }}{pub(crate) ptr: *mut u8}
