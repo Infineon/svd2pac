@@ -335,6 +335,9 @@ impl Visitor {
             );
             cluster.struct_id = cluster.name.to_sanitized_struct_ident();
         }
+        // Store the module id where are declared the registers and clusters
+        // defined in this cluster
+        cluster.module_id = self.current_mod_ir_path.last().unwrap().clone();
         for cluster_register in &cluster_svd.children {
             self.visit_cluster_register(cluster_register, PeripheralClusterE::Cluster(cluster));
         }
@@ -434,16 +437,28 @@ impl Visitor {
     }
 
     fn pop_current_item_svd_path(&mut self, ir_item: DeviceItem) {
+        // Item is already created. Add to map that support
+        // cross references. e.g. derivedFrom attribute
         self.svd_ref_to_ir_item
             .insert(self.current_item_svd_path.join("."), ir_item);
+        // Remove from current... FIFO and check
+        // that fifo are not empty before removing.
         assert!(self.current_item_svd_path.pop().is_some());
         assert!(self.current_mod_ir_path.pop().is_some());
     }
-    fn push_current_item_svd_path(&mut self, svd_item: &impl ExpandedName) {
+    fn push_current_item_svd_path(&mut self, svd_item: &(impl ExpandedName + HeaderStructName)) {
         self.current_item_svd_path
             .push(svd_item.get_expanded_name());
-        self.current_mod_ir_path
-            .push(svd_item.name().to_sanitized_mod_ident());
+        // Module in generated code shall be named as headerStructName if present
+        // otherwise use name.
+        match svd_item.header_struct_name() {
+            None => self
+                .current_mod_ir_path
+                .push(svd_item.name().to_sanitized_mod_ident()),
+            Some(header_struct_name) => self
+                .current_mod_ir_path
+                .push(header_struct_name.to_sanitized_mod_ident()),
+        }
     }
     fn get_absolute_svd_path(&self, local_svd_name: &str) -> String {
         if local_svd_name.contains('.') {

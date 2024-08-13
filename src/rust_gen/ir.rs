@@ -139,6 +139,8 @@ pub struct Cluster {
     pub struct_module_path: Vec<String>,
     /// Id of the struct
     pub struct_id: String,
+    /// Id of module containing nested cluster
+    pub module_id:String
 }
 
 /// Describe Rust module that maps to a peripheral
