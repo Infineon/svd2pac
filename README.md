@@ -4,7 +4,7 @@ Tool to generate Peripheral Access Crates from SVD files
 
 This tool has a very different approach compared to `svd2rust` because our requirements are different and are quite similar to [chiptool](https://github.com/embassy-rs/chiptool).
 
-### Major Requirements
+## Major Requirements
 
 - Register access should be unsafe because we consider akin to C FFI.
   Inherent undefined behavior should be dealt with at the driver layers, trying to handle safety in the PAC often does either not help or make it hard to use.
@@ -18,13 +18,14 @@ This tool has a very different approach compared to `svd2rust` because our requi
   external libraries. This allows the execution unit tests for code that uses the generated libraries on non-embedded devices.
 - No macros. Absence of macros make easier the debugging.
 - PAC shall have 0 dependencies to any other crates.
-   - Exception: `--target=cortex-m`. In this case the generated PAC has some dependencies in order to be usable in ARM Cortex Rust ecosystem.
+  - Exception: `--target=cortex-m`. In this case the generated PAC has some dependencies in order to be usable in ARM Cortex Rust ecosystem.
 - Use associated constants instead of `Enum` for bitfield values so users can easily create new values.
   Enumerations constrain the possible values of a bitfield but many times the SVD enum description has missing enumeration values.
   There are multiple reasons:
-    * Too many values for documentation/SVD.
-    * Valid values depend on other register values or conditions so documentation writers could decided to not list them in the SVD.
-    * Lazyness of user manual writer. (Sorry but it sometimes happens ;-))
+
+- Too many values for documentation/SVD.
+  - Valid values depend on other register values or conditions so documentation writers could decided to not list them in the SVD.
+  - Lazyness of user manual writer. (Sorry but it sometimes happens ;-))
 
 ## Known Limitations
 
@@ -193,12 +194,13 @@ unsafe {
     })
 }
 ```
-> Note: The register is not modified when the `set()` function is called. `set()` modifies the value
-        stored in the CPU and returns the modified struct. The register is only written once with
-        the value returned by the closure.
 
+> Note: The register is not modified when the `set()` function is called. `set()` modifies the value
+> stored in the CPU and returns the modified struct. The register is only written once with
+> the value returned by the closure.
+>
 > Note: `modify()`, due to doing a read and write with modification of read data in between is not
-        atomic and can be subject to race conditions and may be interrupted by an interrupt.
+> atomic and can be subject to race conditions and may be interrupted by an interrupt.
 
 #### Write
 
