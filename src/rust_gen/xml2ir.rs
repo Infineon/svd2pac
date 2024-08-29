@@ -149,16 +149,18 @@ impl Visitor {
         peripheral.name = svd_peripheral.name.to_internal_ident();
         peripheral.description = svd_peripheral.description.clone().unwrap_or_default();
 
+        // defined headerStructName has priority for struct ide definition.
         if let Some(header_struct) = &svd_peripheral.header_struct_name {
-            // defined headerStructName has priority for struct ide definition.
-            peripheral.struct_id = header_struct.to_sanitized_struct_ident()
-        } else if peripheral.struct_id.is_empty() {
-            // If the peripheral has no parent create Rust struct id
-            peripheral.struct_id = svd_peripheral.name.to_sanitized_struct_ident();
-        }
-
-        if peripheral.module_id.is_empty() {
-            peripheral.module_id = svd_peripheral.name.to_sanitized_mod_ident();
+            peripheral.struct_id = header_struct.to_sanitized_struct_ident();
+            peripheral.module_id = header_struct.to_sanitized_mod_ident();
+        } else {
+            // Derived peripherals inherit struct and module id from their parents.
+            if peripheral.struct_id.is_empty() {
+                peripheral.struct_id = svd_peripheral.name.to_sanitized_struct_ident();
+            }
+            if peripheral.module_id.is_empty() {
+                peripheral.module_id = svd_peripheral.name.to_sanitized_mod_ident();
+            }
         }
 
         let (dim, dim_increment) = get_dim_dim_increment(svd_peripheral);

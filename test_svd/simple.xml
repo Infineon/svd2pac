@@ -982,6 +982,34 @@
 			<description>DerivedPeripheral</description>
 			<baseAddress>0x70200000</baseAddress>
 		</peripheral>
+		<peripheral>
+      <name>HasHeaderStruct</name>
+      <headerStructName>HeaderStruct</headerStructName>
+			<version>1.0</version>
+			<description>Peripheral with a headerStructName</description>
+			<baseAddress>0x70300000</baseAddress>
+			<access>read-write</access>
+			<addressBlock>
+				<offset>0</offset>
+				<size>0x100</size>
+				<usage>registers</usage>
+			</addressBlock>
+			<registers>
+				<cluster>
+					<name>I2C2</name>
+					<description>Cluster that defines the base type</description>
+					<addressOffset>0x0</addressOffset>
+					<register>
+						<name>Reg1</name>
+						<addressOffset>0x00</addressOffset>
+					</register>
+					<register>
+						<name>Reg2</name>
+						<addressOffset>0x4</addressOffset>
+					</register>
+				</cluster>
+			</registers>
+		</peripheral>
 	</peripherals>
 	<vendorExtensions>
 		<aurixCSFR>

@@ -33,14 +33,15 @@ cortex-m = "0.7.6"
 
 [features]
 {%- for peri_mod_name, peri in ir.device.peripheral_mod %}
-{{peri.name | to_mod_id}} = [{%if peri.is_derived_from %}"{{ peri.module_id }}"{% endif %}]
+{%- if peri.is_derived_from %} {% continue %} {% endif %} {# module that are derived doesn't have a module #}
+{{peri.module_id}} = []
 {%- endfor %}
 {% if ir_csfr %}
 {%- for peri_mod_name, peri in ir_csfr.device.peripheral_mod %}
-{{peri.name | to_mod_id}} = []
+{{peri.module_id}} = []
 {%- endfor %}
 {%- endif %}
-all = [{%- for peri_mod_name, peri in ir.device.peripheral_mod -%}"{{peri.name | to_mod_id }}",{%- endfor -%}]
+all = [{%- for peri_mod_name, peri in ir.device.peripheral_mod -%}"{{peri.module_id}}",{%- endfor -%}]
 {%- if tracing %}
 tracing = ["dep:phf"]
 tracing_dummy = []
