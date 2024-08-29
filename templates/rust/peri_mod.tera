@@ -13,8 +13,8 @@ use crate::common::{*};
 use crate::common::sealed;
 #[doc = r"{{peri.description | svd_description_to_doc}}"]
 {% set peri_struct = peri.name | to_struct_id -%}
-unsafe impl core::marker::Send for super::{{ peri_struct }} {}
-unsafe impl core::marker::Sync for super::{{ peri_struct }} {}
+unsafe impl ::core::marker::Send for super::{{ peri_struct }} {}
+unsafe impl ::core::marker::Sync for super::{{ peri_struct }} {}
 impl super::{{ peri_struct }} {
 {%- for register_name,reg in peri.registers %}
 {{macros::register_func(types_mod="self",reg=reg)}}
