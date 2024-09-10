@@ -9,7 +9,10 @@ pub trait HasSameType {
 
 impl HasSameType for PeripheralMod {
     fn has_same_type(&self, other: &Self) -> bool {
-        self.clusters == other.clusters && self.registers == other.registers
+        self.clusters == other.clusters
+            && self.registers == other.registers
+            && self.struct_id == other.struct_id
+            && self.module_id == other.module_id
     }
 }
 

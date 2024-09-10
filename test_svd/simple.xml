@@ -983,8 +983,8 @@
 			<baseAddress>0x70200000</baseAddress>
 		</peripheral>
 		<peripheral>
-      <name>HasHeaderStruct</name>
-      <headerStructName>HeaderStruct</headerStructName>
+			<name>HasHeaderStruct</name>
+			<headerStructName>HeaderStruct</headerStructName>
 			<version>1.0</version>
 			<description>Peripheral with a headerStructName</description>
 			<baseAddress>0x70300000</baseAddress>
@@ -1009,6 +1009,20 @@
 					</register>
 				</cluster>
 			</registers>
+		</peripheral>
+		<peripheral derivedFrom="P33">
+			<name>HdrStrDer</name>
+			<headerStructName>HdrStructDerivedP33</headerStructName>
+			<version>1.0</version>
+			<description>Peripheral with a headerStructName and derived from another peripheral</description>
+			<baseAddress>0x70400000</baseAddress>
+		</peripheral>
+		<peripheral derivedFrom="HasHeaderStruct">
+			<name>HdrStrDerHdrStruct</name>
+			<headerStructName>HdrStructDerivedHdr</headerStructName>
+			<version>1.0</version>
+			<description>Peripheral with a headerStructName and derived from peripheral with headerStructName</description>
+			<baseAddress>0x70500000</baseAddress>
 		</peripheral>
 	</peripherals>
 	<vendorExtensions>
