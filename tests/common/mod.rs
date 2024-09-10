@@ -30,6 +30,8 @@ pub fn assert_cargo_build(package_folder: tempfile::TempDir) {
     let mut command = Command::new("cargo");
     command.arg("build");
     command.current_dir(package_folder.path());
+    // Error on invalid cfg(feature) directives
+    command.env("RUSTFLAGS", "-D unexpected_cfgs");
 
     let exec_result = command.output();
 
