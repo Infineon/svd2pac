@@ -32,16 +32,22 @@ cortex-m = "0.7.6"
 
 
 [features]
+{%- set_global all_peripheral_features = [] -%} {# array of all features #}
 {%- for peri_mod_name, peri in ir.device.peripheral_mod %}
 {%- if peri.is_derived_from %} {% continue %} {% endif %} {# module that are derived doesn't have a module #}
-{{peri.module_id}} = []
+{%- set feature_name = peri.name | lower -%}
+{% set_global all_peripheral_features = all_peripheral_features | concat(with=feature_name) %}
+{{feature_name}} = []
 {%- endfor %}
 {% if ir_csfr %}
 {%- for peri_mod_name, peri in ir_csfr.device.peripheral_mod %}
-{{peri.module_id}} = []
+{%- set feature_name = peri.name | lower %}
+{{feature_name}} = []
 {%- endfor %}
 {%- endif %}
-all = [{%- for peri_mod_name, peri in ir.device.peripheral_mod -%}"{{peri.module_id}}",{%- endfor -%}]
+{# collect all module id and remove duplicated#}
+{%- set_global all_peripheral_features = all_peripheral_features | unique -%}
+all = ["{{all_peripheral_features | join(sep='" ,"')}}"]
 {%- if tracing %}
 tracing = ["dep:phf"]
 tracing_dummy = []

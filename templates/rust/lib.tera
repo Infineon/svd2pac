@@ -26,15 +26,17 @@ pub mod tracing;
 {% for peri_mod_name, peri in ir.device.peripheral_mod -%}
 {%- if peri.is_derived_from %} {% continue %} {% endif %} {# module that are derived doesn't have a module #}
 {%- set module_name = peri.module_id -%}
-#[cfg(feature = "{{module_name}}")]
+{%- set feature_name = peri.name | lower -%}
+#[cfg(feature = "{{feature_name}}")]
 pub mod {{module_name}};
 {% endfor -%} {# for peri_mod_name, peri in ir.peripheral_mod #}
 {% if ir_csfr %}
 {% for peri_mod_name, peri in ir_csfr.device.peripheral_mod -%}
 {%- set module_name = peri.module_id -%}
-#[cfg(feature = "{{module_name}}")]
+{%- set feature_name = peri.name | lower -%}
+#[cfg(feature = "{{feature_name}}")]
 pub mod {{module_name}};
-#[cfg(feature = "{{module_name}}")]
+#[cfg(feature = "{{feature_name}}")]
 pub use {{module_name}} as csfr_cpu;
 {% endfor -%}
 {% endif %}
@@ -42,15 +44,16 @@ pub use {{module_name}} as csfr_cpu;
 {% for name,p in ir.device.peripheral_mod %}
 {%- set module_name = p.module_id -%}
 {% set peri_struct = p.struct_id -%}
+{%- set feature_name = p.name | lower -%}
 {%- if not p.is_derived_from -%}
-#[cfg(feature = "{{module_name}}")] {# Peripheral definition #}
+#[cfg(feature = "{{feature_name}}")] {# Peripheral definition #}
 #[derive(Copy, Clone, Eq, PartialEq)] 
 pub struct {{ peri_struct }}{ptr:*mut u8}
 {%- endif -%}
 {# Peripheral instances #}
 {%- set module_struct = p.struct_id -%}
 {%- set full_path_struct = "self::" ~ module_struct -%}
-#[cfg(feature = "{{module_name}}")]
+#[cfg(feature = "{{feature_name}}")]
 {%- if p.base_addr | length == 1 %}
 pub const {{name | upper}}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{p.base_addr[0] | to_hex }}u32 as _};
 {% else %}
@@ -63,7 +66,8 @@ pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [
 {%- set full_path_struct = "self::" ~ module_struct -%}
 {% for name,p in ir_csfr.device.peripheral_mod %}
 {%- set module_name = p.module_id -%}
-{% if not loop.last %}feature = "{{module_name}}",{% else %}feature = "{{module_name}}"))]
+{%- set feature_name = p.name | lower -%}
+{% if not loop.last %}feature = "{{feature_name}}",{% else %}feature = "{{feature_name}}"))]
 #[derive(Copy, Clone, Eq, PartialEq)] 
 pub struct {{ module_struct }}{ptr:*mut u8}
 {% endif %}
@@ -73,7 +77,8 @@ pub struct {{ module_struct }}{ptr:*mut u8}
 {%- set full_path_struct = "self::" ~ module_struct -%}
 {% for name,p in ir_csfr.device.peripheral_mod %}
 {%- set module_name = p.module_id -%}
-{% if not loop.last %}feature = "{{module_name}}",{% else %}feature = "{{module_name}}"))]
+{%- set feature_name = p.name | lower -%}
+{% if not loop.last %}feature = "{{feature_name}}",{% else %}feature = "{{feature_name}}"))]
 {%- if p.base_addr | length == 1 %}
 pub const {{"csfr_cpu" | upper}}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{p.base_addr[0] | to_hex }}u32 as _};
 {% else %}
@@ -149,8 +154,9 @@ pub struct Peripherals {
     {% for name,p in ir.device.peripheral_mod %}
     {%- set module_name = p.module_id -%}
     {%- set module_struct = p.struct_id -%}
+    {%- set feature_name = p.name | lower -%}
     {%- set full_path_struct = "self::" ~ module_struct -%}
-    #[cfg(feature = "{{module_name}}")]
+    #[cfg(feature = "{{feature_name}}")]
     {%- if p.base_addr | length == 1 %}
     pub {{name | upper}}: {{full_path_struct}},
     {% else %}
@@ -162,7 +168,7 @@ pub struct Peripherals {
     {%- set module_name = p.module_id -%}
     {%- set module_struct = p.struct_id -%}
     {%- set full_path_struct = module_name ~ "::" ~ module_struct -%}
-    #[cfg(feature = "{{module_name}}")]
+    #[cfg(feature = "{{feature_name}}")]
     {%- if p.base_addr | length == 1 %}
     pub {{name | upper}}: {{full_path_struct}},
     {% else %}
@@ -192,7 +198,8 @@ impl Peripherals {
             {%- set module_name = p.module_id -%}
             {%- set module_struct = p.struct_id -%}
             {%- set full_path_struct = module_name ~ "::" ~ module_struct %}
-            #[cfg(feature = "{{module_name}}")]
+            {%- set feature_name = p.name | lower -%}
+            #[cfg(feature = "{{feature_name}}")]
             {{name | upper}}: crate::{{name | upper}},
             {%- endfor %}
         
