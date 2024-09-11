@@ -440,7 +440,7 @@ fn generate_peripheral_module(
     for (_, peri) in &ir.device.peripheral_mod {
         // No need to generate a module if the peripheral is derived
         let borrowed_peri = peri.borrow();
-        if borrowed_peri.is_derived_from {
+        if borrowed_peri.derived_from.is_some() {
             continue;
         }
         let module_name = borrowed_peri.module_id.clone();

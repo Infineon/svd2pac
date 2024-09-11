@@ -130,8 +130,15 @@ impl Visitor {
 
             let name = peripheral.name.clone();
 
-            peripheral.is_derived_from = derived_peripheral
-                .is_some_and(|derived_peri| peripheral.has_same_type(&derived_peri));
+            peripheral.derived_from = if let Some(derived_peri) = derived_peripheral {
+                if peripheral.has_same_type(&derived_peri) {
+                    Some(derived_peri.name)
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
             let peripheral_mod = Rc::new(RefCell::new(peripheral));
             self.device
                 .peripheral_mod

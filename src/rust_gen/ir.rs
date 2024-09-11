@@ -155,7 +155,7 @@ pub struct PeripheralMod {
     pub registers: LinkedHashMap<String, Rc<RefCell<Register>>>,
     pub base_addr: Vec<u64>,
     pub interrupts: Vec<Interrupt>,
-    pub is_derived_from: bool,
+    pub derived_from: Option<String>,
     // Struct identifier of the peripheral.
     pub struct_id: String,
     // It could be different from name lower case if derived_from is used.

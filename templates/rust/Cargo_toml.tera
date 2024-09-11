@@ -34,10 +34,9 @@ cortex-m = "0.7.6"
 [features]
 {%- set_global all_peripheral_features = [] -%} {# array of all features #}
 {%- for peri_mod_name, peri in ir.device.peripheral_mod %}
-{%- if peri.is_derived_from %} {% continue %} {% endif %} {# module that are derived doesn't have a module #}
 {%- set feature_name = peri.name | lower -%}
 {% set_global all_peripheral_features = all_peripheral_features | concat(with=feature_name) %}
-{{feature_name}} = []
+{{feature_name}} = [{%- if peri.derived_from is string %} "{{peri.derived_from | lower}}" {% endif %}]
 {%- endfor %}
 {% if ir_csfr %}
 {%- for peri_mod_name, peri in ir_csfr.device.peripheral_mod %}

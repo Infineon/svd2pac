@@ -24,7 +24,7 @@ pub mod reg_name;
 pub mod tracing;
 {% endif %} {# tracing #}
 {% for peri_mod_name, peri in ir.device.peripheral_mod -%}
-{%- if peri.is_derived_from %} {% continue %} {% endif %} {# module that are derived doesn't have a module #}
+{%- if peri.derived_from is string %} {% continue %} {% endif %} {# module that are derived doesn't have a module #}
 {%- set module_name = peri.module_id -%}
 {%- set feature_name = peri.name | lower -%}
 #[cfg(feature = "{{feature_name}}")]
@@ -45,7 +45,7 @@ pub use {{module_name}} as csfr_cpu;
 {%- set module_name = p.module_id -%}
 {% set peri_struct = p.struct_id -%}
 {%- set feature_name = p.name | lower -%}
-{%- if not p.is_derived_from -%}
+{%- if not (p.derived_from is string) -%}
 #[cfg(feature = "{{feature_name}}")] {# Peripheral definition #}
 #[derive(Copy, Clone, Eq, PartialEq)] 
 pub struct {{ peri_struct }}{ptr:*mut u8}
