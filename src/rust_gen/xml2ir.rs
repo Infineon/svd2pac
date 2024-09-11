@@ -156,7 +156,7 @@ impl Visitor {
         peripheral.name = svd_peripheral.name.to_internal_ident();
         peripheral.description = svd_peripheral.description.clone().unwrap_or_default();
 
-        // defined headerStructName has priority for struct ide definition.
+        // defined headerStructName has priority for struct id definition.
         if let Some(header_struct) = &svd_peripheral.header_struct_name {
             peripheral.struct_id = header_struct.to_sanitized_struct_ident();
             peripheral.module_id = header_struct.to_sanitized_mod_ident();
