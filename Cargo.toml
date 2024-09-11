@@ -10,11 +10,6 @@ keywords = ["generator","svd", "pac"]
 license = "MIT"
 description = "Tool to generate peripheral access crates from SVD files"
 
-[features]
-# Set this feature to execute test for Aurix Hightect compiler
-# it shall be not used 
-aurix_tests=[]
-
 [dependencies]
 anyhow = "1.0.70"
 lazy-regex = "3.0"
