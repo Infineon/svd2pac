@@ -16,12 +16,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Get toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup update stable && rustup default stable
+      - run: cargo --version --verbose && rustc --version
       - run: cargo check
       - run: cargo check --all-features
   
@@ -31,13 +27,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Get toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          components: clippy
-          override: true
+      - run: rustup update stable && rustup default stable
+      - run: rustup component add clippy
+      - run: cargo --version --verbose && cargo clippy -- --version
       - run: cargo clippy --all-features -- -D warnings
 
   format:
@@ -46,13 +38,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Get toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup update stable && rustup default stable
       - run: rustup component add rustfmt
+      - run: cargo --version --verbose && cargo fmt -- --version
       - run: cargo fmt --all -- --check
 
   doc:
@@ -63,12 +51,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Get toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: cargo --version --verbose && rustc --version
       - name: Check documentation
         run: cargo doc --no-deps --all-features --document-private-items
 
