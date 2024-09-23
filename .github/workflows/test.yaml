@@ -16,12 +16,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Get toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup update stable && rustup default stable
+      - run: cargo --version --verbose && rustc --version
       - name: Cache dependencies
         uses: actions/cache@v2
         env:
