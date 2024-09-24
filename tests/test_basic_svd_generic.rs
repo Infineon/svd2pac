@@ -50,7 +50,12 @@ fn compile_generated_generic() {
 
     let license_path = generated_code_folder.path().join("LICENSE.txt");
     assert!(license_path.exists(), "Not found LICENSE.txt");
-    assert_cargo_build(generated_code_folder);
+    assert_cargo_build(&generated_code_folder, None);
+    #[cfg(aurix_tests)]
+    assert_cargo_build(
+        &generated_code_folder,
+        Some(env!("AURIX_TOOLCHAIN").to_string()),
+    );
 }
 
 #[test]

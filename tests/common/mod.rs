@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::Path;
-use std::process::Command;
+use std::process::{exit, Command};
 
 #[allow(dead_code)]
 pub fn assert_files_eq<T: AsRef<Path>, Q: AsRef<Path>>(ref_file: T, gen_file: Q) {
@@ -25,17 +25,28 @@ pub fn assert_files_eq<T: AsRef<Path>, Q: AsRef<Path>>(ref_file: T, gen_file: Q)
 }
 
 /// execute cargo build and check that build is successfull
-pub fn assert_cargo_build(package_folder: tempfile::TempDir) {
+pub fn assert_cargo_build(package_folder: &tempfile::TempDir, toolchain_override: Option<String>) {
+    Command::new("cargo")
+        .arg("clean")
+        .current_dir(package_folder.path())
+        .output()
+        .expect("Failed to clean package");
     // Run cargo to build
     let mut command = Command::new("cargo");
+    let toolchain_id = if let Some(ref toolchain_id) = toolchain_override {
+        command.arg(format!("+{}", toolchain_id));
+        toolchain_id
+    } else {
+        "default"
+    };
     command.arg("build");
     command.current_dir(package_folder.path());
     let exec_result = command.output();
 
     if exec_result.is_err() {
-        // This to preserve the project for further debugging
-        let _ = package_folder.into_path();
-        panic!("Failed to execute");
+        eprintln!("Failed to execute using toolchain: {}", toolchain_id);
+        // This to preserve the temp folders for further debugging
+        exit(-1);
     }
     let output_result = exec_result.unwrap();
     if !output_result.status.success() {
@@ -45,29 +56,46 @@ pub fn assert_cargo_build(package_folder: tempfile::TempDir) {
             .expect("Failed to parse stderr returned from cargo build");
         eprintln!("Failed compilation of test project stdout: {}", stdout_msg);
         eprintln!("Failed compilation of test project stderr: {}", stderr_msg);
-        // This to preserve the project for further debugging
-        let _ = package_folder.into_path();
-        panic!("Failed compilation of test project");
+        eprintln!(
+            "Failed compilation of test project using toolchain: {}",
+            toolchain_id
+        );
+        // This to preserve the temp folders for further debugging
+        exit(-1);
     }
 }
 
 #[allow(dead_code)]
-pub fn assert_cargo_test(package_folder: tempfile::TempDir) {
+pub fn assert_cargo_test(package_folder: &tempfile::TempDir, toolchain_override: Option<String>) {
+    Command::new("cargo")
+        .arg("clean")
+        .current_dir(package_folder.path())
+        .output()
+        .expect("Failed to clean package");
     // Run cargo to build
     let mut command = Command::new("cargo");
+    let toolchain_id = if let Some(ref toolchain_id) = toolchain_override {
+        command.arg(format!("+{}", toolchain_id));
+        toolchain_id
+    } else {
+        "default"
+    };
     command.arg("test");
     command.current_dir(package_folder.path());
 
     let exec_result = command.output();
 
     if exec_result.is_err() {
-        // This to preserve the project for further debugging
-        let _ = package_folder.into_path();
-        panic!("Failed to execute tests");
+        eprintln!("Failed to execute tests using toolchain: {}", toolchain_id);
+        // This to preserve the temp folders for further debugging
+        exit(-1);
     }
     if !exec_result.unwrap().status.success() {
-        // This to preserve the project for further debugging
-        let _ = package_folder.into_path();
-        panic!("Failed running tests of test project");
+        eprintln!(
+            "Failed running tests of test project using toolchain: {}",
+            toolchain_id
+        );
+        // This to preserve the temp folders for further debugging
+        exit(-1);
     }
 }

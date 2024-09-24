@@ -62,6 +62,16 @@ fn compile_generated_tracing() {
     )
     .expect("Failed to copy generated files to test cargo project");
 
-    assert_cargo_build(generated_code_folder);
-    assert_cargo_test(generated_test_folder);
+    assert_cargo_build(&generated_code_folder, None);
+    #[cfg(aurix_tests)]
+    assert_cargo_build(
+        &generated_code_folder,
+        Some(env!("AURIX_TOOLCHAIN").to_string()),
+    );
+    assert_cargo_test(&generated_test_folder, None);
+    #[cfg(aurix_tests)]
+    assert_cargo_test(
+        &generated_test_folder,
+        Some(env!("AURIX_TOOLCHAIN").to_string()),
+    );
 }
