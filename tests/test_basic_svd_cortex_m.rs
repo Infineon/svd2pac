@@ -1,4 +1,3 @@
-#![cfg(not(aurix_tests))]
 mod common;
 use common::*;
 use fs_extra::dir::CopyOptions;
@@ -30,5 +29,5 @@ fn compile_generated_cortex_m() {
 
     let license_path = generated_pack_folder.join("LICENSE.txt");
     assert!(license_path.exists(), "Not found LICENSE.txt");
-    assert_cargo_build(workspace_folder);
+    assert_cargo_build(&workspace_folder, None);
 }

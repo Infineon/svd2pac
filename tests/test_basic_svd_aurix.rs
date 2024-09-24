@@ -57,7 +57,10 @@ fn compile_generated_aurix() {
     )
     .expect("Failed to copy required files to build cargo project");
 
-    assert_cargo_build(generated_code_folder);
+    assert_cargo_build(
+        &generated_code_folder,
+        Some(env!("AURIX_TOOLCHAIN").to_string()),
+    );
 }
 
 /// Generate PAC with tracing code but feature is disabled
@@ -112,5 +115,8 @@ fn compile_generated_aurix_tracing() {
     )
     .expect("Failed to copy required files to build cargo project");
 
-    assert_cargo_build(generated_code_folder);
+    assert_cargo_build(
+        &generated_code_folder,
+        Some(env!("AURIX_TOOLCHAIN").to_string()),
+    );
 }

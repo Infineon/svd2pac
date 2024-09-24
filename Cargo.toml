@@ -2,7 +2,7 @@
 name = "svd2pac"
 version = "0.2.1"
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.72"
 categories = ["command-line-utilities", "development-tools::ffi"]
 readme = "README.md"
 repository = "https://github.com/Infineon/svd2pac"
@@ -17,7 +17,7 @@ thiserror = "1.0.40"
 svd-parser = { version = "0.14", features = ["derive-from", "expand"] }
 tera = "1.19.0"
 # clap is limited to to support Aurix Rust compiler v1.0 (-> rustc 1.72)
-clap = { version = "~4.4", features = ["derive", "cargo"] }
+clap = { version = "4.4", features = ["derive", "cargo"] }
 log = { version = "0.4.17", features = ["std"] }
 env_logger = "0.10.0"
 convert_case = "0.6"
@@ -35,6 +35,7 @@ toml_edit = "0.19"
 
 [build-dependencies]
 rustc_version = "0.4.1"
+regex = "1.10"
 
 [profile.dev.package."*"]
 codegen-units = 1 # better optimizations
