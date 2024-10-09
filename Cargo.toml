@@ -2,7 +2,7 @@
 name = "svd2pac"
 version = "0.2.1"
 edition = "2021"
-rust-version = "1.72"
+rust-version = "1.74"
 categories = ["command-line-utilities", "development-tools::ffi"]
 readme = "README.md"
 repository = "https://github.com/Infineon/svd2pac"
