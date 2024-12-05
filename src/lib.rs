@@ -72,7 +72,6 @@ pub struct Args {
 /// let args = ["", "./test_svd/simple.xml", "./generated_code"];
 /// main_parse_arguments(args);
 /// ```
-
 pub fn main_parse_arguments<I, T>(args: I)
 where
     I: IntoIterator<Item = T>,

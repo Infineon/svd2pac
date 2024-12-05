@@ -27,12 +27,12 @@ pub(super) struct ClusterAbs<'a> {
 trait AbsoluteAddress {
     fn abs_address(&self) -> u64;
 }
-impl<'a> AbsoluteAddress for RegisterAbs<'a> {
+impl AbsoluteAddress for RegisterAbs<'_> {
     fn abs_address(&self) -> u64 {
         self.base_addr + self.register.address_offset as u64
     }
 }
-impl<'a> AbsoluteAddress for ClusterAbs<'a> {
+impl AbsoluteAddress for ClusterAbs<'_> {
     fn abs_address(&self) -> u64 {
         self.base_addr + self.cluster.address_offset as u64
     }

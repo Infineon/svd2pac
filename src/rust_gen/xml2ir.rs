@@ -35,7 +35,7 @@ enum PeripheralClusterE<'a> {
     Cluster(&'a mut Cluster),
 }
 
-impl<'a> PeripheralClusterE<'a> {
+impl PeripheralClusterE<'_> {
     pub fn get_mut_registers(&mut self) -> &mut LinkedHashMap<String, Rc<RefCell<Register>>> {
         match self {
             PeripheralClusterE::Peripheral(p) => &mut p.registers,
