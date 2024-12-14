@@ -16,6 +16,11 @@ use crate::common::sealed;
 unsafe impl ::core::marker::Send for super::{{ peri_struct }} {}
 unsafe impl ::core::marker::Sync for super::{{ peri_struct }} {}
 impl super::{{ peri_struct }} {
+    #[allow(unused)]
+    pub(crate) const fn as_ptr(&self) -> *mut u8 {
+        self.ptr
+    }
+
 {%- for register_name,reg in peri.registers %}
 {{macros::register_func(types_mod="self",reg=reg)}}
 {% endfor -%}
