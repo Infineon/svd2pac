@@ -21,13 +21,13 @@ Unsupported register size
 #[inline(always)]
 {% if reg.dim == 1 -%}
 pub const fn {{reg.name | to_func_id }}(&self) -> crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}> {
-    unsafe { crate::common::Reg::from_ptr(self.ptr.add({{reg.offset}}usize)) }
+    unsafe { crate::common::Reg::from_ptr(self.as_ptr().add({{reg.offset}}usize)) }
 }
 {%- else -%}
 pub const fn {{reg.name | to_func_id }}(&self) -> [crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>;{{reg.dim}}] {
     unsafe {  [
     {%- for index in range(end=reg.dim) -%}
-    crate::common::Reg::from_ptr(self.ptr.add({{reg.offset | to_hex }}usize + {{index * reg.dim_increment | to_hex }}usize )),
+    crate::common::Reg::from_ptr(self.as_ptr().add({{reg.offset | to_hex }}usize + {{index * reg.dim_increment | to_hex }}usize )),
     {% endfor -%}
     ] }
 }
@@ -120,20 +120,17 @@ pub mod {{reg_mod_name}} {
 {%- set mod_struct_path = cluster.struct_module_path | join(sep="::") -%}
 {%- set cluster_struct_id = cluster.struct_id | to_struct_id -%}
 {%- set cluster_struct_path = "crate" ~ "::" ~ mod_struct_path ~ "::" ~ cluster_struct_id -%}
+{%- set underscored_cluster_struct_path = "crate" ~ "::" ~ mod_struct_path ~ "::_" ~ cluster_struct_id -%}
 {%- set cluster_func = cluster.name | to_func_id -%}
 #[doc = "{{cluster.description | svd_description_to_doc}}"]
 #[inline(always)]
 {%- if cluster.dim == 1 %}
 pub fn {{cluster_func}}(self) -> {{cluster_struct_path}}{
-    unsafe {   {{cluster_struct_path}}{ptr:self.ptr.add({{cluster.offset}}usize)} }
+    unsafe {   {{underscored_cluster_struct_path}}::from_ptr(self.as_ptr().add({{cluster.offset}}usize)) }
 }
 {%- else %}
-pub fn {{cluster_func}}(self) -> [{{cluster_struct_path}};{{cluster.dim}}] {
-    unsafe {  [
-        {%- for index in range(end=cluster.dim) -%}
-        {{cluster_struct_path}}{ptr:self.ptr.add({{cluster.offset | to_hex}}usize + {{index*cluster.dim_increment | to_hex }}usize)},
-        {% endfor -%}
-        ] }
+pub fn {{cluster_func}}(self) -> &'static crate::common::Cluster<{{underscored_cluster_struct_path}}, {{cluster.dim}}, {{cluster.dim_increment | to_hex}}> {
+    unsafe { crate::common::Cluster::from_ptr(self.as_ptr().add({{cluster.offset | to_hex}}usize)) }
 }
 {%- endif -%}
 {%- endmacro -%}
@@ -145,11 +142,24 @@ pub fn {{cluster_func}}(self) -> [{{cluster_struct_path}};{{cluster.dim}}] {
 {%- set cluster_struct = cluster.struct_id | to_struct_id -%}
 {%- set cluster_mod = cluster.module_id -%}
 #[doc = "{{cluster.description | svd_description_to_doc}}"]
-#[derive(Copy, Clone, Eq, PartialEq)]
-pub struct {{ cluster_struct }}{pub(crate) ptr: *mut u8}
-unsafe impl ::core::marker::Send for {{ cluster_struct}} {}
-unsafe impl ::core::marker::Sync for {{ cluster_struct }} {}
-impl {{cluster_struct}} {
+#[non_exhaustive]
+pub struct _{{ cluster_struct }};
+
+#[doc = "{{cluster.description | svd_description_to_doc}}"]
+pub type {{ cluster_struct }} = &'static _{{ cluster_struct }};
+
+unsafe impl ::core::marker::Sync for _{{ cluster_struct }} {}
+impl _{{cluster_struct}} {
+    #[allow(unused)]
+    pub(crate) unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
+        &*(ptr as *mut _)
+    }
+
+    #[allow(unused)]
+    pub(crate) const fn as_ptr(&self) -> *mut u8 {
+        self as *const Self as *mut u8
+    }
+
     {% for register_name,reg in cluster.registers -%}
     {{self::register_func(types_mod=cluster_mod,reg=reg)}}
     {% endfor -%}
