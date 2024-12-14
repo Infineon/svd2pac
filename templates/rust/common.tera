@@ -900,3 +900,60 @@ where
         START_OFFSET + (self.index * DIM_INCREMENT) as usize
     }
 }
+
+/// A cluster of identical register blocks.
+pub struct Cluster<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> {
+    _t: ::core::marker::PhantomData<T>,
+}
+
+impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> Cluster<T, DIM, DIM_INCREMENT> {
+    /// Returns the number of register blocks in the cluster.
+    pub fn len() -> usize {
+        DIM
+    }
+
+    /// Returns whether the cluster is empty (DIM == 0).
+    pub fn is_empty() -> bool {
+        DIM == 0
+    }
+
+    /// Returns an iterator over the elements of this cluster.
+    pub fn iter(&self) -> impl ::core::iter::ExactSizeIterator<Item = &T> {
+        (0..DIM).map(|i| &self[i])
+    }
+
+    /// Returns the cluster element with the specified index.
+    /// 
+    /// Panics if the index is out of bounds.
+    pub fn get(&self, index: usize) -> &T {
+        assert!(index < DIM);
+        unsafe { self.get_unchecked(index) }
+    }
+
+    /// Returns the cluster element with the specified index.
+    ///
+    /// # Safety
+    ///
+    /// `index` must be less than `DIM`.
+    pub unsafe fn get_unchecked(&self, index: usize) -> &T {
+        &*(self.as_ptr().add(index * DIM_INCREMENT) as *const _) 
+    }
+
+    pub(crate) unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
+        &*(ptr as *const Self)
+    }
+
+    fn as_ptr(&self) -> *mut u8 {
+        self as *const _ as *mut _
+    }
+}
+
+impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ::core::ops::Index<usize>
+    for Cluster<T, DIM, DIM_INCREMENT>
+{
+    type Output = T;
+
+    fn index(&self, index: usize) -> &T {
+        self.get(index)
+    }
+}
