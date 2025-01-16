@@ -93,6 +93,12 @@ fn main() -> ! {
 
         // Test 64Bit register
         TIMER.register64bit().modify(|r| r.boolean().set(crate::timer::register64bit::Boolean::FALSE));
+
+        // Test cluster array
+        TIMER.clusterdim()[0].cr().modify(|r| r.field1().set(0));
+        for elem in TIMER.clusterdim() {
+            TIMER.clusterdim()[0].cr().modify(|r| r.field1().set(1));
+        }
     }
     loop {}
 }

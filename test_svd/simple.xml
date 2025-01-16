@@ -593,7 +593,7 @@
 						<resetValue>0x1000</resetValue>
 						<fields>
 							<field>
-								<name>filed1</name>
+								<name>field1</name>
 								<lsb>0</lsb>
 								<msb>2</msb>
 								<access>read-write</access>

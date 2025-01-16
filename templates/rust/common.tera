@@ -901,25 +901,28 @@ where
     }
 }
 
-/// A cluster of identical register blocks.
-pub struct Cluster<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> {
+/// An array of identical register clusters.
+pub struct ClusterArray<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> {
     _t: ::core::marker::PhantomData<T>,
 }
 
-impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> Cluster<T, DIM, DIM_INCREMENT> {
+impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ClusterArray<T, DIM, DIM_INCREMENT> {
     /// Returns the number of register blocks in the cluster.
-    pub fn len() -> usize {
+    #[inline(always)]
+    pub fn len(&self) -> usize {
         DIM
     }
 
     /// Returns whether the cluster is empty (DIM == 0).
-    pub fn is_empty() -> bool {
+    #[inline(always)]
+    pub fn is_empty(&self) -> bool {
         DIM == 0
     }
 
     /// Returns an iterator over the elements of this cluster.
+    #[inline(always)]
     pub fn iter(&self) -> impl ::core::iter::ExactSizeIterator<Item = &T> {
-        (0..DIM).map(|i| &self[i])
+        self.into_iter()
     }
 
     /// Returns the cluster element with the specified index.
@@ -935,21 +938,24 @@ impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> Cluster<T, DIM, DIM
     /// # Safety
     ///
     /// `index` must be less than `DIM`.
+    #[inline(always)]
     pub unsafe fn get_unchecked(&self, index: usize) -> &T {
         &*(self.as_ptr().add(index * DIM_INCREMENT) as *const _) 
     }
 
+    #[inline(always)]
     pub(crate) unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
         &*(ptr as *const Self)
     }
 
+    #[inline(always)]
     fn as_ptr(&self) -> *mut u8 {
         self as *const _ as *mut _
     }
 }
 
 impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ::core::ops::Index<usize>
-    for Cluster<T, DIM, DIM_INCREMENT>
+    for ClusterArray<T, DIM, DIM_INCREMENT>
 {
     type Output = T;
 
@@ -957,3 +963,41 @@ impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ::core::ops::Index<
         self.get(index)
     }
 }
+
+
+impl<'a, T: Sized, const DIM: usize, const DIM_INCREMENT: usize> IntoIterator for &'a ClusterArray<T, DIM, DIM_INCREMENT> {
+    type Item = &'a T;
+    type IntoIter = ClusterArrayIterator<'a, T, DIM, DIM_INCREMENT>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        ClusterArrayIterator {
+            array: self,
+            index: 0
+        }
+    }
+}
+
+pub struct ClusterArrayIterator<'a, T: Sized, const DIM: usize, const DIM_INCREMENT: usize> {
+    array: &'a ClusterArray<T, DIM, DIM_INCREMENT>,
+    index: usize
+}
+
+impl<'a, T: Sized, const DIM: usize, const DIM_INCREMENT: usize> Iterator for ClusterArrayIterator<'a, T, DIM, DIM_INCREMENT> {
+    type Item = &'a T;
+    fn next(&mut self) -> Option<&'a T> {
+        if self.index < self.array.len() {
+            let result = &self.array[self.index];
+            self.index += 1;
+            Some(result)
+        } else {
+            None
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.array.len() - self.index;
+        (len, Some(len))
+    }
+}
+
+impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ExactSizeIterator for ClusterArrayIterator<'_, T, DIM, DIM_INCREMENT> {}

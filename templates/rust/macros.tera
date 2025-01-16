@@ -21,13 +21,13 @@ Unsupported register size
 #[inline(always)]
 {% if reg.dim == 1 -%}
 pub const fn {{reg.name | to_func_id }}(&self) -> crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}> {
-    unsafe { crate::common::Reg::from_ptr(self.as_ptr().add({{reg.offset}}usize)) }
+    unsafe { crate::common::Reg::from_ptr(self._svd2pac_as_ptr().add({{reg.offset}}usize)) }
 }
 {%- else -%}
 pub const fn {{reg.name | to_func_id }}(&self) -> [crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>;{{reg.dim}}] {
     unsafe {  [
     {%- for index in range(end=reg.dim) -%}
-    crate::common::Reg::from_ptr(self.as_ptr().add({{reg.offset | to_hex }}usize + {{index * reg.dim_increment | to_hex }}usize )),
+    crate::common::Reg::from_ptr(self._svd2pac_as_ptr().add({{reg.offset | to_hex }}usize + {{index * reg.dim_increment | to_hex }}usize )),
     {% endfor -%}
     ] }
 }
@@ -125,12 +125,12 @@ pub mod {{reg_mod_name}} {
 #[doc = "{{cluster.description | svd_description_to_doc}}"]
 #[inline(always)]
 {%- if cluster.dim == 1 %}
-pub fn {{cluster_func}}(self) -> {{cluster_struct_path}}{
-    unsafe {   {{underscored_cluster_struct_path}}::from_ptr(self.as_ptr().add({{cluster.offset}}usize)) }
+pub const fn {{cluster_func}}(self) -> {{cluster_struct_path}}{
+    unsafe {   {{underscored_cluster_struct_path}}::_svd2pac_from_ptr(self._svd2pac_as_ptr().add({{cluster.offset}}usize)) }
 }
 {%- else %}
-pub fn {{cluster_func}}(self) -> &'static crate::common::Cluster<{{underscored_cluster_struct_path}}, {{cluster.dim}}, {{cluster.dim_increment | to_hex}}> {
-    unsafe { crate::common::Cluster::from_ptr(self.as_ptr().add({{cluster.offset | to_hex}}usize)) }
+pub fn {{cluster_func}}(self) -> &'static crate::common::ClusterArray<{{underscored_cluster_struct_path}}, {{cluster.dim}}, {{cluster.dim_increment | to_hex}}> {
+    unsafe { crate::common::ClusterArray::from_ptr(self._svd2pac_as_ptr().add({{cluster.offset | to_hex}}usize)) }
 }
 {%- endif -%}
 {%- endmacro -%}
@@ -151,12 +151,14 @@ pub type {{ cluster_struct }} = &'static _{{ cluster_struct }};
 unsafe impl ::core::marker::Sync for _{{ cluster_struct }} {}
 impl _{{cluster_struct}} {
     #[allow(unused)]
-    pub(crate) unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
+    #[inline(always)]
+    pub(crate) const unsafe fn _svd2pac_from_ptr(ptr: *mut u8) -> &'static Self {
         &*(ptr as *mut _)
     }
 
     #[allow(unused)]
-    pub(crate) const fn as_ptr(&self) -> *mut u8 {
+    #[inline(always)]
+    pub(crate) const fn _svd2pac_as_ptr(&self) -> *mut u8 {
         self as *const Self as *mut u8
     }
 
