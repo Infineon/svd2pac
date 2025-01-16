@@ -17,7 +17,8 @@ unsafe impl ::core::marker::Send for super::{{ peri_struct }} {}
 unsafe impl ::core::marker::Sync for super::{{ peri_struct }} {}
 impl super::{{ peri_struct }} {
     #[allow(unused)]
-    pub(crate) const fn as_ptr(&self) -> *mut u8 {
+    #[inline(always)]
+    pub(crate) const fn _svd2pac_as_ptr(&self) -> *mut u8 {
         self.ptr
     }
 
