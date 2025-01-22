@@ -97,7 +97,7 @@ fn main() -> ! {
         // Test cluster array
         TIMER.clusterdim()[0].cr().modify(|r| r.field1().set(0));
         for elem in TIMER.clusterdim() {
-            TIMER.clusterdim()[0].cr().modify(|r| r.field1().set(1));
+            elem.cr().modify(|r| r.field1().set(1));
         }
     }
     loop {}

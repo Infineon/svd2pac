@@ -153,7 +153,7 @@ impl _{{cluster_struct}} {
     #[allow(unused)]
     #[inline(always)]
     pub(crate) const unsafe fn _svd2pac_from_ptr(ptr: *mut u8) -> &'static Self {
-        &*(ptr as *mut _)
+        &*(ptr as *const _)
     }
 
     #[allow(unused)]
