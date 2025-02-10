@@ -20,8 +20,8 @@ Unsupported register size
 #[doc = "{{reg.description | svd_description_to_doc}}"]
 #[inline(always)]
 {% if reg.dim == 1 -%}
-pub const fn {{reg.name | to_func_id }}(&self) -> crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}> {
-    unsafe { crate::common::Reg::from_ptr(self._svd2pac_as_ptr().add({{reg.offset}}usize)) }
+pub const fn {{reg.name | to_func_id }}(&self) -> &'static crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}> {
+    unsafe {   crate::common::Reg::<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>::from_ptr(self._svd2pac_as_ptr().add({{reg.offset}}usize)) }
 }
 {%- else -%}
 pub const fn {{reg.name | to_func_id }}(&self) -> &'static crate::common::ClusterRegisterArray<crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>, {{reg.dim}}, {{reg.dim_increment | to_hex}}> {

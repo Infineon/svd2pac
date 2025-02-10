@@ -98,7 +98,6 @@ impl Write for W {}
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Reg<T, A: Access> {
-    ptr: *mut u8,
     phantom: PhantomData<*mut (T, A)>,
 }
 unsafe impl<T, A: Access> Send for Reg<T, A> {}
@@ -243,22 +242,19 @@ where
 {
     #[inline(always)]
     #[must_use]
-    pub(crate) const fn from_ptr(ptr: *mut u8) -> Self {
-        Self {
-            ptr,
-            phantom: PhantomData,
-        }
+    pub(crate) const fn from_ptr(ptr: *mut u8) -> &'static Self {
+        unsafe { &*(ptr as *const Self) }
     }
 
     #[inline(always)]
     #[must_use]
     pub const fn ptr(&self) -> *mut T::DataType {
-        self.ptr as _
+        self as *const _ as *mut T::DataType
     }
     {% if tracing %}
     /// Returns the address of the register.
     pub fn addr(&self) -> usize {
-        self.ptr as usize
+        unsafe {(self as *const _) as usize}
     }
     {% endif %}
 }
@@ -298,8 +294,8 @@ where
             T::DataType::cast_from(buf)
         };
         #[cfg(not(feature = "tracing"))]
-        {% endif %}
-        let val = (self.ptr as *mut T::DataType).read_volatile();
+        {% endif -%}
+        let val = self.ptr().read_volatile();
         RegValueT::<T>::new(val)
     }
 }
@@ -352,8 +348,8 @@ where
             }
         });
         #[cfg(not(feature = "tracing"))]
-        {% endif %}
-        (self.ptr as *mut T::DataType).write_volatile(reg_value.data);
+        {% endif -%}
+        self.ptr().write_volatile(reg_value.data);
     }
 }
 
@@ -464,7 +460,7 @@ where
         #[cfg(not(feature="tracing"))]
         {% endif -%}
         unsafe {
-            ::core::arch::tricore::intrinsics::__ldmst(self.ptr as *mut u32, res.data, res.mask);
+            ::core::arch::tricore::intrinsics::__ldmst(self.ptr(), res.data, res.mask);
         }
 
     }
