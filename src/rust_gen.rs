@@ -78,7 +78,8 @@ fn filter_prepend_lines(value: &Value, args: &HashMap<String, Value>) -> tera::R
             .split(&input_string)
             .map(|s| prefix_string.clone() + s)
             .collect::<Vec<_>>(),
-    ).map_err(|e| tera::Error::msg(format!("Failed to convert to value: {}", e)))?;
+    )
+    .map_err(|e| tera::Error::msg(format!("Failed to convert to value: {}", e)))?;
     Ok(splits)
 }
 
