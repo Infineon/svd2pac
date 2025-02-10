@@ -902,11 +902,11 @@ where
 }
 
 /// An array of identical register clusters.
-pub struct ClusterArray<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> {
+pub struct ClusterRegisterArray<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> {
     _t: ::core::marker::PhantomData<T>,
 }
 
-impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ClusterArray<T, DIM, DIM_INCREMENT> {
+impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ClusterRegisterArray<T, DIM, DIM_INCREMENT> {
     /// Returns the number of register blocks in the cluster.
     #[inline(always)]
     pub const fn len(&self) -> usize {
@@ -956,7 +956,7 @@ impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ClusterArray<T, DIM
 }
 
 impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ::core::ops::Index<usize>
-    for ClusterArray<T, DIM, DIM_INCREMENT>
+    for ClusterRegisterArray<T, DIM, DIM_INCREMENT>
 {
     type Output = T;
 
@@ -967,25 +967,25 @@ impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ::core::ops::Index<
 }
 
 
-impl<'a, T: Sized, const DIM: usize, const DIM_INCREMENT: usize> IntoIterator for &'a ClusterArray<T, DIM, DIM_INCREMENT> {
+impl<'a, T: Sized, const DIM: usize, const DIM_INCREMENT: usize> IntoIterator for &'a ClusterRegisterArray<T, DIM, DIM_INCREMENT> {
     type Item = &'a T;
-    type IntoIter = ClusterArrayIterator<'a, T, DIM, DIM_INCREMENT>;
+    type IntoIter = ClusterRegisterArrayIterator<'a, T, DIM, DIM_INCREMENT>;
 
     #[inline(always)]
     fn into_iter(self) -> Self::IntoIter {
-        ClusterArrayIterator {
+        ClusterRegisterArrayIterator {
             array: self,
             index: 0
         }
     }
 }
 
-pub struct ClusterArrayIterator<'a, T: Sized, const DIM: usize, const DIM_INCREMENT: usize> {
-    array: &'a ClusterArray<T, DIM, DIM_INCREMENT>,
+pub struct ClusterRegisterArrayIterator<'a, T: Sized, const DIM: usize, const DIM_INCREMENT: usize> {
+    array: &'a ClusterRegisterArray<T, DIM, DIM_INCREMENT>,
     index: usize
 }
 
-impl<'a, T: Sized, const DIM: usize, const DIM_INCREMENT: usize> Iterator for ClusterArrayIterator<'a, T, DIM, DIM_INCREMENT> {
+impl<'a, T: Sized, const DIM: usize, const DIM_INCREMENT: usize> Iterator for ClusterRegisterArrayIterator<'a, T, DIM, DIM_INCREMENT> {
     type Item = &'a T;
     #[inline(always)]
     fn next(&mut self) -> Option<&'a T> {
@@ -1005,4 +1005,4 @@ impl<'a, T: Sized, const DIM: usize, const DIM_INCREMENT: usize> Iterator for Cl
     }
 }
 
-impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ExactSizeIterator for ClusterArrayIterator<'_, T, DIM, DIM_INCREMENT> {}
+impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ExactSizeIterator for ClusterRegisterArrayIterator<'_, T, DIM, DIM_INCREMENT> {}
