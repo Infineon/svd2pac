@@ -24,12 +24,8 @@ pub const fn {{reg.name | to_func_id }}(&self) -> crate::common::Reg<{{reg_struc
     unsafe { crate::common::Reg::from_ptr(self._svd2pac_as_ptr().add({{reg.offset}}usize)) }
 }
 {%- else -%}
-pub const fn {{reg.name | to_func_id }}(&self) -> [crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>;{{reg.dim}}] {
-    unsafe {  [
-    {%- for index in range(end=reg.dim) -%}
-    crate::common::Reg::from_ptr(self._svd2pac_as_ptr().add({{reg.offset | to_hex }}usize + {{index * reg.dim_increment | to_hex }}usize )),
-    {% endfor -%}
-    ] }
+pub const fn {{reg.name | to_func_id }}(&self) -> &'static crate::common::ClusterRegisterArray<crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>, {{reg.dim}}, {{reg.dim_increment | to_hex}}> {
+    unsafe { crate::common::ClusterRegisterArray::from_ptr(self._svd2pac_as_ptr().add({{reg.offset | to_hex}}usize)) }
 }
 {%- endif -%}
 {%- endmacro -%}
@@ -129,8 +125,8 @@ pub const fn {{cluster_func}}(self) -> {{cluster_struct_path}}{
     unsafe {   {{underscored_cluster_struct_path}}::_svd2pac_from_ptr(self._svd2pac_as_ptr().add({{cluster.offset}}usize)) }
 }
 {%- else %}
-pub fn {{cluster_func}}(self) -> &'static crate::common::ClusterArray<{{underscored_cluster_struct_path}}, {{cluster.dim}}, {{cluster.dim_increment | to_hex}}> {
-    unsafe { crate::common::ClusterArray::from_ptr(self._svd2pac_as_ptr().add({{cluster.offset | to_hex}}usize)) }
+pub fn {{cluster_func}}(self) -> &'static crate::common::ClusterRegisterArray<{{underscored_cluster_struct_path}}, {{cluster.dim}}, {{cluster.dim_increment | to_hex}}> {
+    unsafe { crate::common::ClusterRegisterArray::from_ptr(self._svd2pac_as_ptr().add({{cluster.offset | to_hex}}usize)) }
 }
 {%- endif -%}
 {%- endmacro -%}

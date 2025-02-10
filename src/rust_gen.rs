@@ -78,8 +78,7 @@ fn filter_prepend_lines(value: &Value, args: &HashMap<String, Value>) -> tera::R
             .split(&input_string)
             .map(|s| prefix_string.clone() + s)
             .collect::<Vec<_>>(),
-    )
-    .unwrap();
+    ).map_err(|e| tera::Error::msg(format!("Failed to convert to value: {}", e)))?;
     Ok(splits)
 }
 
@@ -286,6 +285,16 @@ fn error_with_context() -> Result<()> {
     Err(anyhow!("svd parsing error")).context("problem with svd to extract aurix cpu related peripherals, <vendorExtensions> or <aurixCSFR> maybe missing?")
 }
 
+/// Extracts the AURIX CSFR SVD section from the given XML file and constructs a new SVD string.
+///
+/// # Arguments
+///
+/// * `path` - The path to the XML file containing the SVD.
+/// * `svd_string` - A mutable reference to a string where the extracted SVD will be stored.
+///
+/// # Returns
+///
+/// * `Result<()>` - Returns an Ok(()) if successful, or an error if there was a problem reading the file or parsing the XML.
 pub fn get_aurix_csfr_svd(path: &Path, svd_string: &mut String) -> Result<()> {
     let xml = &mut String::new();
     File::open(path)
