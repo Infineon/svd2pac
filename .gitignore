@@ -2,3 +2,5 @@
 /generated_code/
 /lcov.info
 
+# temp folders for test run
+/.tmp*

@@ -278,7 +278,11 @@ possible to read/write registers as plain integers.
 // get register value as integer value
 let to_log = unsafe { TIMER.sr().read().get_raw() };
 
-// write register with integer value, e.g. read from table
+// write register with opaque integer value
+unsafe { TIMER.bitfield_reg().write_raw(0x42dead42) };
+
+// write register with opaque integer value, e.g. read from table
+// `set_raw` can be mixed with other bitfield setting functions
 unsafe { TIMER.bitfield_reg().modify(|r| r.set_raw(0x1234)) };
 ```
 
