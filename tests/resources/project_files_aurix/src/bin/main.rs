@@ -35,6 +35,9 @@ fn main() -> ! {
                 .set(3)
         });
 
+        // write raw
+        TIMER.bitfield_reg().write_raw(0x123);
+
         // Modify atomic only 32bit registers
         TIMER.bitfield_reg().modify_atomic(|f| {
             f.bitfieldenumerated()

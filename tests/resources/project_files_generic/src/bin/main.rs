@@ -35,6 +35,9 @@ fn main() -> ! {
                 .set(3)
         });
 
+        // write raw
+        TIMER.bitfield_reg().write_raw(0x123);
+
         // Array of register bitfields
         let mut a = TIMER.bitfield_reg().read();
         for x in 0..2 {

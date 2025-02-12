@@ -312,8 +312,8 @@ where
     /// * `reg_value` - A string slice that holds the name of the person
     ///
     /// # Safety
-    /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
-    /// Register is Send and Sync to allow complete freedom. Developer is responsible of proper use in interrupt and thread.
+    /// Write operation could cause undefined behavior for some peripheral. Developers shall read the device user manual.
+    /// Register is Send and Sync to allow complete freedom. Developers are responsible of proper use in interrupt and thread.
     ///
     /// # Example
     /// ```rust,ignore
@@ -350,6 +350,49 @@ where
         #[cfg(not(feature = "tracing"))]
         {% endif -%}
         self.ptr().write_volatile(reg_value.data);
+    }
+
+
+    /// Write an arbitrary integer to register
+    ///
+    /// Use this function when e.g. loading data to be written from a config-page.
+    /// For normal use prefer either [`Reg<T, A>::write`] if the value was read before, or [`Reg<T, A>::init`],
+    /// both of which provide some restrictions available register fields, enums, etc.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The unchecked value to be written to the register
+    ///
+    /// # Safety
+    ///
+    /// Write operation could cause undefined behavior for some peripheral. Developers shall read the device user manual.
+    /// Register is Send and Sync to allow complete freedom. Developers are responsible of proper use in interrupt and thread.
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// // example with generic names
+    /// unsafe { TIMER.bitfield_reg().write_raw(0xdead) }
+    /// ```
+    /// See also [`Reg<T, A>::init`] and [`Reg<T, A>::write`] both of which are the safe, preferred functions.
+    #[inline(always)]
+    pub unsafe fn write_raw(&self, value: T::DataType) {
+        {% if tracing %}
+        #[cfg(feature = "tracing")]
+        tracing::WRITE_FN.with(|wf| {
+            if let Some(wf) = wf.get() {
+                wf(
+                    self.addr(),
+                    std::mem::size_of::<T::DataType>(),
+                    value.into(),
+                )
+            } else {
+                #[cfg(not(feature = "tracing_dummy"))]
+                panic!("Please, provide an handler for read with tracing::set_read_fn(callback);");
+            }
+        });
+        #[cfg(not(feature = "tracing"))]
+        {% endif %}
+        self.ptr().write_volatile(value);
     }
 }
 
