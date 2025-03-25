@@ -102,6 +102,16 @@ fn main() -> ! {
         for elem in TIMER.clusterdim() {
             elem.cr().modify(|r| r.field1().set(1));
         }
+
+        // Demonstrating the usage of enumerated values with read-only, write-only, and read-write usage
+        let reg_value = UART[1].regenumvalue().read();
+        let _bitfield_value:uart::regenumvalue::OnlyReadEnumRead =reg_value.only_read_enum().get();
+        let _ =reg_value.only_read_enum().set(1);
+        let _ = reg_value.only_write_enum().set(uart::regenumvalue::OnlyWriteEnumWrite::VALUE_1);
+        let _:u8 = reg_value.only_write_enum().get();
+        let _:uart::regenumvalue::ReadWriteEnumSplitBinaryRead = reg_value.read_write_enum_split_binary().get();
+        let _ = reg_value.read_write_enum_split_binary().set(uart::regenumvalue::ReadWriteEnumSplitBinaryWrite::VALUE_0);
+        let _:uart::regenumvalue::ReadWriteEnumSplitBinaryRead = reg_value.read_write_enum_split_binary().get();
     }
     loop {}
 }
