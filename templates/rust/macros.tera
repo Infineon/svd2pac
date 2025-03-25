@@ -32,16 +32,22 @@ pub const fn {{reg.name | to_func_id }}(&self) -> &'static crate::common::Cluste
  
 {%- macro bitfield_type(field,reg_struct_name,reg_mod_name,turbofish) -%}
 {%-if turbofish %}{%set separator = "::"%}{%else%}{%set separator = ""%}{%endif-%}
-{%- if not field.enum_type and field.mask == 1 %}
+{%- if  field.mask == 1 and 0 == field.enum_types | length %}
     crate::common::RegisterFieldBool{{separator}}<{{field.offset}},{{field.dim}},{{field.dim_increment}},{{reg_struct_name}}_SPEC,crate::common::{{field.access}}>
 {%- else -%}
-    {%- if field.enum_type -%}
-        {%- set enum_name_type= field.enum_type.name | to_struct_id -%}
-        {%- set field_type= reg_mod_name ~ "::" ~ enum_name_type -%}
+    {%- if field.enum_type_read -%}
+        {%- set enum_name_type_read= field.enum_type_read | to_struct_id -%}
+        {%- set field_type_read= reg_mod_name ~ "::" ~ enum_name_type_read -%}
     {%- else %}
-        {%- set field_type= self::reg_size2num_type(bit_size=field.size) -%}
+        {%- set field_type_read= self::reg_size2num_type(bit_size=field.size) -%}
     {%- endif -%}
-    crate::common::RegisterField{{separator}}<{{field.offset}},{{field.mask | to_hex}},{{field.dim}},{{field.dim_increment}},{{field_type}}, {{reg_struct_name}}_SPEC,crate::common::{{field.access}}>
+    {%- if field.enum_type_write -%}
+        {%- set enum_name_type_write= field.enum_type_write | to_struct_id -%}
+        {%- set field_type_write= reg_mod_name ~ "::" ~ enum_name_type_write -%}
+    {%- else %}
+        {%- set field_type_write= self::reg_size2num_type(bit_size=field.size) -%}
+    {%- endif -%}
+    crate::common::RegisterField{{separator}}<{{field.offset}},{{field.mask | to_hex}},{{field.dim}},{{field.dim_increment}},{{field_type_read}},{{field_type_write}},{{reg_struct_name}}_SPEC,crate::common::{{field.access}}>
 {%- endif -%}
 {%- endmacro -%}
 
@@ -94,18 +100,18 @@ impl ::core::default::Default for {{reg_struct_name}} {
 {% if reg.has_enumerated_fields -%}
 pub mod {{reg_mod_name}} {
     {% for field_name,field in reg.fields -%}
-    {%-if field.enum_type -%}
-    {%- set enum_name_type= field.enum_type.name | to_struct_id %}
+    {%- for enum_type in field.enum_types -%}
+    {%- set enum_name_type= enum_type.name | to_struct_id %}
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     pub struct {{enum_name_type}}_SPEC;
-    pub type  {{enum_name_type}} = crate::EnumBitfieldStruct<{{self::reg_size2num_type(bit_size=field.enum_type.size)}},{{enum_name_type}}_SPEC>;
+    pub type  {{enum_name_type}} = crate::EnumBitfieldStruct<{{self::reg_size2num_type(bit_size=enum_type.size)}},{{enum_name_type}}_SPEC>;
     impl {{enum_name_type}} {
-        {%- for val in field.enum_type.values %}
+        {%- for val in enum_type.values %}
         #[doc = "{{val.description | svd_description_to_doc}}"]
         pub const {{val.name | to_enumerated_const_id }}:Self =Self::new({{val.value}});
         {%- endfor %}
     }
-    {%- endif -%}
+    {%- endfor -%}
     {% endfor %}
 }
 {%- endif -%}

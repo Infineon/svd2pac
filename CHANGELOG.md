@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0]
+
+### Changed
+
+- previously the `usage` tag was ignored in `enumeratedValues` tag and all label were merged. In this release different types are generated based on `usage` value. The enumerate value type is postfixed with `_Read` and `_Write` if `usage` is `read` or `write`. No postfix if `usage` is absent or `read-write`
+- panic if an `enumeratedValue` has attribute `derivedFrom`
+
 ## [0.4.0]
 
 ### Added
