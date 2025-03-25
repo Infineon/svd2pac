@@ -757,6 +757,7 @@
 							<name>only_read_enum</name>
 							<lsb>0</lsb>
 							<msb>2</msb>
+							<access>read-write</access>
 							<enumeratedValues>
 								<usage>read</usage>
 								<enumeratedValue>
@@ -777,6 +778,7 @@
 							<name>only_write_enum</name>
 							<lsb>3</lsb>
 							<msb>5</msb>
+							<access>read-write</access>
 							<enumeratedValues>
 								<usage>write</usage>
 								<enumeratedValue>
@@ -797,6 +799,7 @@
 							<name>read_write_enum</name>
 							<lsb>6</lsb>
 							<msb>7</msb>
+							<access>read-write</access>
 							<enumeratedValues>
 								<usage>read-write</usage>
 								<enumeratedValue>
@@ -817,6 +820,7 @@
 							<name>read_write_enum_split</name>
 							<lsb>8</lsb>
 							<msb>9</msb>
+							<access>read-write</access>
 							<enumeratedValues>
 								<usage>read</usage>
 								<enumeratedValue>
@@ -852,6 +856,7 @@
 							<name>read_write_enum_split_binary</name>
 							<lsb>10</lsb>
 							<msb>10</msb>
+							<access>read-write</access>
 							<enumeratedValues>
 								<usage>read</usage>
 								<enumeratedValue>

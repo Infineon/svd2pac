@@ -52,7 +52,7 @@ fn filter_render_path(value: &Value, _args: &HashMap<String, Value>) -> tera::Re
         },
         Err(e)=>{
             Err(tera::Error::msg(format!(
-                "filter_render_path only acceptes Vec<PathChunk> as input.\nCound not deserialize value:{} because:\nerror:{}",
+                "filter_render_path only accepts Vec<PathChunk> as input.\nCannot deserialize value:{} because:\nerror:{}",
                 value,
                 e
             )))

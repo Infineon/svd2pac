@@ -695,7 +695,8 @@ pub struct RegisterField<
     const MASK: u64,
     const DIM: u8,
     const DIM_INCREMENT: u8,
-    ValueType,
+    ValueTypeRead,
+    ValueTypeWrite,
     T,
     A,
 > where
@@ -704,7 +705,7 @@ pub struct RegisterField<
 {
     data: RegValueT<T>,
     index: u8,
-    marker: PhantomData<(ValueType, A)>,
+    marker: PhantomData<(ValueTypeRead,ValueTypeWrite, A)>,
 }
 
 impl<
@@ -712,10 +713,11 @@ impl<
         const MASK: u64,
         const DIM: u8,
         const DIM_INCREMENT: u8,
-        ValueType,
+        ValueTypeRead,
+        ValueTypeWrite,
         T,
         A,
-    > RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueType, T, A>
+    > RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueTypeRead,ValueTypeWrite, T, A>
 where
     T: RegSpec,
     A: Access,
@@ -732,7 +734,7 @@ where
 
     /// Get mask for bitfield, the mask is unshifted and at offset 0
     ///
-    /// Prefer the use of [`RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueType, T, A>::get()`] to
+    /// Prefer the use of [`RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueTypeRead,ValueTypeWrite, T, A>::get()`] to
     /// extract a bitfield value.
     #[inline(always)]
     #[must_use]
@@ -742,7 +744,7 @@ where
 
     /// Get offset of bitfield in containing register
     ///
-    /// Prefer the use of [`RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueType, T, A>::get()`] to
+    /// Prefer the use of [`RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueTypeRead,ValueTypeWrite, T, A>::get()`] to
     /// extract a bitfield value.
     #[inline(always)]
     #[must_use]
@@ -756,21 +758,22 @@ impl<
         const MASK: u64,
         const DIM: u8,
         const DIM_INCREMENT: u8,
-        ValueType,
+        ValueTypeRead,
+        ValueTypeWrite,
         T,
         A,
-    > RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueType, T, A>
+    > RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueTypeRead,ValueTypeWrite, T, A>
 where
     T: RegSpec,
     A: Read,
-    ValueType: CastFrom<u64>,
+    ValueTypeRead: CastFrom<u64>,
 {
     /// Extract bitfield from read register value
     #[inline(always)]
-    pub fn get(&self) -> ValueType {
+    pub fn get(&self) -> ValueTypeRead {
         let offset = START_OFFSET + (self.index * DIM_INCREMENT) as usize;
         let filtered: T::DataType = (self.data.data >> offset) & T::DataType::cast_from(MASK);
-        ValueType::cast_from(filtered.into())
+        ValueTypeRead::cast_from(filtered.into())
     }
 }
 
@@ -779,14 +782,15 @@ impl<
         const MASK: u64,
         const DIM: u8,
         const DIM_INCREMENT: u8,
-        ValueType,
+        ValueTypeRead,
+        ValueTypeWrite,
         T,
         A,
-    > RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueType, T, A>
+    > RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueTypeRead,ValueTypeWrite, T, A>
 where
     T: RegSpec,
     A: Write,
-    u64: From<ValueType>,
+    u64: From<ValueTypeWrite>,
 {
     /// Prepare bitfield value that could be written to register
     ///
@@ -817,7 +821,7 @@ where
     /// ```
     #[inline(always)]
     #[must_use]
-    pub fn set(mut self, value: ValueType) -> RegValueT<T> {
+    pub fn set(mut self, value: ValueTypeWrite) -> RegValueT<T> {
         let mask = T::DataType::cast_from(MASK);
         let value: T::DataType = T::DataType::cast_from(Into::<u64>::into(value)) & mask;
         let offset = START_OFFSET + (self.index * DIM_INCREMENT) as usize;
