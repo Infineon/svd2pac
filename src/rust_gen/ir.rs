@@ -50,9 +50,18 @@ pub struct EnumeratedSingleValue {
     pub description: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+pub enum EnumeratedValueUsage {
+    Read,
+    Write,
+    #[default]
+    ReadWrite,
+}
+
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct EnumeratedValueType {
     pub name: String,
+    pub usage: EnumeratedValueUsage,
     pub size: BitSize, // Used generate the smallest numeric type to contain the value
     pub values: Vec<EnumeratedSingleValue>,
 }
@@ -64,7 +73,14 @@ pub struct FieldGetterSetter {
     pub offset: u32,
     pub mask: u32,
     pub size: BitSize,
-    pub enum_type: Option<EnumeratedValueType>,
+    /// Contains up to 2 enum types that are used to generate read and write functions
+    pub enum_types: Vec<EnumeratedValueType>,
+    /// if None then the field is not enumerated and api accept raw value
+    /// if Some then the field is enumerated and api accept a type defined in the option
+    /// String shall match a name of EnumeratedValueType
+    pub enum_type_write: Option<String>,
+    /// The same as enum_type_write but for read function
+    pub enum_type_read: Option<String>,
     pub access: RegisterBitfieldAccess,
     pub dim: u32,
     pub dim_increment: u32,
