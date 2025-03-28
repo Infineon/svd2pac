@@ -29,5 +29,6 @@ fn compile_generated_cortex_m() {
 
     let license_path = generated_pack_folder.join("LICENSE.txt");
     assert!(license_path.exists(), "Not found LICENSE.txt");
-    assert_cargo_build(&workspace_folder, None);
+    assert_cargo_command(&workspace_folder, CargoCommand::Build, None);
+    assert_cargo_command(&workspace_folder, CargoCommand::Clippy, None);
 }
