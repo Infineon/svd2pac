@@ -254,7 +254,7 @@ where
     {% if tracing %}
     /// Returns the address of the register.
     pub fn addr(&self) -> usize {
-        unsafe {(self as *const _) as usize}
+        (self as *const _) as usize
     }
     {% endif %}
 }

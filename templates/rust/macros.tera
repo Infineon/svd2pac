@@ -12,12 +12,19 @@ Unsupported register size
 {%- endif -%}
 {%- endmacro reg_size2num_type -%}
 
+{%- macro doc_attribute(documentation) -%}
+{%- set doc_string = documentation | svd_description_to_doc -%}
+{%- if doc_string is not matching("") %} 
+#[doc = "{{doc_string}}"]
+{%- endif -%}
+{%- endmacro -%}
+
 {# Generated register function #}
 {%- macro register_func(types_mod,reg) -%}
 {%- set reg_struct = reg.name | to_struct_id -%}
 {%- set reg_struct_name = types_mod ~ "::" ~  reg_struct  -%}
 {%- set reg_mod_name = reg.name | to_mod_id -%}
-#[doc = "{{reg.description | svd_description_to_doc}}"]
+{{self::doc_attribute(documentation=reg.description)}}
 #[inline(always)]
 {% if reg.dim == 1 -%}
 pub const fn {{reg.name | to_func_id }}(&self) -> &'static crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}> {
@@ -67,7 +74,7 @@ pub struct {{reg_struct_name}}_SPEC;
 impl crate::sealed::RegSpec for {{reg_struct_name}}_SPEC {
     type DataType = {{self::reg_size2num_type(bit_size=reg.size)}};
 }
-#[doc = "{{reg.description | svd_description_to_doc}}"]
+{{self::doc_attribute(documentation=reg.description)}}
 pub type  {{reg_struct_name}} = crate::RegValueT<{{reg_struct_name}}_SPEC>;
 
 {% if not reg.fields %}
@@ -75,7 +82,7 @@ impl NoBitfieldReg<{{reg_struct_name}}_SPEC> for {{reg_struct_name}} {}
 {% else -%}
 impl {{reg_struct_name}} {
     {%- for field_name,field in reg.fields %}
-    #[doc = "{{field.description | svd_description_to_doc}}"]
+    {{self::doc_attribute(documentation=field.description)}}
     #[inline(always)]
     {%- if field.dim > 1 -%}
     pub fn {{field.name | to_func_id }}(self,index:u8) -> {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
@@ -107,7 +114,7 @@ pub mod {{reg_mod_name}} {
     pub type  {{enum_name_type}} = crate::EnumBitfieldStruct<{{self::reg_size2num_type(bit_size=enum_type.size)}},{{enum_name_type}}_SPEC>;
     impl {{enum_name_type}} {
         {%- for val in enum_type.values %}
-        #[doc = "{{val.description | svd_description_to_doc}}"]
+        {{self::doc_attribute(documentation=val.description)}}
         pub const {{val.name | to_enumerated_const_id }}:Self =Self::new({{val.value}});
         {%- endfor %}
     }
@@ -124,7 +131,7 @@ pub mod {{reg_mod_name}} {
 {%- set cluster_struct_path = "crate" ~ "::" ~ mod_struct_path ~ "::" ~ cluster_struct_id -%}
 {%- set underscored_cluster_struct_path = "crate" ~ "::" ~ mod_struct_path ~ "::_" ~ cluster_struct_id -%}
 {%- set cluster_func = cluster.name | to_func_id -%}
-#[doc = "{{cluster.description | svd_description_to_doc}}"]
+{{self::doc_attribute(documentation=cluster.description)}}
 #[inline(always)]
 {%- if cluster.dim == 1 %}
 pub const fn {{cluster_func}}(self) -> {{cluster_struct_path}}{
@@ -143,11 +150,10 @@ pub fn {{cluster_func}}(self) -> &'static crate::common::ClusterRegisterArray<{{
 {%- if not cluster.is_derived_from -%}
 {%- set cluster_struct = cluster.struct_id | to_struct_id -%}
 {%- set cluster_mod = cluster.module_id -%}
-#[doc = "{{cluster.description | svd_description_to_doc}}"]
+{{self::doc_attribute(documentation=cluster.description)}}
 #[non_exhaustive]
 pub struct _{{ cluster_struct }};
-
-#[doc = "{{cluster.description | svd_description_to_doc}}"]
+{{self::doc_attribute(documentation=cluster.description)}}
 pub type {{ cluster_struct }} = &'static _{{ cluster_struct }};
 
 unsafe impl ::core::marker::Sync for _{{ cluster_struct }} {}

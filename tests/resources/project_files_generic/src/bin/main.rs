@@ -64,12 +64,9 @@ fn main() -> ! {
         }
 
         // Raw bitfield write. How to write an enumerated bitfield by passing an integer literal
-        TIMER.bitfield_reg().modify(|f| {
-            f.bitfieldenumerated()
-                .set(3.into())
-                .bitfieldw()
-                .set(3)
-        });
+        TIMER
+            .bitfield_reg()
+            .modify(|f| f.bitfieldenumerated().set(3.into()).bitfieldw().set(3));
 
         // Use register marked with alternateGroup
         TIMER.bitfield_reg_alt_group().modify(|f| f.set(32));
@@ -95,7 +92,9 @@ fn main() -> ! {
             .write(value._self().set(foo::r#in::_Self::_1_VALUE));
 
         // Test 64Bit register
-        TIMER.register64bit().modify(|r| r.boolean().set(crate::timer::register64bit::Boolean::FALSE));
+        TIMER
+            .register64bit()
+            .modify(|r| r.boolean().set(crate::timer::register64bit::Boolean::FALSE));
 
         // Test cluster array
         TIMER.clusterdim()[0].cr().modify(|r| r.field1().set(0));
@@ -105,13 +104,21 @@ fn main() -> ! {
 
         // Demonstrating the usage of enumerated values with read-only, write-only, and read-write usage
         let reg_value = UART[1].regenumvalue().read();
-        let _bitfield_value:uart::regenumvalue::OnlyReadEnumRead =reg_value.only_read_enum().get();
-        let _ =reg_value.only_read_enum().set(1);
-        let _ = reg_value.only_write_enum().set(uart::regenumvalue::OnlyWriteEnumWrite::VALUE_1);
-        let _:u8 = reg_value.only_write_enum().get();
-        let _:uart::regenumvalue::ReadWriteEnumSplitBinaryRead = reg_value.read_write_enum_split_binary().get();
-        let _ = reg_value.read_write_enum_split_binary().set(uart::regenumvalue::ReadWriteEnumSplitBinaryWrite::VALUE_0);
-        let _:uart::regenumvalue::ReadWriteEnumSplitBinaryRead = reg_value.read_write_enum_split_binary().get();
+        let _bitfield_value: uart::regenumvalue::OnlyReadEnumRead =
+            reg_value.only_read_enum().get();
+        let _ = reg_value.only_read_enum().set(1);
+        let _ = reg_value
+            .only_write_enum()
+            .set(uart::regenumvalue::OnlyWriteEnumWrite::VALUE_1);
+        let _: u8 = reg_value.only_write_enum().get();
+        let _: uart::regenumvalue::ReadWriteEnumSplitBinaryRead =
+            reg_value.read_write_enum_split_binary().get();
+        let _ = reg_value
+            .read_write_enum_split_binary()
+            .set(uart::regenumvalue::ReadWriteEnumSplitBinaryWrite::VALUE_0);
+        let _: uart::regenumvalue::ReadWriteEnumSplitBinaryRead =
+            reg_value.read_write_enum_split_binary().get();
     }
+    #[allow(clippy::empty_loop)]
     loop {}
 }

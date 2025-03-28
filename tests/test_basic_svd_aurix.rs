@@ -57,8 +57,9 @@ fn compile_generated_aurix() {
     )
     .expect("Failed to copy required files to build cargo project");
 
-    assert_cargo_build(
+    assert_cargo_command(
         &generated_code_folder,
+        CargoCommand::Build,
         Some(env!("AURIX_TOOLCHAIN").to_string()),
     );
 }
@@ -115,8 +116,9 @@ fn compile_generated_aurix_tracing() {
     )
     .expect("Failed to copy required files to build cargo project");
 
-    assert_cargo_build(
+    assert_cargo_command(
         &generated_code_folder,
+        CargoCommand::Build,
         Some(env!("AURIX_TOOLCHAIN").to_string()),
     );
 }
