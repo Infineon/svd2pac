@@ -24,13 +24,30 @@ pub fn assert_files_eq<T: AsRef<Path>, Q: AsRef<Path>>(ref_file: T, gen_file: Q)
     );
 }
 
-/// execute cargo build and check that build is successfull
-pub fn assert_cargo_build(package_folder: &tempfile::TempDir, toolchain_override: Option<String>) {
-    Command::new("cargo")
-        .arg("clean")
-        .current_dir(package_folder.path())
-        .output()
-        .expect("Failed to clean package");
+#[allow(dead_code)]
+pub enum CargoCommand {
+    Build,
+    Clippy,
+    Clean,
+}
+
+impl std::fmt::Display for CargoCommand {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let command_str = match self {
+            CargoCommand::Build => "build",
+            CargoCommand::Clippy => "clippy",
+            CargoCommand::Clean => "clean",
+        };
+        write!(f, "{}", command_str)
+    }
+}
+
+/// execute cargo command cargo  and check that build is successful
+pub fn assert_cargo_command(
+    package_folder: &tempfile::TempDir,
+    cargo_command: CargoCommand,
+    toolchain_override: Option<String>,
+) {
     // Run cargo to build
     let mut command = Command::new("cargo");
     let toolchain_id = if let Some(ref toolchain_id) = toolchain_override {
@@ -39,7 +56,11 @@ pub fn assert_cargo_build(package_folder: &tempfile::TempDir, toolchain_override
     } else {
         "default"
     };
-    command.arg("build");
+    match cargo_command {
+        CargoCommand::Build => command.arg("build"),
+        CargoCommand::Clippy => command.arg("clippy"),
+        CargoCommand::Clean => command.arg("clean"),
+    };
     command.current_dir(package_folder.path());
     let exec_result = command.output();
 
@@ -49,17 +70,30 @@ pub fn assert_cargo_build(package_folder: &tempfile::TempDir, toolchain_override
         exit(-1);
     }
     let output_result = exec_result.unwrap();
+
+    let stdout_msg = std::str::from_utf8(&output_result.stdout)
+        .expect("Failed to parse stdout returned from cargo build");
+    check_warning_message(stdout_msg);
+    let stderr_msg = std::str::from_utf8(&output_result.stderr)
+        .expect("Failed to parse stderr returned from cargo build");
+    check_warning_message(stderr_msg);
+
     if !output_result.status.success() {
-        let stdout_msg = std::str::from_utf8(&output_result.stdout)
-            .expect("Failed to parse stdout returned from cargo build");
-        let stderr_msg = std::str::from_utf8(&output_result.stderr)
-            .expect("Failed to parse stderr returned from cargo build");
-        eprintln!("Failed compilation of test project stdout: {}", stdout_msg);
-        eprintln!("Failed compilation of test project stderr: {}", stderr_msg);
+        eprintln!("Error stdout: {}", stdout_msg);
+        eprintln!("Error stderr: {}", stderr_msg);
         eprintln!(
-            "Failed compilation of test project using toolchain: {}",
-            toolchain_id
+            "Failed cargo {} of test project using toolchain: {}",
+            cargo_command, toolchain_id
         );
+        // This to preserve the temp folders for further debugging
+        exit(-1);
+    }
+}
+
+fn check_warning_message(msg: &str) {
+    // Check for warnings in stdout
+    if msg.to_lowercase().contains("warning") {
+        eprintln!("Warning detected: {}", msg);
         // This to preserve the temp folders for further debugging
         exit(-1);
     }

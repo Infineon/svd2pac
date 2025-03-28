@@ -238,14 +238,32 @@ impl Visitor {
                 svd::Access::WriteOnce => RegisterBitfieldAccess::W,
                 svd::Access::ReadWriteOnce => RegisterBitfieldAccess::RW,
             };
-            let enum_type = get_values_types(field);
+
             let (dim, dim_increment) = get_dim_dim_increment(field);
+            let enum_types = get_values_types(field);
+            let enum_type_write = enum_types
+                .iter()
+                .find(|x| {
+                    x.usage == EnumeratedValueUsage::Write
+                        || x.usage == EnumeratedValueUsage::ReadWrite
+                })
+                .map(|x| x.name.clone());
+            let enum_type_read = enum_types
+                .iter()
+                .find(|x| {
+                    x.usage == EnumeratedValueUsage::Read
+                        || x.usage == EnumeratedValueUsage::ReadWrite
+                })
+                .map(|x| x.name.clone());
+
             fields.push(FieldGetterSetter {
                 name,
                 description,
                 offset,
                 mask,
-                enum_type,
+                enum_types,
+                enum_type_write,
+                enum_type_read,
                 access,
                 size: BitSize::val_2_bit_size(mask.into()),
                 dim,
@@ -279,7 +297,7 @@ impl Visitor {
             ),
         }
 
-        register.has_enumerated_fields = fields.iter().any(|f| f.enum_type.is_some());
+        register.has_enumerated_fields = fields.iter().any(|f| !f.enum_types.is_empty());
 
         match reg.properties.access {
             Some(reg_access) => {
@@ -483,15 +501,16 @@ impl Visitor {
     }
 }
 
-fn get_values_types(field: &svd::Field) -> Option<EnumeratedValueType> {
+fn get_values_types(field: &svd::Field) -> Vec<EnumeratedValueType> {
     if field.enumerated_values.is_empty() {
-        return None;
+        return vec![];
     };
-
-    let name = field.name.to_internal_ident();
-    let mut values = Vec::new();
-    let mut max_value = 0u64; // Compute max value of bitfiled to define the size of bitfiled in bits.
+    let mut result = Vec::new();
     for enum_values in &field.enumerated_values {
+        assert!(enum_values.derived_from.is_none(), "Derived from is not supported in enumerated values. Bitfield: {} shall not have derived_from", field.name);
+
+        let mut max_value = 0u64; // Compute max value of bitfield to define the size of bitfield in bits.
+        let mut values = Vec::new();
         for val_entry in &enum_values.values {
             assert!(
                 !val_entry.name.is_empty(),
@@ -517,12 +536,34 @@ fn get_values_types(field: &svd::Field) -> Option<EnumeratedValueType> {
             });
             max_value = max_value.max(value);
         }
+        let usage = match enum_values.usage {
+            None => EnumeratedValueUsage::ReadWrite,
+            Some(svd::Usage::Read) => EnumeratedValueUsage::Read,
+            Some(svd::Usage::Write) => EnumeratedValueUsage::Write,
+            Some(svd::Usage::ReadWrite) => EnumeratedValueUsage::ReadWrite,
+        };
+        let name = match usage {
+            EnumeratedValueUsage::Read => format!("{}_Read", field.name.to_internal_ident()),
+            EnumeratedValueUsage::Write => format!("{}_Write", field.name.to_internal_ident()),
+            EnumeratedValueUsage::ReadWrite => field.name.to_internal_ident(),
+        };
+        result.push(EnumeratedValueType {
+            name,
+            usage,
+            size: BitSize::val_2_bit_size(max_value),
+            values,
+        });
     }
-    Some(EnumeratedValueType {
-        name,
-        size: BitSize::val_2_bit_size(max_value),
-        values,
-    })
+    assert!(
+        result.len() <= 2,
+        "Only up to two enumeratedValue are supported"
+    );
+    assert!(result.iter().all(|f| f.usage!=EnumeratedValueUsage::ReadWrite) || result.len() != 2, "If two enumeratedValue are defined, one shall be read and the other write. bitfield name: {}", field.name);
+    assert!(
+        result.len() != 2 || (result[0].usage != result[1].usage),
+        "If two enumeratedValue are defined, one shall be read and the other write"
+    );
+    result
 }
 
 /// Parse xml and trasform to device description of svd_rs module

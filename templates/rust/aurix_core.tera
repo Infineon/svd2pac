@@ -59,7 +59,6 @@ pub const fn {{cluster.name~"_"~reg.name~"_"~cluster_index~"_"~reg_index| to_fun
 {%- set cluster_struct_id = cluster.name | to_struct_id -%}
 {%- set cluster_base_addr = base_addr+cluster.offset -%}
 #[doc = "{{cluster.description | svd_description_to_doc}}"]
-#[inline(always)]
 {%- if cluster.dim == 1 %}
 {% for register_name,reg in cluster.registers -%}
 {{self::cluster_register_core_func(types_mod="self",reg=reg, base_addr=cluster_base_addr,cluster_index=0,cluster=cluster)}}

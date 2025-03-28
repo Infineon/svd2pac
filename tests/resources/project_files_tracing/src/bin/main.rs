@@ -74,7 +74,6 @@ fn main() -> ! {
                 .set(3)
         });
         {
-            use tracing::insanely_unsafe;
             // Write a read-only register
             TIMER.sr().write_read_only(timer::Sr::default());
 
@@ -82,6 +81,7 @@ fn main() -> ! {
             let _ = TIMER.int().read_write_only();
         }
     }
+    #[allow(clippy::empty_loop)]
     loop {}
 }
 
