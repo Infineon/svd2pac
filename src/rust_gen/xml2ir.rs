@@ -7,6 +7,7 @@ use super::ir::*;
 use super::util::*;
 use crate::svd_util::*;
 use crate::SvdValidationLevel;
+use anyhow::Ok;
 use anyhow::Result;
 use linked_hash_map::LinkedHashMap;
 use log::{debug, error, warn};
@@ -92,41 +93,53 @@ struct Visitor {
 }
 impl Visitor {
     /// Create the intermediate representation of device used by template engine
-    fn visit_device(&mut self, device: &svd::Device) {
+    fn visit_device(&mut self, device: &svd::Device) -> Result<()> {
         self.device.name.clone_from(&device.name);
         self.device.description.clone_from(&device.description);
 
         for svd_peripheral in device.peripherals.iter() {
             let derived_peripheral: Option<PeripheralMod> =
+                // Check if the peripheral is derived from another one
                 if let Some(derived_ref) = &svd_peripheral.derived_from {
+                     // If so get the reference to the original peripheral
                     if let Some(ref_item) = self.svd_ref_to_ir_item.get(derived_ref) {
-                        if let DeviceItem::Peripheral(ref_peripheral) = ref_item {
-                            Some(ref_peripheral.borrow().clone())
-                        } else {
-                            panic!(
-                                "reference {:} in {:} doesn't point to a peripheral",
-                                derived_ref, svd_peripheral.name
-                            )
+                        // Check if the reference is a peripheral
+                        match ref_item {
+                            DeviceItem::Peripheral(ref_peripheral) => {
+                                Some(ref_peripheral.borrow().clone())
+                            }
+                            // if it is not a peripheral return an error
+                            _ => {
+                                return Err(ParseError::InvalidPeripheral {
+                                    peripheral_name: svd_peripheral.name.clone(),
+                                    msg: format!(
+                                        "reference {} doesn't point to a peripheral",
+                                        derived_ref
+                                    ),
+                                }
+                                .into());
+                            }
                         }
                     } else {
-                        panic!(
-                            "Missing reference {:} in {:}",
-                            derived_ref, svd_peripheral.name
-                        );
+                        // If the reference is not found return an error
+                        return Err(ParseError::InvalidPeripheral {
+                            peripheral_name: svd_peripheral.name.clone(),
+                            msg: format!("Missing reference  {:}", derived_ref),
+                        }.into());
                     }
                 } else {
                     None
                 };
 
             // Push the peripheral svd and ir path in corresponding FIFO stack
-            self.push_current_item_svd_path(svd_peripheral);
+            self.push_current_item_svd_path(svd_peripheral)?;
             // If derivedFrom point to some peripheral get a clone of this peripheral
             // other wise create a new one
             let mut peripheral = derived_peripheral
                 .as_ref()
                 .map_or_else(PeripheralMod::default, |x| x.clone());
             // Update the peripheral_mod with data from svd::peripheral
-            self.visit_peripheral(svd_peripheral, &mut peripheral);
+            self.visit_peripheral(svd_peripheral, &mut peripheral)?;
 
             let name = peripheral.name.clone();
 
@@ -146,12 +159,13 @@ impl Visitor {
             // Pop out the paths and the just updated peripheral in svd to it index
             self.pop_current_item_svd_path(DeviceItem::Peripheral(peripheral_mod));
         }
+        Ok(())
     }
     fn visit_peripheral(
         &mut self,
         svd_peripheral: &svd::Peripheral,
         peripheral: &mut PeripheralMod,
-    ) {
+    ) -> Result<()> {
         debug!("Parsing peripheral: {}", &svd_peripheral.name);
         peripheral.name = svd_peripheral.name.to_internal_ident();
         peripheral.description = svd_peripheral.description.clone().unwrap_or_default();
@@ -191,11 +205,12 @@ impl Visitor {
             self.visit_cluster_register(
                 cluster_register,
                 PeripheralClusterE::Peripheral(peripheral),
-            );
+            )?;
         }
+        Ok(())
     }
 
-    fn visit_register(&mut self, reg: &svd::Register, register: &mut Register) {
+    fn visit_register(&mut self, reg: &svd::Register, register: &mut Register) -> Result<()> {
         //TODO Review this call. If alternate_group is used
         // inheritance resolver will not work
         //TODO It is not clear what is happen with inheritance.
@@ -216,10 +231,12 @@ impl Visitor {
         // Get fields
         let mut fields = Vec::new();
         for field in reg.fields() {
-            assert!(
-                field.derived_from.is_none(),
-                "derived_from is not supported in field"
-            );
+            if field.derived_from.is_some() {
+                return Err(ParseError::Unsupported(
+                    "derived_from is not supported in field".to_string(),
+                )
+                .into());
+            }
             let description = field.description.clone().unwrap_or_default();
             let offset = field.bit_range.offset;
             let mask = (0..field.bit_range.width - 1).fold(0x1u32, |acc, _| (acc << 1) | 0x1);
@@ -240,7 +257,7 @@ impl Visitor {
             };
 
             let (dim, dim_increment) = get_dim_dim_increment(field);
-            let enum_types = get_values_types(field);
+            let enum_types = get_values_types(field)?;
             let enum_type_write = enum_types
                 .iter()
                 .find(|x| {
@@ -278,23 +295,35 @@ impl Visitor {
                     16 => BitSize::BIT16,
                     8 => BitSize::BIT8,
                     register_size => {
-                        panic!("Unsupported register size {register_size}")
+                        return Err(ParseError::Unsupported(format!(
+                            "Unsupported register size {register_size}"
+                        ))
+                        .into());
                     }
                 }
             }
-            None => assert!(
-                reg.derived_from.is_some(),
-                "register {} is not derived and it has no specified size",
-                &register.name
-            ),
+            None => {
+                if reg.derived_from.is_none() {
+                    return Err(ParseError::InvalidRegister {
+                        register_name: reg.name.clone(),
+                        msg: "register is not derived and it has no specified size".to_string(),
+                    }
+                    .into());
+                }
+            }
         }
         match reg.properties.reset_value {
             Some(value) => register.reset_value = value,
-            None => assert!(
-                reg.derived_from.is_some(),
-                "register {} is not derived and it has no specified reset value",
-                &register.name
-            ),
+            None => {
+                if reg.derived_from.is_none() {
+                    return Err(ParseError::InvalidRegister {
+                        register_name: register.name.clone(),
+                        msg: "register is not derived and it has no specified reset value"
+                            .to_string(),
+                    }
+                    .into());
+                }
+            }
         }
 
         register.has_enumerated_fields = fields.iter().any(|f| !f.enum_types.is_empty());
@@ -341,9 +370,10 @@ impl Visitor {
             .into_iter()
             .map(|f| (f.name.clone(), Rc::new(RefCell::new(f))))
             .collect();
+        Ok(())
     }
 
-    fn visit_cluster(&mut self, cluster_svd: &svd::Cluster, cluster: &mut Cluster) {
+    fn visit_cluster(&mut self, cluster_svd: &svd::Cluster, cluster: &mut Cluster) -> Result<()> {
         cluster.name = cluster_svd.name.to_internal_ident();
         cluster.description = cluster_svd.description.clone().unwrap_or_default();
         cluster.offset = cluster_svd.address_offset;
@@ -366,14 +396,15 @@ impl Visitor {
         // defined in this cluster
         cluster.module_id = self.current_mod_ir_path.last().unwrap().clone();
         for cluster_register in &cluster_svd.children {
-            self.visit_cluster_register(cluster_register, PeripheralClusterE::Cluster(cluster));
+            self.visit_cluster_register(cluster_register, PeripheralClusterE::Cluster(cluster))?;
         }
+        Ok(())
     }
     fn visit_cluster_register(
         &mut self,
         register_cluster: &svd::RegisterCluster,
         mut parent_peripheral_cluster: PeripheralClusterE,
-    ) {
+    ) -> Result<()> {
         match register_cluster {
             svd::RegisterCluster::Register(ref reg_svd) => {
                 let derived_register: Option<Register> = if let Some(derived_ref) =
@@ -384,24 +415,32 @@ impl Visitor {
                         if let DeviceItem::Register(ref_register) = ref_item {
                             Some(ref_register.borrow().clone())
                         } else {
-                            panic!(
-                                "reference {:} in {:} point to not register svd item",
-                                derived_ref, reg_svd.name
-                            );
+                            return Err(ParseError::InvalidRegister {
+                                register_name: reg_svd.name.clone(),
+                                msg: format!(
+                                    "reference {} doesn't point to register svd item",
+                                    derived_ref
+                                ),
+                            }
+                            .into());
                         }
                     } else {
-                        panic!("Missing reference {:} in {:}", derived_ref, reg_svd.name);
+                        return Err(ParseError::InvalidRegister {
+                            register_name: reg_svd.name.clone(),
+                            msg: format!("Missing reference {:}", derived_ref),
+                        }
+                        .into());
                     }
                 } else {
                     None
                 };
                 // Push the target register svd and ir path in corresponding FIFO stack
-                self.push_current_item_svd_path(reg_svd);
+                self.push_current_item_svd_path(reg_svd)?;
                 let mut register = derived_register
                     .as_ref()
                     .map_or_else(Register::default, |x| x.clone());
 
-                self.visit_register(reg_svd, &mut register);
+                self.visit_register(reg_svd, &mut register)?;
 
                 let name = register.name.clone();
                 // If after visiting the svd node and updating the cluster_svd we get cluster that has the same type
@@ -426,27 +465,32 @@ impl Visitor {
                         if let DeviceItem::Cluster(ref_cluster) = ref_item {
                             Some(ref_cluster.borrow().clone())
                         } else {
-                            panic!(
-                                "reference {:} in {:} point to not cluster svd item",
-                                derived_ref, cluster_svd.name
-                            );
+                            return Err(ParseError::InvalidCluster {
+                                cluster_name: cluster_svd.name.clone(),
+                                msg: format!(
+                                    "reference {} doesn't point to cluster svd item",
+                                    derived_ref
+                                ),
+                            }
+                            .into());
                         }
                     } else {
-                        panic!(
-                            "Missing reference {:} in {:}",
-                            derived_ref, cluster_svd.name
-                        );
+                        return Err(ParseError::InvalidCluster {
+                            cluster_name: cluster_svd.name.clone(),
+                            msg: format!("Missing reference {}", derived_ref),
+                        }
+                        .into());
                     }
                 } else {
                     None
                 };
 
                 // Push the target cluster svd and ir path in corresponding FIFO stack
-                self.push_current_item_svd_path(cluster_svd);
+                self.push_current_item_svd_path(cluster_svd)?;
                 let mut cluster = derived_cluster
                     .as_ref()
                     .map_or_else(Cluster::default, |x| x.clone());
-                self.visit_cluster(cluster_svd, &mut cluster);
+                self.visit_cluster(cluster_svd, &mut cluster)?;
                 // If after visiting the svd node and updating the cluster_svd we get cluster that has the same type
                 // set derived_cluster and replace the struct id
                 cluster.is_derived_from = derived_cluster
@@ -461,6 +505,7 @@ impl Visitor {
                 self.pop_current_item_svd_path(DeviceItem::Cluster(cluster));
             }
         }
+        Ok(())
     }
 
     fn pop_current_item_svd_path(&mut self, ir_item: DeviceItem) {
@@ -473,9 +518,13 @@ impl Visitor {
         assert!(self.current_item_svd_path.pop().is_some());
         assert!(self.current_mod_ir_path.pop().is_some());
     }
-    fn push_current_item_svd_path(&mut self, svd_item: &(impl ExpandedName + HeaderStructName)) {
+
+    fn push_current_item_svd_path(
+        &mut self,
+        svd_item: &(impl ExpandedName + HeaderStructName),
+    ) -> Result<()> {
         self.current_item_svd_path
-            .push(svd_item.get_expanded_name());
+            .push(svd_item.get_expanded_name()?);
         // Module in generated code shall be named as headerStructName if present
         // otherwise use name.
         match svd_item.header_struct_name() {
@@ -486,6 +535,7 @@ impl Visitor {
                 .current_mod_ir_path
                 .push(header_struct_name.to_sanitized_mod_ident()),
         }
+        Ok(())
     }
     fn get_absolute_svd_path(&self, local_svd_name: &str) -> String {
         if local_svd_name.contains('.') {
@@ -501,21 +551,30 @@ impl Visitor {
     }
 }
 
-fn get_values_types(field: &svd::Field) -> Vec<EnumeratedValueType> {
+fn get_values_types(field: &svd::Field) -> Result<Vec<EnumeratedValueType>> {
     if field.enumerated_values.is_empty() {
-        return vec![];
+        return Ok(vec![]);
     };
     let mut result = Vec::new();
     for enum_values in &field.enumerated_values {
-        assert!(enum_values.derived_from.is_none(), "Derived from is not supported in enumerated values. Bitfield: {} shall not have derived_from", field.name);
+        if enum_values.derived_from.is_some() {
+            return Err(ParseError::Unsupported(format!(
+            "Derived from is not supported in enumerated values. Bitfield: {} shall not have derived_from tag",
+            field.name
+            ))
+            .into());
+        }
 
         let mut max_value = 0u64; // Compute max value of bitfield to define the size of bitfield in bits.
         let mut values = Vec::new();
         for val_entry in &enum_values.values {
-            assert!(
-                !val_entry.name.is_empty(),
-                "Value of enumeration shall have a name"
-            );
+            if val_entry.name.is_empty() {
+                return Err(ParseError::InvalidField {
+                    field_name: field.name.clone(),
+                    msg: "Value of enumeration shall have a name".to_string(),
+                }
+                .into());
+            }
             let description = val_entry.description.clone().unwrap_or_default();
             let val_name: String = if let Some(ref enumerated_values_name) = enum_values.name {
                 format!("{}_{}", enumerated_values_name, val_entry.name)
@@ -526,7 +585,7 @@ fn get_values_types(field: &svd::Field) -> Vec<EnumeratedValueType> {
             let value = if let Some(value) = val_entry.value {
                 value
             } else {
-                panic!("Default value is unsupported, all value in enumeration shall have a value defined")
+                return Err(ParseError::Unsupported("Default value is unsupported, all value in enumeration shall have a value defined".to_string()).into());
             };
 
             values.push(EnumeratedSingleValue {
@@ -554,19 +613,37 @@ fn get_values_types(field: &svd::Field) -> Vec<EnumeratedValueType> {
             values,
         });
     }
-    assert!(
-        result.len() <= 2,
-        "Only up to two enumeratedValue are supported"
-    );
-    assert!(result.iter().all(|f| f.usage!=EnumeratedValueUsage::ReadWrite) || result.len() != 2, "If two enumeratedValue are defined, one shall be read and the other write. bitfield name: {}", field.name);
-    assert!(
-        result.len() != 2 || (result[0].usage != result[1].usage),
-        "If two enumeratedValue are defined, one shall be read and the other write"
-    );
-    result
+    if result.len() > 2 {
+        return Err(ParseError::InvalidField {
+            field_name: field.name.clone(),
+            msg: "Only up to two enumeratedValue are supported".to_string(),
+        }
+        .into());
+    }
+    if result
+        .iter()
+        .any(|f| f.usage == EnumeratedValueUsage::ReadWrite)
+        && result.len() == 2
+    {
+        return Err(ParseError::InvalidField {
+            field_name: field.name.clone(),
+            msg: "If two enumeratedValue are defined, one shall be read and the other write."
+                .to_string(),
+        }
+        .into());
+    }
+    if result.len() == 2 && result[0].usage == result[1].usage {
+        return Err(ParseError::InvalidField {
+            field_name: field.name.clone(),
+            msg: "If two enumeratedValue are defined, one shall be read and the other write."
+                .to_string(),
+        }
+        .into());
+    }
+    Ok(result)
 }
 
-/// Parse xml and trasform to device description of svd_rs module
+/// Parse xml and transform to device description of svd_rs module
 ///
 /// # Arguments
 ///
@@ -651,7 +728,7 @@ pub(super) fn svd_device2ir(
         |file_license| file_license.clone(),
     );
     let mut visitor = Visitor::default();
-    visitor.visit_device(svd_device);
+    visitor.visit_device(svd_device)?;
     let device = visitor.device;
     let interrupt_table = get_interrupt_table(&device.peripheral_mod);
     Ok(IR {
