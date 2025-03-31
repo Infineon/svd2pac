@@ -6,14 +6,14 @@ rust-version = "1.74"
 categories = ["command-line-utilities", "development-tools::ffi"]
 readme = "README.md"
 repository = "https://github.com/Infineon/svd2pac"
-keywords = ["generator","svd", "pac"]
+keywords = ["generator", "svd", "pac"]
 license = "MIT"
 description = "Tool to generate peripheral access crates from SVD files"
 
 [dependencies]
 anyhow = "1.0.70"
 lazy-regex = "3.0"
-thiserror = "1.0.40"
+thiserror = "2.0"
 svd-parser = { version = "0.14", features = ["derive-from", "expand"] }
 tera = "1.19.0"
 # clap is limited to to support Aurix Rust compiler v1.0 (-> rustc 1.72)
@@ -21,10 +21,10 @@ clap = { version = "4.4", features = ["derive", "cargo"] }
 log = { version = "0.4.17", features = ["std"] }
 env_logger = "0.10.0"
 convert_case = "0.6"
-serde_json = {version = "1.0.96", features = ["preserve_order"]}
-serde = { version = "1.0.160", features = ["derive","rc"] }
+serde_json = { version = "1.0.96", features = ["preserve_order"] }
+serde = { version = "1.0.160", features = ["derive", "rc"] }
 syn = "2.0.33"
-linked-hash-map = {version="0.5",features =["serde_impl"]}
+linked-hash-map = { version = "0.5", features = ["serde_impl"] }
 chrono = "0.4"
 
 [dev-dependencies]
@@ -47,4 +47,3 @@ doctest = false
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
-
