@@ -3,7 +3,7 @@
 ## [0.5.0]
 
 ### Fixed
-- All warning in generated crates
+- Fixed all warning in generated crates
 
 ### Changed
 
@@ -12,7 +12,8 @@
 - generated pac has rust minimal required version 1.70 instead of 1.64
 
 ### Added
-- test that verify there are no clippy warnings in generated pac
+
+- Added tests that verify there are no clippy warnings in generated pac
 
 ## [0.4.0]
 
