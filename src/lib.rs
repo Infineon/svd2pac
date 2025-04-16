@@ -10,6 +10,7 @@ use serde::Serialize;
 use std::ffi::OsString;
 use std::fs;
 use std::path::PathBuf;
+use std::process::exit;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -103,7 +104,7 @@ pub fn main(args: Args) {
         info!("Create folder {}", &destination_folder.to_str().unwrap());
         if let Err(err) = fs::create_dir_all(&destination_folder) {
             error!("Failed to create destination folder: {}", err);
-            panic!("Failed to create folder")
+            exit(-1);
         };
     }
 
@@ -121,6 +122,6 @@ pub fn main(args: Args) {
         },
     ) {
         error!("Failed to generate code with err {}", err);
-        panic!("Failed to generate code");
+        exit(-1);
     }
 }

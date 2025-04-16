@@ -1,5 +1,22 @@
 use svd_parser::svd::{self};
 
+#[derive(thiserror::Error, Debug)]
+pub enum ParseError {
+    #[error("Invalid peripheral {peripheral_name:?}: {msg:?}")]
+    InvalidPeripheral {
+        peripheral_name: String,
+        msg: String,
+    },
+    #[error("Invalid register {register_name:?}: {msg:?}")]
+    InvalidRegister { register_name: String, msg: String },
+    #[error("Invalid cluster {cluster_name:?}: {msg:?}")]
+    InvalidCluster { cluster_name: String, msg: String },
+    #[error("Invalid field {field_name:?}: {msg:?}")]
+    InvalidField { field_name: String, msg: String },
+    #[error("Unsupported feature {0}")]
+    Unsupported(String),
+}
+
 pub(crate) trait ExpandedName: svd_parser::svd::Name {
     /// Generate an identifier that can be used in derivedFrom tags
     /// CMSIS svd.xsd specification is not consisted with svdconv.exe.
@@ -8,44 +25,53 @@ pub(crate) trait ExpandedName: svd_parser::svd::Name {
     /// This is not supported by svdconv.exe. svdconv.exe want to have name of register after array unrolling.
     /// This function shall return the name of first element after array unrolling
     /// If the element is not an array it return just a clone of the name.
-    fn get_expanded_name(&self) -> String;
+    fn get_expanded_name(&self) -> Result<String, ParseError>;
 }
 
 impl ExpandedName for svd::Cluster {
-    fn get_expanded_name(&self) -> String {
+    fn get_expanded_name(&self) -> Result<String, ParseError> {
         match self {
-            svd::MaybeArray::Single(info) => info.name.clone(),
-            svd::MaybeArray::Array(info, dim_info) => svd::cluster::expand(info, dim_info)
+            svd::MaybeArray::Single(info) => Ok(info.name.clone()),
+            svd::MaybeArray::Array(info, dim_info) => Ok(svd::cluster::expand(info, dim_info)
                 .next()
-                .expect("Empty")
+                .ok_or(ParseError::InvalidCluster {
+                    cluster_name: self.name.clone(),
+                    msg: "Array of size 0 is not allowed".to_string(),
+                })?
                 .name
-                .to_string(),
+                .to_string()),
         }
     }
 }
 
 impl ExpandedName for svd::Register {
-    fn get_expanded_name(&self) -> String {
+    fn get_expanded_name(&self) -> Result<String, ParseError> {
         match self {
-            svd::MaybeArray::Single(info) => info.name.clone(),
-            svd::MaybeArray::Array(info, dim_info) => svd::register::expand(info, dim_info)
+            svd::MaybeArray::Single(info) => Ok(info.name.clone()),
+            svd::MaybeArray::Array(info, dim_info) => Ok(svd::register::expand(info, dim_info)
                 .next()
-                .unwrap_or_else(|| panic!("Register {} is array of size 0", self.name))
+                .ok_or(ParseError::InvalidRegister {
+                    register_name: self.name.clone(),
+                    msg: "Array of size 0 is not allowed".to_string(),
+                })?
                 .name
-                .to_string(),
+                .to_string()),
         }
     }
 }
 
 impl ExpandedName for svd::Peripheral {
-    fn get_expanded_name(&self) -> String {
+    fn get_expanded_name(&self) -> Result<String, ParseError> {
         match self {
-            svd::MaybeArray::Single(info) => info.name.clone(),
-            svd::MaybeArray::Array(info, dim_info) => svd::peripheral::expand(info, dim_info)
+            svd::MaybeArray::Single(info) => Ok(info.name.clone()),
+            svd::MaybeArray::Array(info, dim_info) => Ok(svd::peripheral::expand(info, dim_info)
                 .next()
-                .unwrap_or_else(|| panic!("Peripheral {} is array of size 0", self.name))
+                .ok_or(ParseError::InvalidPeripheral {
+                    peripheral_name: self.name.clone(),
+                    msg: "Array of size 0 is not allowed".to_string(),
+                })?
                 .name
-                .to_string(),
+                .to_string()),
         }
     }
 }

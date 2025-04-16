@@ -486,9 +486,13 @@ fn generate_aurix_core_ir(
 
     info!("Start generating csfr rust code");
     // Read license file if specified
-    let custom_license_text = license_file.as_ref().map(|path| {
-        fs::read_to_string(path).unwrap_or_else(|_| panic!("Unable to read license file {path:?}"))
-    });
+    let custom_license_text = license_file
+        .as_ref()
+        .map(|path| {
+            fs::read_to_string(path)
+                .with_context(|| format!("Unable to read license file {:?}", path))
+        })
+        .transpose()?;
     // If target is aurix, create csfr
     let result = check_for_vendor_extension(xml_path)?;
     if result {
@@ -523,9 +527,13 @@ pub(crate) fn generate_rust_package(
 
     info!("Start generating rust code");
     // Read license file if specified
-    let custom_license_text = license_file.as_ref().map(|path| {
-        fs::read_to_string(path).unwrap_or_else(|_| panic!("Unable to read license file {path:?}"))
-    });
+    let custom_license_text = license_file
+        .as_ref()
+        .map(|path| {
+            fs::read_to_string(path)
+                .with_context(|| format!("Unable to read license file {:?}", path))
+        })
+        .transpose()?;
 
     let xml = &mut String::new();
     get_xml_string(xml_path, xml)?;
