@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0]
+
+### Changed
+
+Internal implementation: instead of panic and assertion return errors from function. Kept assertion that identify implementation bugs
+
+Upgraded thiserror to 2.0
+
 ## [0.5.0]
 
 ### Fixed
