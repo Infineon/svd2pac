@@ -619,7 +619,7 @@
 		<!-- Timer 2 -->
 		<peripheral>
 			<dim>3</dim>
-			<dimIncrement>0x1000</dimIncrement>
+			<dimIncrement>0x1004</dimIncrement>
 			<name>UART[%s]</name>
 			<version>1.0</version>
 			<description>Test cluster</description>
@@ -731,7 +731,7 @@
 				<register>
 					<name>Reg16bitRaw</name>
 					<description>Read write without enum</description>
-					<addressOffset>0x107</addressOffset>
+					<addressOffset>0x108</addressOffset>
 					<size>16</size>
 					<access>read-write</access>
 					<resetValue>0x0000</resetValue>
@@ -740,7 +740,7 @@
 				<register>
 					<name>Reg32bitRaw</name>
 					<description>Read write without enum</description>
-					<addressOffset>0x109</addressOffset>
+					<addressOffset>0x110</addressOffset>
 					<access>read-write</access>
 					<resetValue>0x0000000</resetValue>
 					<resetMask>0xFFFFFFFF</resetMask>
@@ -1160,6 +1160,49 @@
 			<version>1.0</version>
 			<description>Peripheral with a headerStructName and derived from peripheral with headerStructName</description>
 			<baseAddress>0x70500000</baseAddress>
+		</peripheral>
+		<peripheral>
+			<name>DimIndexPeri</name>
+			<description>Test Dim Index</description>
+			<baseAddress>0x70700000</baseAddress>
+			<addressBlock>
+				<offset>0</offset>
+				<size>0x100</size>
+				<usage>registers</usage>
+			</addressBlock>
+			<registers>
+			
+					<cluster>
+					<dim>3</dim>
+					<dimIncrement>0x30</dimIncrement>
+					<dimIndex>3-5</dimIndex>
+						<name>Clu%sst</name>
+						<description>Array cluster index</description>
+						<addressOffset>0x0</addressOffset>
+						<register>
+							<dim>3</dim>
+							<dimIncrement>0x4</dimIncrement>
+							<dimIndex>D,F,G</dimIndex>
+							<name>AReg%s</name>
+							<addressOffset>0x0</addressOffset>
+						</register>
+						<register>
+							<dim>3</dim>
+							<dimIncrement>0x4</dimIncrement>
+							<dimIndex>2-4</dimIndex>
+							<name>BReg%s</name>
+							<addressOffset>0xC</addressOffset>
+						</register>
+						<register>
+							<dim>3</dim>
+							<dimIncrement>0x4</dimIncrement>
+							<dimIndex>C-E</dimIndex>
+							<name>CReg%s</name>
+							<addressOffset>0x18</addressOffset>
+						</register>
+					</cluster>
+		
+			</registers>
 		</peripheral>
 	</peripherals>
 	<vendorExtensions>
