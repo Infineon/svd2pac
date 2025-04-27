@@ -240,6 +240,7 @@ where
     T: RegSpec,
     A: Access,
 {
+    #[allow(dead_code)]
     #[inline(always)]
     #[must_use]
     pub(crate) const fn from_ptr(ptr: *mut u8) -> &'static Self {
@@ -987,6 +988,7 @@ impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ClusterRegisterArra
         &*(self.as_ptr().add(index * DIM_INCREMENT) as *const _) 
     }
 
+    #[allow(dead_code)]
     #[inline(always)]
     pub(crate) const unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
         &*(ptr as *const Self)
