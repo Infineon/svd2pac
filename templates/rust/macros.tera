@@ -35,8 +35,9 @@ pub const fn {{reg.name | to_func_id }}(&self) -> &'static crate::common::Cluste
     unsafe { crate::common::ClusterRegisterArray::from_ptr(self._svd2pac_as_ptr().add({{reg.offset | to_hex}}usize)) }
 }
 {%- for func_name in reg.dim_index %}
+#[inline(always)]
 pub const fn {{func_name | to_func_id }}(&self) -> &'static crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}> {
-    unsafe {   crate::common::Reg::<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>::from_ptr(self._svd2pac_as_ptr().add({{reg.offset + reg.dim_increment * loop.index | to_hex}}usize)) }
+    unsafe {   crate::common::Reg::<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>::from_ptr(self._svd2pac_as_ptr().add({{reg.offset + reg.dim_increment * loop.index0 | to_hex}}usize)) }
 }
 {%- endfor -%}
 {%- endif -%}
@@ -95,6 +96,12 @@ impl {{reg_struct_name}} {
         {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=true)}}::from_register(self,index)
      
     }
+    {%- for func_name in field.dim_index %}
+    #[inline(always)]
+    pub fn {{func_name | to_func_id }}(self) -> {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
+        {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=true)}}::from_register(self,{{loop.index0}})
+    }
+    {% endfor %}
     {%- else %}
     pub fn {{field.name | to_func_id }}(self) -> {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
         {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=true)}}::from_register(self,0)
@@ -147,8 +154,9 @@ pub fn {{cluster_func}}(self) -> &'static crate::common::ClusterRegisterArray<{{
     unsafe { crate::common::ClusterRegisterArray::from_ptr(self._svd2pac_as_ptr().add({{cluster.offset | to_hex}}usize)) }
 }
 {%- for func_name in cluster.dim_index %}
+#[inline(always)]
 pub fn {{func_name | to_func_id}}(self) -> {{cluster_struct_path}} {
-    unsafe {   {{underscored_cluster_struct_path}}::_svd2pac_from_ptr(self._svd2pac_as_ptr().add({{cluster.offset + cluster.dim_increment * loop.index | to_hex}}usize)) }
+    unsafe {   {{underscored_cluster_struct_path}}::_svd2pac_from_ptr(self._svd2pac_as_ptr().add({{cluster.offset + cluster.dim_increment * loop.index0 | to_hex}}usize)) }
 }
 {%- endfor %}
 {%- endif -%}
