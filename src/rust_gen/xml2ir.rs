@@ -2,6 +2,7 @@ mod svd2temp;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::vec;
 
 use super::ir::*;
 use super::util::*;
@@ -13,6 +14,7 @@ use linked_hash_map::LinkedHashMap;
 use log::{debug, error, warn};
 use svd2temp::*;
 use svd_parser::svd;
+use svd_parser::svd::Name;
 
 trait RegisterHelper {
     /// Get name of register considering the presence of alternate group
@@ -58,15 +60,39 @@ impl PeripheralClusterE<'_> {
 /// # Arguments
 ///
 /// * `array` any MaybeArray type
+/// * `raw_name` is the name that contains %s. This is the same string contained in tag <name> before any transformation.
 ///
 /// # Result
 ///
-/// (`dimension of array`,`increment between two element of array`) If `array`=Single() the result default to (1,0)
-fn get_dim_dim_increment<T>(array: &svd::array::MaybeArray<T>) -> (u32, u32) {
+/// (`dimension of array`,`increment between two element of array`, list of name derived from dimIndex tag if present) If `array`=Single() the result default to (1,0,[])
+fn get_dim_dim_increment<T: Name>(array: &svd::array::MaybeArray<T>) -> (u32, u32, Vec<String>) {
     match array {
-        svd::array::MaybeArray::Single(_) => (1, 0),
-        svd::array::MaybeArray::Array(_, dim_element) => {
-            (dim_element.dim, dim_element.dim_increment)
+        svd::array::MaybeArray::Single(_) => (1, 0, vec![]),
+        svd::array::MaybeArray::Array(item, dim_element) => {
+            let dim_index: Vec<String> = if let Some(dim_index_elements) = &dim_element.dim_index {
+                if dim_index_elements.len() != dim_element.dim as usize {
+                    warn!("dim_index length is not equal to dim. dim_index: {:?} dim: {} ignoring dimIndex tag", dim_index_elements, dim_element.dim);
+                    vec![]
+                } else if !item.name().contains("%s") {
+                    warn!("dimIndex tag is used but name doesn't contain %s. dim_index: {:?} dim: {} ignoring dimIndex tag", dim_index_elements, dim_element.dim);
+                    vec![]
+                } else {
+                    // Replace %s in name with the value of dim_index_elements
+                    let result = dim_index_elements
+                        .iter()
+                        .map(|x| {
+                            let replaced = item.name().replace("%s", x);
+                            replaced.to_internal_ident()
+                        })
+                        .collect();
+                    println!("dim_index: {:?} dim: {}", result, dim_element.dim);
+                    result
+                }
+            } else {
+                // dimIndex is not present. No list of names to be generated
+                vec![]
+            };
+            (dim_element.dim, dim_element.dim_increment, dim_index)
         }
     }
 }
@@ -184,7 +210,7 @@ impl Visitor {
             }
         }
 
-        let (dim, dim_increment) = get_dim_dim_increment(svd_peripheral);
+        let (dim, dim_increment, _) = get_dim_dim_increment(svd_peripheral);
         peripheral.base_addr = (0..dim)
             .map(|index| svd_peripheral.base_address + (index * dim_increment) as u64)
             .collect();
@@ -219,7 +245,7 @@ impl Visitor {
         register.name = reg.get_name_id_internal();
         register.description = reg.description.clone().unwrap_or_default();
         register.offset = reg.address_offset;
-        (register.dim, register.dim_increment) = get_dim_dim_increment(reg);
+        (register.dim, register.dim_increment, register.dim_index) = get_dim_dim_increment(reg);
 
         if register.struct_id.is_empty() {
             register.struct_module_path = Vec::with_capacity(10);
@@ -256,7 +282,7 @@ impl Visitor {
                 svd::Access::ReadWriteOnce => RegisterBitfieldAccess::RW,
             };
 
-            let (dim, dim_increment) = get_dim_dim_increment(field);
+            let (dim, dim_increment, _) = get_dim_dim_increment(field);
             let enum_types = get_values_types(field)?;
             let enum_type_write = enum_types
                 .iter()
@@ -377,7 +403,8 @@ impl Visitor {
         cluster.name = cluster_svd.name.to_internal_ident();
         cluster.description = cluster_svd.description.clone().unwrap_or_default();
         cluster.offset = cluster_svd.address_offset;
-        (cluster.dim, cluster.dim_increment) = get_dim_dim_increment(cluster_svd);
+        (cluster.dim, cluster.dim_increment, cluster.dim_index) =
+            get_dim_dim_increment(cluster_svd);
 
         if let Some(header_struct_name) = &cluster_svd.header_struct_name {
             cluster.struct_module_path = Vec::with_capacity(10);
