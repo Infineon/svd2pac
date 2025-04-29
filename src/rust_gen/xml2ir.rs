@@ -60,7 +60,7 @@ impl PeripheralClusterE<'_> {
 /// # Arguments
 ///
 /// * `array` any MaybeArray type
-/// * `raw_name` is the name that contains %s. This is the same string contained in tag <name> before any transformation.
+/// * `raw_name` is the name that contains %s. This is the same string contained in tag "name" before any transformation.
 ///
 /// # Result
 ///
