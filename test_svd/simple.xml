@@ -1185,6 +1185,17 @@
 							<dimIndex>D,F,G</dimIndex>
 							<name>AReg%s</name>
 							<addressOffset>0x0</addressOffset>
+							<fields>
+								<field>
+								<dim>3</dim>
+								<dimIncrement>2</dimIncrement>
+								<dimIndex>C-E</dimIndex>
+									<name>arrayBitfield_%s</name>
+									<lsb>1</lsb>
+									<msb>2</msb>
+									<access>read-write</access>
+								</field>
+							</fields>
 						</register>
 						<register>
 							<dim>3</dim>
@@ -1192,6 +1203,17 @@
 							<dimIndex>2-4</dimIndex>
 							<name>BReg%s</name>
 							<addressOffset>0xC</addressOffset>
+							<fields>
+								<field>
+								<dim>3</dim>
+								<dimIncrement>1</dimIncrement>
+								<dimIndex>C-E</dimIndex>
+									<name>arrayBitfieldBool_%s</name>
+									<lsb>0</lsb>
+									<msb>0</msb>
+									<access>read-write</access>
+								</field>
+							</fields>
 						</register>
 						<register>
 							<dim>3</dim>

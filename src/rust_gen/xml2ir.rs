@@ -78,15 +78,13 @@ fn get_dim_dim_increment<T: Name>(array: &svd::array::MaybeArray<T>) -> (u32, u3
                     vec![]
                 } else {
                     // Replace %s in name with the value of dim_index_elements
-                    let result = dim_index_elements
+                    dim_index_elements
                         .iter()
                         .map(|x| {
                             let replaced = item.name().replace("%s", x);
                             replaced.to_internal_ident()
                         })
-                        .collect();
-                    println!("dim_index: {:?} dim: {}", result, dim_element.dim);
-                    result
+                        .collect()
                 }
             } else {
                 // dimIndex is not present. No list of names to be generated
@@ -209,7 +207,7 @@ impl Visitor {
                 peripheral.module_id = svd_peripheral.name.to_sanitized_mod_ident();
             }
         }
-
+        // As written in the CMSIS documentation. dimIndex is not allowed
         let (dim, dim_increment, _) = get_dim_dim_increment(svd_peripheral);
         peripheral.base_addr = (0..dim)
             .map(|index| svd_peripheral.base_address + (index * dim_increment) as u64)
@@ -267,6 +265,7 @@ impl Visitor {
             let offset = field.bit_range.offset;
             let mask = (0..field.bit_range.width - 1).fold(0x1u32, |acc, _| (acc << 1) | 0x1);
             let name = field.name.to_internal_ident();
+            println!("{:}", name);
             let svd_field_access = match field.access {
                 None => {
                     error!("Inheritance of access is not supported. Bitfield: {} access shall be specified. Bitfield skipped",name);
@@ -282,7 +281,7 @@ impl Visitor {
                 svd::Access::ReadWriteOnce => RegisterBitfieldAccess::RW,
             };
 
-            let (dim, dim_increment, _) = get_dim_dim_increment(field);
+            let (dim, dim_increment, dim_index) = get_dim_dim_increment(field);
             let enum_types = get_values_types(field)?;
             let enum_type_write = enum_types
                 .iter()
@@ -311,6 +310,7 @@ impl Visitor {
                 size: BitSize::val_2_bit_size(mask.into()),
                 dim,
                 dim_increment,
+                dim_index,
             });
         }
         match reg.properties.size {

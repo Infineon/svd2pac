@@ -84,6 +84,7 @@ pub struct FieldGetterSetter {
     pub access: RegisterBitfieldAccess,
     pub dim: u32,
     pub dim_increment: u32,
+    pub dim_index: Vec<String>,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
