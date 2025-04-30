@@ -265,7 +265,6 @@ impl Visitor {
             let offset = field.bit_range.offset;
             let mask = (0..field.bit_range.width - 1).fold(0x1u32, |acc, _| (acc << 1) | 0x1);
             let name = field.name.to_internal_ident();
-            println!("{:}", name);
             let svd_field_access = match field.access {
                 None => {
                     error!("Inheritance of access is not supported. Bitfield: {} access shall be specified. Bitfield skipped",name);
