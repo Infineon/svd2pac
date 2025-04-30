@@ -118,6 +118,12 @@ fn main() -> ! {
             .set(uart::regenumvalue::ReadWriteEnumSplitBinaryWrite::VALUE_0);
         let _: uart::regenumvalue::ReadWriteEnumSplitBinaryRead =
             reg_value.read_write_enum_split_binary().get();
+
+        // Demonstrating usage of register array with dimIndex tag.
+        DIMINDEXPERI
+            .clu3st()
+            .aregd()
+            .modify(|f| f.arraybitfield_c().set(0x2));
     }
     #[allow(clippy::empty_loop)]
     loop {}
