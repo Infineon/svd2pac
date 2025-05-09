@@ -109,13 +109,14 @@ pub use self::Interrupt as interrupt;
 #[cfg(feature = "rt")]
 pub use cortex_m_rt::interrupt;
 #[cfg(feature = "rt")]
-extern "C" {
-    {% for interrupt in ir.interrupt_table -%}
-    {% if interrupt -%}
-    fn {{interrupt.name | upper}}();
-    {% endif -%}
-    {% endfor -%}
-
+pub mod interrupt_handlers {
+    extern "C" {
+        {% for interrupt in ir.interrupt_table -%}
+        {% if interrupt -%}
+        pub fn {{interrupt.name | upper}}();
+        {% endif -%}
+        {% endfor -%}
+    }
 }
 #[cfg(feature = "rt")]
 #[doc(hidden)]
@@ -124,7 +125,7 @@ extern "C" {
 pub static __INTERRUPTS: [Vector; {{ir.interrupt_table  | length}}] = [
     {% for interrupt in ir.interrupt_table -%}
     {% if interrupt -%}
-    Vector { _handler: {{interrupt.name | upper}} },
+    Vector { _handler: interrupt_handlers::{{interrupt.name | upper}} },
     {% else -%}
     Vector { _reserved: 0 },
     {% endif -%}
@@ -136,7 +137,9 @@ pub static __INTERRUPTS: [Vector; {{ir.interrupt_table  | length}}] = [
 pub enum Interrupt {
     {% for interrupt in ir.interrupt_table -%}
     {% if interrupt -%}
+    {% if interrupt.description %}
     #[doc = "{{interrupt.description | svd_description_to_doc}}"]
+    {% endif -%}
     {{interrupt.name | upper}} = {{interrupt.value}},
     {% endif -%}
     {% endfor -%}
