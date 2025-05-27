@@ -14,7 +14,7 @@ Unsupported register size
 
 {%- macro doc_attribute(documentation) -%}
 {%- set doc_string = documentation | svd_description_to_doc -%}
-{%- if doc_string is not matching("") %} 
+{%- if doc_string != "" %} 
 #[doc = "{{doc_string}}"]
 {%- endif -%}
 {%- endmacro -%}
