@@ -2,11 +2,15 @@
 
 ## [0.6.0]
 
+### Fixed
+
+- Template bug that block generation of all PAC documentation
+
 ### Changed
 
-Internal implementation: instead of panic and assertion return errors from function. Kept assertion that identify implementation bugs
-
-Upgraded thiserror to 2.0
+- Internal implementation: instead of panic and assertion return errors from function. Kept assertion that identify implementation bugs
+- Upgraded thiserror to 2.0
+- Generate IRQ handler extern ref in a module to avoid collisions with peripheral instances. Only applicable when generating for cortex-m devices.
 
 ## [0.5.0]
 
