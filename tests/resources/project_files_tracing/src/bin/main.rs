@@ -1,10 +1,10 @@
 use test_pac::{timer::bitfield_reg, tracing, *};
 fn read_fn(addr: usize, len: usize) -> u64 {
-    println!("r addr=0x{:X}\tlen={:?}", addr, len);
+    println!("r addr=0x{addr:X}\tlen={len:?}");
     0x0
 }
 fn write_fn(addr: usize, len: usize, val: u64) {
-    println!("w addr=0x{:X}\tlen={:?}\tval=0x{:X}", addr, len, val);
+    println!("w addr=0x{addr:X}\tlen={len:?}\tval=0x{val:X}");
 }
 fn main() -> ! {
     let _ = tracing::set_read_fn(read_fn);
@@ -91,13 +91,12 @@ mod test {
     fn assert_regname(addr: usize, name_expected: &str) {
         match reg_name_from_addr(addr as u64) {
             Some(name) => {
-                println!("name:{}, name_expected:{}", name, name_expected);
+                println!("name:{name}, name_expected:{name_expected}");
                 assert!(name.contains(name_expected));
             }
             None => {
                 panic!(
-                    "Address: {} is not in map of register names. This should not happen.",
-                    addr
+                    "Address: {addr} is not in map of register names. This should not happen."
                 );
             }
         }

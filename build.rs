@@ -28,7 +28,7 @@ fn main() {
         ),
         Ok(Some(aurix_toolchain)) => {
             println!("cargo:rustc-cfg=aurix_tests");
-            println!("cargo:rustc-env=AURIX_TOOLCHAIN={}", aurix_toolchain);
+            println!("cargo:rustc-env=AURIX_TOOLCHAIN={aurix_toolchain}");
         }
         Ok(None) => (),
     }
