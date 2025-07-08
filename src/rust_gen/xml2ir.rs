@@ -137,8 +137,7 @@ impl Visitor {
                                 return Err(ParseError::InvalidPeripheral {
                                     peripheral_name: svd_peripheral.name.clone(),
                                     msg: format!(
-                                        "reference {} doesn't point to a peripheral",
-                                        derived_ref
+                                        "reference {derived_ref} doesn't point to a peripheral"
                                     ),
                                 }
                                 .into());
@@ -148,7 +147,7 @@ impl Visitor {
                         // If the reference is not found return an error
                         return Err(ParseError::InvalidPeripheral {
                             peripheral_name: svd_peripheral.name.clone(),
-                            msg: format!("Missing reference  {:}", derived_ref),
+                            msg: format!("Missing reference {derived_ref}"),
                         }.into());
                     }
                 } else {
@@ -444,8 +443,7 @@ impl Visitor {
                             return Err(ParseError::InvalidRegister {
                                 register_name: reg_svd.name.clone(),
                                 msg: format!(
-                                    "reference {} doesn't point to register svd item",
-                                    derived_ref
+                                    "reference {derived_ref} doesn't point to register svd item"
                                 ),
                             }
                             .into());
@@ -453,7 +451,7 @@ impl Visitor {
                     } else {
                         return Err(ParseError::InvalidRegister {
                             register_name: reg_svd.name.clone(),
-                            msg: format!("Missing reference {:}", derived_ref),
+                            msg: format!("Missing reference {derived_ref:}"),
                         }
                         .into());
                     }
@@ -494,8 +492,7 @@ impl Visitor {
                             return Err(ParseError::InvalidCluster {
                                 cluster_name: cluster_svd.name.clone(),
                                 msg: format!(
-                                    "reference {} doesn't point to cluster svd item",
-                                    derived_ref
+                                    "reference {derived_ref} doesn't point to cluster svd item"
                                 ),
                             }
                             .into());
@@ -503,7 +500,7 @@ impl Visitor {
                     } else {
                         return Err(ParseError::InvalidCluster {
                             cluster_name: cluster_svd.name.clone(),
-                            msg: format!("Missing reference {}", derived_ref),
+                            msg: format!("Missing reference {derived_ref}"),
                         }
                         .into());
                     }

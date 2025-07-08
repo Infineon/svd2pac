@@ -36,7 +36,7 @@ fn filter_render_path(value: &Value, _args: &HashMap<String, Value>) -> tera::Re
                             _ => path_chunk.path.clone() +"()",
                         },
                         match path_chunk.index {
-                            Some(index) => format!("[{}]",index),
+                            Some(index) => format!("[{index}]"),
                             None => "".to_owned(),
                         },
                         match index {
@@ -52,9 +52,7 @@ fn filter_render_path(value: &Value, _args: &HashMap<String, Value>) -> tera::Re
         },
         Err(e)=>{
             Err(tera::Error::msg(format!(
-                "filter_render_path only accepts Vec<PathChunk> as input.\nCannot deserialize value:{} because:\nerror:{}",
-                value,
-                e
+                "filter_render_path only accepts Vec<PathChunk> as input.\nCannot deserialize value:{value} because:\nerror:{e}"
             )))
         }
     }
@@ -79,7 +77,7 @@ fn filter_prepend_lines(value: &Value, args: &HashMap<String, Value>) -> tera::R
             .map(|s| prefix_string.clone() + s)
             .collect::<Vec<_>>(),
     )
-    .map_err(|e| tera::Error::msg(format!("Failed to convert to value: {}", e)))?;
+    .map_err(|e| tera::Error::msg(format!("Failed to convert to value: {e}")))?;
     Ok(splits)
 }
 
@@ -87,14 +85,13 @@ fn filter_prepend_lines(value: &Value, args: &HashMap<String, Value>) -> tera::R
 fn filter_to_hex(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
     if let Value::Number(number) = value {
         if let Some(u64_val) = number.as_u64() {
-            Ok(Value::String(format!("0x{:x}", u64_val)))
+            Ok(Value::String(format!("0x{u64_val:x}")))
         } else {
             Err(tera::Error::msg("to_hex accept only unsigned numbers"))
         }
     } else {
         Err(tera::Error::msg(format!(
-            "to_hex accept only numbers as input. value:{}",
-            value
+            "to_hex accept only numbers as input. value:{value}"
         )))
     }
 }
@@ -104,17 +101,15 @@ fn filter_to_hex(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<
 fn filter_num_str_to_hex(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
     if let Value::String(number_str) = value {
         if let Ok(u64_val) = number_str.parse::<u64>() {
-            Ok(Value::String(format!("0x{:x}", u64_val)))
+            Ok(Value::String(format!("0x{u64_val:x}")))
         } else {
             Err(tera::Error::msg(format!(
-                "num_str_to_hex could not parse value:{} as number",
-                value
+                "num_str_to_hex could not parse value:{value} as number"
             )))
         }
     } else {
         Err(tera::Error::msg(format!(
-            "num_str_to_hex only accepts strings. value:{}",
-            value
+            "num_str_to_hex only accepts strings. value:{value}"
         )))
     }
 }
@@ -124,8 +119,7 @@ fn filter_to_struct_id(value: &Value, _args: &HashMap<String, Value>) -> tera::R
         Ok(Value::String(string.to_owned().to_sanitized_struct_ident()))
     } else {
         Err(tera::Error::msg(format!(
-            "filter_to_struct_id only supports String as argument. value:{}",
-            value
+            "filter_to_struct_id only supports String as argument. value:{value}"
         )))
     }
 }
@@ -135,8 +129,7 @@ fn filter_to_mod_id(value: &Value, _args: &HashMap<String, Value>) -> tera::Resu
         Ok(Value::String(string.to_owned().to_sanitized_mod_ident()))
     } else {
         Err(tera::Error::msg(format!(
-            "filter_to_mod_id only supports String as argument. value:{}",
-            value,
+            "filter_to_mod_id only supports String as argument. value:{value}",
         )))
     }
 }
@@ -147,8 +140,7 @@ fn filter_to_enum_id(value: &Value, _args: &HashMap<String, Value>) -> tera::Res
         Ok(Value::String(string.to_owned().to_sanitized_enum_ident()))
     } else {
         Err(tera::Error::msg(format!(
-            "filter_to_enum_id case support only String as argument. value:{}",
-            value,
+            "filter_to_enum_id case support only String as argument. value:{value}",
         )))
     }
 }
@@ -158,8 +150,7 @@ fn filter_to_const_id(value: &Value, _args: &HashMap<String, Value>) -> tera::Re
         Ok(Value::String(string.to_owned().to_sanitized_const_ident()))
     } else {
         Err(tera::Error::msg(format!(
-            "filter_to_const_id only supports String as argument. value:{}",
-            value,
+            "filter_to_const_id only supports String as argument. value:{value}",
         )))
     }
 }
@@ -169,8 +160,7 @@ fn filter_to_func_id(value: &Value, _args: &HashMap<String, Value>) -> tera::Res
         Ok(Value::String(string.to_owned().to_sanitized_func_ident()))
     } else {
         Err(tera::Error::msg(format!(
-            "filter_to_func_id only supports String as argument. value:{}",
-            value
+            "filter_to_func_id only supports String as argument. value:{value}"
         )))
     }
 }
@@ -215,9 +205,9 @@ fn execute_template(
     }?;
     let folder = output_path
         .parent()
-        .unwrap_or_else(|| panic!("No parent folder for {:?}", output_path));
+        .unwrap_or_else(|| panic!("No parent folder for {output_path:?}"));
     create_dir_all(folder)?;
-    fs::write(output_path, result).context(format!("Error while writing {:?}", output_path))?;
+    fs::write(output_path, result).context(format!("Error while writing {output_path:?}"))?;
     Ok(())
 }
 
@@ -463,7 +453,7 @@ fn generate_peripheral_module(
             tera,
             template_name,
             &context,
-            &destination_folder.join(format!("src/{}.rs", module_name)),
+            &destination_folder.join(format!("src/{module_name}.rs")),
         )
         .context("Failed generation of code")?;
     }
@@ -490,7 +480,7 @@ fn generate_aurix_core_ir(
         .as_ref()
         .map(|path| {
             fs::read_to_string(path)
-                .with_context(|| format!("Unable to read license file {:?}", path))
+                .with_context(|| format!("Unable to read license file {path:?}"))
         })
         .transpose()?;
     // If target is aurix, create csfr
@@ -531,7 +521,7 @@ pub(crate) fn generate_rust_package(
         .as_ref()
         .map(|path| {
             fs::read_to_string(path)
-                .with_context(|| format!("Unable to read license file {:?}", path))
+                .with_context(|| format!("Unable to read license file {path:?}"))
         })
         .transpose()?;
 
