@@ -451,7 +451,7 @@ impl Visitor {
                     } else {
                         return Err(ParseError::InvalidRegister {
                             register_name: reg_svd.name.clone(),
-                            msg: format!("Missing reference {derived_ref:}"),
+                            msg: format!("Missing reference {derived_ref}"),
                         }
                         .into());
                     }
