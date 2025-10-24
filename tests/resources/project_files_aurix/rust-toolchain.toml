@@ -1,3 +1,2 @@
 [toolchain]
-channel = "tricore-htc-none-v1.0.0"
-
+channel = "tricore-htc-none-v1.1.0"

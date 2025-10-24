@@ -509,8 +509,9 @@ where
 
     }
 }
-
+{% if tracing %}
 #[cfg(not(feature="tracing"))]
+{% endif -%}
 use ::core::arch::tricore::intrinsics::{__mfcr, __mtcr};
 
 /// Type of core special register of Aurix (CSFR)
@@ -550,7 +551,7 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
     where
         A: Read,
      {
-        
+        {%- if tracing %}
         #[cfg(feature = "tracing")]
         let val = {
             let mut buf: u64 = 0x0;
@@ -559,8 +560,10 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
             });
             T::DataType::cast_from(buf)
         };
-        
+        {%- endif %}
+        {%- if tracing %}
         #[cfg(not(feature = "tracing"))]
+        {%- endif %}
         let val: T::DataType = __mfcr::<ADDR>();
         RegValueT::<T>::new(val)
             }
@@ -592,6 +595,7 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
     where
         A: Write,
     {
+        {%- if tracing %}
         #[cfg(feature = "tracing")]
         tracing::WRITE_FN.with(|wf| {
             wf.get().unwrap()(
@@ -600,7 +604,10 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
                 reg_value.data.into(),
             )
         });
+        {%- endif %}
+        {%- if tracing %}
         #[cfg(not(feature = "tracing"))]
+        {%- endif %}
         __mtcr::<ADDR>(reg_value.data);
     }
 
