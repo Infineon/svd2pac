@@ -52,7 +52,7 @@ no-default-features = false
 # More documentation for the advisories section can be found here:
 # https://embarkstudios.github.io/cargo-deny/checks/advisories/cfg.html
 [advisories]
-version =2 
+version = 2
 # The path where the advisory database is cloned/fetched into
 db-path = "~/.cargo/advisory-db"
 # The url(s) of the advisory databases to use
@@ -88,12 +88,7 @@ version = 2
 # List of explicitly allowed licenses
 # See https://spdx.org/licenses/ for list of possible licenses
 # [possible values: any SPDX 3.11 short identifier (+ optional exception)].
-allow = [
-    "MIT",
-    "Apache-2.0",
-    "Unicode-DFS-2016",
-    "BSD-3-Clause"
-]
+allow = ["MIT", "Apache-2.0", "Unicode-3.0", "BSD-3-Clause"]
 # The confidence threshold for detecting a license from license text.
 # The higher the value, the more closely the license text must be to the
 # canonical license text of a valid SPDX license file.
@@ -123,8 +118,8 @@ exceptions = [
 # and the crate will be checked normally, which may produce warnings or errors
 # depending on the rest of your configuration
 #license-files = [
-    # Each entry is a crate relative path, and the (opaque) hash of its contents
-    #{ path = "LICENSE", hash = 0xbd0eed23 }
+# Each entry is a crate relative path, and the (opaque) hash of its contents
+#{ path = "LICENSE", hash = 0xbd0eed23 }
 #]
 
 [licenses.private]
@@ -202,7 +197,7 @@ deny = [
 
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
-    {name = "windows-sys", version = "=0.52.0"}
+    { name = "windows-sys", version = "=0.60.2" },
     #{ name = "ansi_term", version = "=0.11.0" },
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate
