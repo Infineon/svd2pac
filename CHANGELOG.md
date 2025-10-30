@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- Fixed bug related to Aurix code (--target aurix). Usage of features tracing in code even if tracing is not enabled in code generation
 - Fixed warning deteced by rust 1.88 version.
 - Upgraded tera to avoid unmaintained unicode dependencies.
 
