@@ -111,7 +111,7 @@ impl<'svd> FQNFlatMaps<'svd> {
             }
         }
     }
-    /// Collect individual [`svd::Register`]s into [`FQNFlatMaps.registers`].
+    /// Collect individual [`svd::Register`]s into [`FQNFlatMaps`].
     pub(super) fn collect_register_array<'prefix>(
         &mut self,
         prefix: &'prefix [PathChunk],
