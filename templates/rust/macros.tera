@@ -176,13 +176,11 @@ pub type {{ cluster_struct }} = &'static _{{ cluster_struct }};
 
 unsafe impl ::core::marker::Sync for _{{ cluster_struct }} {}
 impl _{{cluster_struct}} {
-    #[allow(unused)]
     #[inline(always)]
     pub(crate) const unsafe fn _svd2pac_from_ptr(ptr: *mut u8) -> &'static Self {
         &*(ptr as *const _)
     }
 
-    #[allow(unused)]
     #[inline(always)]
     pub(crate) const fn _svd2pac_as_ptr(&self) -> *mut u8 {
         self as *const Self as *mut u8
@@ -195,6 +193,19 @@ impl _{{cluster_struct}} {
     {{self::cluster_func(types_mod=cluster_mod,cluster=cluster)}}
     {% endfor -%}
 }
+
+impl AsPtr for _{{cluster_struct}} {
+    fn as_ptr(&self) -> *mut u8 {
+        self._svd2pac_as_ptr()
+    }
+
+    #[inline(always)]
+    unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
+        Self::_svd2pac_from_ptr(ptr)
+    }
+}
+
+
 pub mod {{cluster_mod}} {
     #[allow(unused_imports)]
     use crate::common::{*};
