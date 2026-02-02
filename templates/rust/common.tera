@@ -96,6 +96,20 @@ pub trait Write: Access {}
 impl Write for RW {}
 impl Write for W {}
 
+/// Trait for the `as_ptr` and `from_ptr` methods,
+/// allowing register and cluster types to be converted to and from raw pointers.
+pub trait AsPtr {
+    /// Returns a raw pointer with the address of `self`.
+    fn as_ptr(&self) -> *mut u8;
+
+    /// Creates a new instance of this type from a raw pointer.
+    ///
+    /// # Safety
+    /// The pointer must be non-null, as well as valid and properly aligned for the read and write operations
+    /// performed on the resulting register instance.
+    unsafe fn from_ptr(ptr: *mut u8) -> &'static Self;
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Reg<T, A: Access> {
     phantom: PhantomData<*mut (T, A)>,
@@ -240,7 +254,6 @@ where
     T: RegSpec,
     A: Access,
 {
-    #[allow(dead_code)]
     #[inline(always)]
     #[must_use]
     pub(crate) const fn from_ptr(ptr: *mut u8) -> &'static Self {
@@ -252,6 +265,7 @@ where
     pub const fn ptr(&self) -> *mut T::DataType {
         self as *const _ as *mut T::DataType
     }
+
     {% if tracing %}
     /// Returns the address of the register.
     pub fn addr(&self) -> usize {
@@ -259,6 +273,24 @@ where
     }
     {% endif %}
 }
+
+
+impl<T, A> AsPtr for Reg<T, A>
+where
+    T: RegSpec + 'static,
+    A: Access + 'static,
+{
+    #[inline(always)]
+    fn as_ptr(&self) -> *mut u8 {
+        self.ptr() as *mut u8
+    }
+
+    #[inline(always)]
+    unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
+        Self::from_ptr(ptr)
+    }
+}
+
 
 impl<T, A> Reg<T, A>
 where
@@ -995,7 +1027,6 @@ impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ClusterRegisterArra
         &*(self.as_ptr().add(index * DIM_INCREMENT) as *const _) 
     }
 
-    #[allow(dead_code)]
     #[inline(always)]
     pub(crate) const unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
         &*(ptr as *const Self)
@@ -1004,6 +1035,20 @@ impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ClusterRegisterArra
     #[inline(always)]
     const fn as_ptr(&self) -> *mut u8 {
         self as *const _ as *mut _
+    }
+}
+
+impl<T: Sized + 'static, const DIM: usize, const DIM_INCREMENT: usize>
+    AsPtr for ClusterRegisterArray<T, DIM, DIM_INCREMENT>
+{
+    #[inline(always)]
+    fn as_ptr(&self) -> *mut u8 {
+        self.as_ptr()
+    }
+
+    #[inline(always)]
+    unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
+        ClusterRegisterArray::from_ptr(ptr)
     }
 }
 
