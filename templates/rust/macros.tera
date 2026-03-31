@@ -194,7 +194,7 @@ impl _{{cluster_struct}} {
     {% endfor -%}
 }
 
-impl AsPtr for _{{cluster_struct}} {
+unsafe impl AsPtr for _{{cluster_struct}} {
     fn as_ptr(&self) -> *mut u8 {
         self._svd2pac_as_ptr()
     }
