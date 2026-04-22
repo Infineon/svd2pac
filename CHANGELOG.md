@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.7.0]
+
+### Improvements
+
+Register and Clusters implement trait AsPtr. This trait allow easy conversion from/to pointers
+
 ## [0.6.1]
 
 ### Fixed
