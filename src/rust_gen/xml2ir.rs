@@ -6,15 +6,15 @@ use std::vec;
 
 use super::ir::*;
 use super::util::*;
-use crate::svd_util::*;
 use crate::SvdValidationLevel;
+use crate::svd_util::*;
 use anyhow::Ok;
 use anyhow::Result;
 use linked_hash_map::LinkedHashMap;
 use log::{debug, error, warn};
-use svd2temp::*;
 use svd_parser::svd;
 use svd_parser::svd::Name;
+use svd2temp::*;
 
 trait RegisterHelper {
     /// Get name of register considering the presence of alternate group
@@ -71,10 +71,16 @@ fn get_dim_dim_increment<T: Name>(array: &svd::array::MaybeArray<T>) -> (u32, u3
         svd::array::MaybeArray::Array(item, dim_element) => {
             let dim_index: Vec<String> = if let Some(dim_index_elements) = &dim_element.dim_index {
                 if dim_index_elements.len() != dim_element.dim as usize {
-                    warn!("dim_index length is not equal to dim. dim_index: {:?} dim: {} ignoring dimIndex tag", dim_index_elements, dim_element.dim);
+                    warn!(
+                        "dim_index length is not equal to dim. dim_index: {:?} dim: {} ignoring dimIndex tag",
+                        dim_index_elements, dim_element.dim
+                    );
                     vec![]
                 } else if !item.name().contains("%s") {
-                    warn!("dimIndex tag is used but name doesn't contain %s. dim_index: {:?} dim: {} ignoring dimIndex tag", dim_index_elements, dim_element.dim);
+                    warn!(
+                        "dimIndex tag is used but name doesn't contain %s. dim_index: {:?} dim: {} ignoring dimIndex tag",
+                        dim_index_elements, dim_element.dim
+                    );
                     vec![]
                 } else {
                     // Replace %s in name with the value of dim_index_elements
@@ -266,7 +272,10 @@ impl Visitor {
             let name = field.name.to_internal_ident();
             let svd_field_access = match field.access {
                 None => {
-                    error!("Inheritance of access is not supported. Bitfield: {} access shall be specified. Bitfield skipped",name);
+                    error!(
+                        "Inheritance of access is not supported. Bitfield: {} access shall be specified. Bitfield skipped",
+                        name
+                    );
                     continue;
                 }
                 Some(acc) => acc,
@@ -383,7 +392,10 @@ impl Visitor {
                         (true, false) => RegisterAccess::R,
                         (false, true) => RegisterAccess::W,
                         (false, false) => {
-                            error!("No bitfield in register '{}' specifies an access mode. Not able to infer register access mode", &register.name);
+                            error!(
+                                "No bitfield in register '{}' specifies an access mode. Not able to infer register access mode",
+                                &register.name
+                            );
                             RegisterAccess::R
                         }
                     }
@@ -431,7 +443,7 @@ impl Visitor {
         mut parent_peripheral_cluster: PeripheralClusterE,
     ) -> Result<()> {
         match register_cluster {
-            svd::RegisterCluster::Register(ref reg_svd) => {
+            svd::RegisterCluster::Register(reg_svd) => {
                 let derived_register: Option<Register> = if let Some(derived_ref) =
                     register_cluster.derived_from()
                 {
@@ -480,7 +492,7 @@ impl Visitor {
                 // Pop out the paths and the just updated cluster in svd to it index
                 self.pop_current_item_svd_path(DeviceItem::Register(register));
             }
-            svd::RegisterCluster::Cluster(ref cluster_svd) => {
+            svd::RegisterCluster::Cluster(cluster_svd) => {
                 let derived_cluster: Option<Cluster> = if let Some(derived_ref) =
                     register_cluster.derived_from()
                 {

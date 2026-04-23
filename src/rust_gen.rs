@@ -8,7 +8,7 @@ use std::{
 
 use self::util::ToSanitizedSymbol;
 use crate::{SvdValidationLevel, Target};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use lazy_regex::regex;
 use log::{error, info, warn};
 use std::collections::HashMap;
@@ -19,42 +19,40 @@ use std::fs::File;
 use std::io::Read;
 use std::io::{BufRead, BufReader};
 use std::process::Command;
-use tera::{to_value, try_get_value, Tera, Value};
+use tera::{Tera, Value, to_value, try_get_value};
 
 /// Convert [`Vec<PathChunk>`] to a string representation of a register path.
 fn filter_render_path(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
     match serde_json::from_value::<Vec<ir::PathChunk>>(value.clone()) {
         Ok(path) => {
-            let rendered = path.iter()
-                .enumerate()
-                .fold(String::new(),|mut output,(index, path_chunk)|{
-                    let _ = write!(output,
-                        "{}{}{}",
-                        match index {
-                            // check first element
-                            0 => path_chunk.path.clone(),
-                            _ => path_chunk.path.clone() +"()",
-                        },
-                        match path_chunk.index {
-                            Some(index) => format!("[{index}]"),
-                            None => "".to_owned(),
-                        },
-                        match index {
-                            _i if (_i == path.len() -1) => String::default(),
-                            _ => ".".to_owned(),
-                        }
-                    );
-                    output
-
-                }
-                );
+            let rendered =
+                path.iter()
+                    .enumerate()
+                    .fold(String::new(), |mut output, (index, path_chunk)| {
+                        let _ = write!(
+                            output,
+                            "{}{}{}",
+                            match index {
+                                // check first element
+                                0 => path_chunk.path.clone(),
+                                _ => path_chunk.path.clone() + "()",
+                            },
+                            match path_chunk.index {
+                                Some(index) => format!("[{index}]"),
+                                None => "".to_owned(),
+                            },
+                            match index {
+                                _i if (_i == path.len() - 1) => String::default(),
+                                _ => ".".to_owned(),
+                            }
+                        );
+                        output
+                    });
             Ok(Value::String(rendered))
-        },
-        Err(e)=>{
-            Err(tera::Error::msg(format!(
-                "filter_render_path only accepts Vec<PathChunk> as input.\nCannot deserialize value:{value} because:\nerror:{e}"
-            )))
         }
+        Err(e) => Err(tera::Error::msg(format!(
+            "filter_render_path only accepts Vec<PathChunk> as input.\nCannot deserialize value:{value} because:\nerror:{e}"
+        ))),
     }
 }
 
@@ -68,7 +66,7 @@ fn filter_prepend_lines(value: &Value, args: &HashMap<String, Value>) -> tera::R
         None => {
             return Err(tera::Error::msg(
                 "Filter `prepend_lines` expected an arg called `prefix`",
-            ))
+            ));
         }
     };
     let splits = to_value(
@@ -535,7 +533,7 @@ pub(crate) fn generate_rust_package(
 
     let package_name: String = match package_name {
         None => ir.device.name.clone().to_lowercase(),
-        Some(ref package_name) => package_name.clone(),
+        Some(package_name) => package_name.clone(),
     };
 
     let now = chrono::Utc::now().to_rfc2822();
@@ -621,7 +619,9 @@ pub(crate) fn generate_rust_package(
             }
             // if not able to run with --help proceed just with a warning. Generated code is anyway valid.
             Err(_) => {
-                warn!("Error while detecting presence of rustfmt. Generated code is valid but not formatted");
+                warn!(
+                    "Error while detecting presence of rustfmt. Generated code is valid but not formatted"
+                );
             }
         }
     };

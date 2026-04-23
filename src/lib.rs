@@ -2,7 +2,7 @@
 
 mod rust_gen;
 mod svd_util;
-use crate::rust_gen::{generate_rust_package, GenPkgSettings};
+use crate::rust_gen::{GenPkgSettings, generate_rust_package};
 use clap::{Parser, ValueEnum};
 use env_logger::Env;
 use log::{error, info, warn};
