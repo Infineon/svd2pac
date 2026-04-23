@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::Path;
-use std::process::{exit, Command};
+use std::process::{Command, exit};
 
 #[allow(dead_code)]
 pub fn assert_files_eq<T: AsRef<Path>, Q: AsRef<Path>>(ref_file: T, gen_file: Q) {

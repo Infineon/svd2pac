@@ -4,7 +4,12 @@
 
 ### Improvements
 
-Register and Clusters implement trait AsPtr. This trait allow easy conversion from/to pointers
+- Register and Clusters implement trait AsPtr. This trait allow easy conversion from/to pointers
+
+### Changed
+
+- Upgraded Cargo.lock to fix GitHub dependabot about rand package
+- Updated edition to 2024 and rust minimum version to 1.85
 
 ## [0.6.1]
 

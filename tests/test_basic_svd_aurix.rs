@@ -5,7 +5,7 @@ use fs_extra::dir::CopyOptions;
 use std::fs;
 use std::{env, path::Path};
 use svd2pac::main_parse_arguments;
-use toml_edit::{array, value, Array, Document, Table};
+use toml_edit::{Array, Document, Table, array, value};
 
 /// This test requires Aurix Rust compiler pre-installed
 #[test]
