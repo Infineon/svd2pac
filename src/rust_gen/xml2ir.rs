@@ -10,7 +10,7 @@ use crate::SvdValidationLevel;
 use crate::svd_util::*;
 use anyhow::Ok;
 use anyhow::Result;
-use linked_hash_map::LinkedHashMap;
+use indexmap::IndexMap;
 use log::{debug, error, warn};
 use svd_parser::svd;
 use svd_parser::svd::Name;
@@ -39,13 +39,13 @@ enum PeripheralClusterE<'a> {
 }
 
 impl PeripheralClusterE<'_> {
-    pub fn get_mut_registers(&mut self) -> &mut LinkedHashMap<String, Rc<RefCell<Register>>> {
+    pub fn get_mut_registers(&mut self) -> &mut IndexMap<String, Rc<RefCell<Register>>> {
         match self {
             PeripheralClusterE::Peripheral(p) => &mut p.registers,
             PeripheralClusterE::Cluster(c) => &mut c.registers,
         }
     }
-    pub fn get_mut_clusters(&mut self) -> &mut LinkedHashMap<String, Rc<RefCell<Cluster>>> {
+    pub fn get_mut_clusters(&mut self) -> &mut IndexMap<String, Rc<RefCell<Cluster>>> {
         match self {
             PeripheralClusterE::Peripheral(p) => &mut p.clusters,
             PeripheralClusterE::Cluster(c) => &mut c.clusters,
@@ -710,7 +710,7 @@ pub(super) fn parse_xml(
 
 /// Generate interrupt table including holes that will be used to create required function for cortex-m-rt
 fn get_interrupt_table(
-    peripheral_types: &LinkedHashMap<String, Rc<RefCell<PeripheralMod>>>,
+    peripheral_types: &IndexMap<String, Rc<RefCell<PeripheralMod>>>,
 ) -> Vec<Option<Interrupt>> {
     match peripheral_types
         .values()

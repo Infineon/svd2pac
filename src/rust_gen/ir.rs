@@ -1,4 +1,4 @@
-use linked_hash_map::LinkedHashMap;
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -40,7 +40,7 @@ impl HasSameType for Register {
 pub struct Device {
     pub name: String,
     pub description: String,
-    pub peripheral_mod: LinkedHashMap<String, Rc<RefCell<PeripheralMod>>>,
+    pub peripheral_mod: IndexMap<String, Rc<RefCell<PeripheralMod>>>,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -135,7 +135,7 @@ pub struct Register {
     pub dim_increment: u32,
     pub dim_index: Vec<String>,
     pub access: RegisterAccess,
-    pub fields: LinkedHashMap<String, Rc<RefCell<FieldGetterSetter>>>,
+    pub fields: IndexMap<String, Rc<RefCell<FieldGetterSetter>>>,
     pub size: BitSize,
     pub reset_value: u64,
     pub has_enumerated_fields: bool,
@@ -154,8 +154,8 @@ pub struct Cluster {
     pub dim: u32,
     pub dim_increment: u32,
     pub dim_index: Vec<String>,
-    pub registers: LinkedHashMap<String, Rc<RefCell<Register>>>,
-    pub clusters: LinkedHashMap<String, Rc<RefCell<Cluster>>>,
+    pub registers: IndexMap<String, Rc<RefCell<Register>>>,
+    pub clusters: IndexMap<String, Rc<RefCell<Cluster>>>,
     pub is_derived_from: bool,
     /// Full Rust path to module that contains the struct
     pub struct_module_path: Vec<String>,
@@ -170,8 +170,8 @@ pub struct Cluster {
 pub struct PeripheralMod {
     pub name: String,
     pub description: String,
-    pub clusters: LinkedHashMap<String, Rc<RefCell<Cluster>>>,
-    pub registers: LinkedHashMap<String, Rc<RefCell<Register>>>,
+    pub clusters: IndexMap<String, Rc<RefCell<Cluster>>>,
+    pub registers: IndexMap<String, Rc<RefCell<Register>>>,
     pub base_addr: Vec<u64>,
     pub interrupts: Vec<Interrupt>,
     pub derived_from: Option<String>,
@@ -207,7 +207,7 @@ pub struct Interrupt {
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct IR {
     pub device: Device,
-    pub register_addresses: LinkedHashMap<u64, Vec<Vec<PathChunk>>>,
+    pub register_addresses: IndexMap<u64, Vec<Vec<PathChunk>>>,
     pub license_text: String,
     pub version: String,
     /// Interrupt table to be created in the lib.rs. Interrupt table hole has value None

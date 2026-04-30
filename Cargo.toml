@@ -23,7 +23,7 @@ convert_case = "0.6"
 serde_json = { version = "1.0.96", features = ["preserve_order"] }
 serde = { version = "1.0.160", features = ["derive", "rc"] }
 syn = "2.0.33"
-linked-hash-map = { version = "0.5", features = ["serde_impl"] }
+indexmap = { version = "2", features = ["serde"] }
 chrono = "0.4"
 
 [dev-dependencies]

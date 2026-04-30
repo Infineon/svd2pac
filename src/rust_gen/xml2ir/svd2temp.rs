@@ -1,12 +1,12 @@
 use super::super::ir::PathChunk;
 use super::super::util::*;
 use super::RegisterHelper;
-use linked_hash_map::LinkedHashMap;
+use indexmap::IndexMap;
 use svd_parser::svd::{self, MaybeArray};
 
 pub(super) struct EntityDb {
     /// Flat map of absolute addresses to paths of registers at that address.
-    pub register_addresses: LinkedHashMap<u64, Vec<Vec<PathChunk>>>,
+    pub register_addresses: IndexMap<u64, Vec<Vec<PathChunk>>>,
 }
 
 /// Register struct wrapper with base address.
@@ -42,9 +42,9 @@ impl AbsoluteAddress for ClusterAbs<'_> {
 /// Maps include possible indices if path contains an array of peripherals/clusters/registers.
 /// Values in maps store the respective base address of clusters/registers.
 struct FQNFlatMaps<'a> {
-    registers: LinkedHashMap<Vec<PathChunk>, RegisterAbs<'a>>,
+    registers: IndexMap<Vec<PathChunk>, RegisterAbs<'a>>,
     #[allow(dead_code)]
-    clusters: LinkedHashMap<Vec<PathChunk>, ClusterAbs<'a>>,
+    clusters: IndexMap<Vec<PathChunk>, ClusterAbs<'a>>,
 }
 impl<'svd> FQNFlatMaps<'svd> {
     /// Build [`FQNFlatMaps`] from [`svd::Device`] reference.
@@ -53,8 +53,8 @@ impl<'svd> FQNFlatMaps<'svd> {
     /// into `registers` and `clusters` respectively.
     pub(super) fn generate(device: &'svd svd::Device) -> Self {
         let mut ret: Self = Self {
-            registers: LinkedHashMap::new(),
-            clusters: LinkedHashMap::new(),
+            registers: IndexMap::new(),
+            clusters: IndexMap::new(),
         };
 
         for p in &device.peripherals {
@@ -198,7 +198,7 @@ pub(super) fn get_entity_db(device: &svd::Device) -> EntityDb {
     // Build flat map of enumerated_values and addresses mapping to register names.
     //
     // This is needed for
-    let mut register_addresses: LinkedHashMap<u64, Vec<Vec<PathChunk>>> = LinkedHashMap::new();
+    let mut register_addresses: IndexMap<u64, Vec<Vec<PathChunk>>> = IndexMap::new();
     for (reg_name, &reg) in &flat_maps.registers {
         register_addresses
             .entry(reg.abs_address())
