@@ -1,0 +1,924 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# DEPLOYMENT NOTE
+# ───────────────────────────────────────────────────────────────────────────────
+# Place this workflow in the TARGET repository at:
+#   .github/workflows/blackduck-badges.yml
+#
+# The workflow scans the repo it is deployed in — no separate "target repo"
+# configuration is needed.  Works for all repos in the org: just copy this
+# file into each repo's .github/workflows/ folder.
+#
+# Required secrets / variables (org-level, granted to each target repo):
+#   BD_GITHUB_PAT            — fine-grained PAT with Contents+Issues write
+#   BLACKDUCK_BADGE_TOKEN      — Black Duck API token
+#   ARTIFACTORY_USER         — Artifactory username
+#   ARTIFACTORY_TOKEN        — Artifactory password / token
+#   BLACKDUCKSCA_URL (var)   — Black Duck server URL
+#   DETECT_JAR_NAME (var)    — optional override, default: detect-11.2.1.jar
+#   SCAN_CLI_NAME (var)      — optional override, default: scan.cli-linux64.zip
+#                              Upload from: BD UI → username → Tools → Legacy Downloads
+#                              → "Download for Linux x64" → upload to Artifactory
+# ═══════════════════════════════════════════════════════════════════════════════
+name: Black Duck SCA — Policy & Vulnerability Badges (No Hyperlinks)
+on:
+  # ── Manual trigger ────────────────────────────────────────────────────────
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch to scan and update badges on (defaults to current branch)'
+        required: false
+        default: ''
+      skip_signature_scan:
+        description: 'Set to "true" to run DETECTOR only (faster debug run, no source scan)'
+        required: true
+        default: 'false'
+
+  # ── Push to ANY branch ────────────────────────────────────────────────────
+  # paths-ignore prevents infinite loops:
+  #   README.md    → badge commit won't retrigger this workflow
+  #   .github/**   → Black Duck Security App commits are ignored
+  push:
+    branches: [ '**' ]
+    paths-ignore:
+      - '.github/**'
+      - 'README.md'
+
+  # ── Webhook-based trigger from external orchestrator ─────────────────────
+  repository_dispatch:
+    types: [blackduck-scan]
+
+  # ── Periodic scan — badges stay fresh with zero setup in target repo ──────
+  schedule:
+    - cron: '0 2 * * 1'   # Every Monday at 02:00 UTC
+
+# ── Permissions apply only to this runner repo ───────────────────────────────
+permissions:
+  contents: write
+  issues:   write
+
+jobs:
+  blackduck-badges:
+    # Skip runs triggered by bots (black-duck-security app, github-actions bot, dependabot).
+    # GitHub overrides paths-ignore when .github/workflows/** files change, so this
+    # job-level guard is the only reliable way to prevent bot-commit-triggered runs.
+    if: |
+      github.actor != 'black-duck-security[bot]' &&
+      github.actor != 'github-actions[bot]'      &&
+      github.actor != 'dependabot[bot]'
+    runs-on: [ self-hosted, Linux, X64, badges ]
+    env:
+      # ── Branch to scan — resolves: manual input → webhook payload → pushed branch → main ─
+      TARGET_BRANCH: ${{ github.event.inputs.target_branch || github.event.client_payload.ref || github.ref_name || 'main' }}
+
+      # ── Black Duck ────────────────────────────────────────────────────────
+      BLACKDUCK_URL:   ${{ vars.BLACKDUCKSCA_URL }}
+      BLACKDUCK_TOKEN: ${{ secrets.BLACKDUCK_BADGE_TOKEN }}
+      GITHUB_TOKEN:    ${{ secrets.BD_GITHUB_PAT }}
+
+      # ── Scan behaviour ────────────────────────────────────────────────────
+      BD_SCAN_FAILURE_SEVERITIES: "BLOCKER,CRITICAL"
+      BD_TRUST_CERT: "false"
+      BD_MARK_BUILD_SUCCESS: "true"
+      BD_INCLUDE_DIAGNOSTICS: "true"
+      # Push/repository_dispatch → DETECTOR only (fast, no source scan on every commit).
+      # Scheduled run           → DETECTOR + SIGNATURE_SCAN (thorough weekly sweep).
+      # Manual dispatch         → both by default; set skip_signature_scan=true for a quick debug run.
+      SKIP_SIGNATURE_SCAN: ${{ github.event.inputs.skip_signature_scan || 'false' }}
+
+      # ── Artifactory ───────────────────────────────────────────────────────
+      ARTIFACTORY_BASE_URL: https://artifactory.intra.infineon.com/artifactory/gen-it-blr-gopal-test-migration-local
+      ARTIFACTORY_USER:  ${{ secrets.ARTIFACTORY_USER }}
+      ARTIFACTORY_TOKEN: ${{ secrets.ARTIFACTORY_TOKEN }}
+
+      # ── Internal Shields.io instance ──────────────────────────────────────
+      IFX_SHIELDS_BASE: https://ifx-shields.icp.infineon.com/badge
+
+      # ── Detect JAR — downloaded to /tmp, NEVER inside the target project ──
+      #    This prevents Detect from scanning its own JAR as a component.
+      #    Current version: detect-11.2.1.jar (Black Duck Detect 11.2.1)
+      #    NOTE: Named BD_JAR_NAME (not DETECT_JAR_NAME) so Detect does not auto-map
+      #    the env var to the invalid property detect.jar.name (Detect converts all
+      #    DETECT_* env vars to detect.* properties at startup).
+      #    Upgrade: change DETECT_JAR_NAME org variable in GitHub Enterprise.
+      BD_JAR_NAME:        ${{ vars.DETECT_JAR_NAME || 'detect-11.2.1.jar' }}
+      DETECT_INSTALL_DIR: /tmp/blackduck-detect-${{ github.run_id }}
+
+      # ── Project checkout directory — isolated from all tool downloads ────
+      #    The repo is checked out into ${GITHUB_WORKSPACE}/project so that
+      #    Detect/scanner JARs in /tmp are never reachable from source.path.
+      PROJECT_DIR: ${{ github.workspace }}/project
+
+      # ── Signature Scanner ZIP — pre-cached in Artifactory (Linux x64) ────
+      #    Downloaded from BD UI: username menu → Tools → Legacy Downloads
+      #    → "Download for Linux x64" → upload to Artifactory as scan.cli-linux64.zip
+      #    Detect uses this local copy instead of fetching from the BD server,
+      #    keeping all tool downloads on the same internal Artifactory path.
+      #    Upgrade: replace with newer zip from BD UI when upgrading BD server.
+      SCAN_CLI_NAME:      ${{ vars.SCAN_CLI_NAME || 'scan.cli-linux64.zip' }}
+
+    steps:
+      # ────────────────────────────────────────────────────────────────────────
+      # 1. Prepare isolated temp directory for Detect and clean project folder
+      #    All tool downloads (Detect JAR, scan CLI, JDK, jq) live under
+      #    DETECT_INSTALL_DIR in /tmp — completely outside the project tree.
+      #    The project/ folder is wiped and recreated so no leftover runner
+      #    state from previous jobs can contaminate the scan scope.
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Prepare Detect temp directory and clean project folder
+        shell: bash
+        run: |
+          mkdir -p "${DETECT_INSTALL_DIR}"
+          # Remove any leftover checkout from a previous run on this runner
+          rm -rf "${PROJECT_DIR}"
+          mkdir -p "${PROJECT_DIR}"
+          echo "✔ Detect temp dir : ${DETECT_INSTALL_DIR}"
+          echo "✔ Project dir     : ${PROJECT_DIR} (clean)"
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 2. Checkout this repository into the isolated project/ subfolder
+      #    Using path: project pins the checkout to ${GITHUB_WORKSPACE}/project
+      #    so Detect's source.path never accidentally reaches /tmp or other
+      #    runner-local directories where tool JARs are stored.
+      #    actions/checkout sets up git credentials via the PAT so that
+      #    step 9 can commit and push the updated README.md directly.
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref:        ${{ env.TARGET_BRANCH }}
+          token:      ${{ secrets.BD_GITHUB_PAT }}
+          path:       project          # checks out into ${GITHUB_WORKSPACE}/project
+          clean:      true             # removes untracked files — no leftover build artefacts
+          fetch-depth: 1               # shallow clone, fastest possible checkout
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 2b. Verify checkout path and report repo size
+      #     Confirms exactly what was cloned, where it lives, and how big it is
+      #     so you can verify the scan scope before Detect runs.
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Verify project checkout path and size
+        shell: bash
+        run: |
+          echo "=== Project checkout location ==="
+          echo "  Path : ${PROJECT_DIR}"
+          echo ""
+          echo "--- Top-level contents of project/ ---"
+          ls -la "${PROJECT_DIR}"
+          echo ""
+          echo "--- Sub-directory tree (2 levels) ---"
+          find "${PROJECT_DIR}" -maxdepth 2 -mindepth 1 -type d | sort
+          echo ""
+          echo "--- Total disk usage ---"
+          du -sh "${PROJECT_DIR}"
+          echo ""
+          echo "--- Largest sub-directories (top 20) ---"
+          du -sh "${PROJECT_DIR}"//* 2>/dev/null | sort -rh | head -20 || true
+          echo ""
+          echo "--- File count by extension (top 15) ---"
+          find "${PROJECT_DIR}" -type f | sed 's/.*\.//' | sort | uniq -c | sort -rn | head -15 || true
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 3. Inspect project/ for scannable artifacts
+      #    Scoped to ${PROJECT_DIR} — Detect JAR, scan CLI, and JDK in /tmp
+      #    are completely outside this path and will never be inspected.
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Inspect project for scannable artifacts
+        shell: bash
+        run: |
+          echo "=== Scanning scope: ${PROJECT_DIR} ==="
+          echo ""
+          echo "--- JAR / WAR / EAR files found (first 50) ---"
+          find "${PROJECT_DIR}" \( -name "*.jar" -o -name "*.war" -o -name "*.ear" \) 2>/dev/null | head -50 || true
+          echo ""
+          echo "--- Package-manager descriptor files ---"
+          find "${PROJECT_DIR}" \( \
+            -name "pom.xml" -o -name "build.gradle" -o -name "build.gradle.kts" \
+            -o -name "package-lock.json" -o -name "npm-shrinkwrap.json" -o -name "yarn.lock" -o -name "pnpm-lock.yaml" \
+            -o -name "requirements*.txt" -o -name "Pipfile" -o -name "Pipfile.lock" \
+            -o -name "poetry.lock" -o -name "pyproject.toml" -o -name "setup.py" -o -name "uv.lock" \
+            -o -name "Cargo.toml" -o -name "Cargo.lock" \
+            -o -name "go.mod" -o -name "go.sum" \
+            -o -name "*.csproj" -o -name "*.sln" -o -name "packages.config" \
+            -o -name "composer.lock" -o -name "Gemfile.lock" \
+            -o -name "pubspec.yaml" -o -name "pubspec.lock" \
+            -o -name "Package.swift" -o -name "Package.resolved" \
+            -o -name "Podfile.lock" \
+            -o -name "conanfile.txt" -o -name "conanfile.py" -o -name "conan.lock" \
+            -o -name "build.sbt" -o -name "lerna.json" -o -name "rush.json" \
+            -o -name "*.opam" -o -name "rebar.config" \
+          \) 2>/dev/null | head -50 || true
+          echo ""
+          echo "--- Largest sub-directories (disk usage) ---"
+          du -shx "${PROJECT_DIR}"/* 2>/dev/null | sort -rh | head -20 || true
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 4. Ensure Java 17 is available (install from Artifactory if missing)
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Check or install Java from Artifactory
+        shell: bash
+        run: |
+          if java -version >/dev/null 2>&1; then
+            echo "✔ Java already available: $(java -version 2>&1 | head -1)"
+          else
+            echo "Java not found — downloading from Artifactory..."
+            mkdir -p "${DETECT_INSTALL_DIR}/java"
+            curl -fSL -u "${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN}" -o "${DETECT_INSTALL_DIR}/java/jdk.tar.gz" "${ARTIFACTORY_BASE_URL}/jdk-17-linux-x64.tar.gz"
+            tar -xzf "${DETECT_INSTALL_DIR}/java/jdk.tar.gz" \
+              -C "${DETECT_INSTALL_DIR}/java/" --strip-components=1
+            echo "${DETECT_INSTALL_DIR}/java/bin" >> "$GITHUB_PATH"
+            export PATH="${DETECT_INSTALL_DIR}/java/bin:$PATH"
+            echo "✔ Java installed: $(java -version 2>&1 | head -1)"
+          fi
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 5. Ensure jq is available (install from Artifactory if missing)
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Check or install jq from Artifactory
+        shell: bash
+        run: |
+          if command -v jq >/dev/null 2>&1; then
+            echo "✔ jq already available: $(jq --version)"
+          else
+            echo "jq not found — downloading from Artifactory..."
+            curl -fSL -u "${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN}" -o "${DETECT_INSTALL_DIR}/jq" "${ARTIFACTORY_BASE_URL}/jq-linux64"
+            chmod +x "${DETECT_INSTALL_DIR}/jq"
+            echo "${DETECT_INSTALL_DIR}" >> "$GITHUB_PATH"
+            export PATH="${DETECT_INSTALL_DIR}:$PATH"
+            echo "✔ jq installed: $(jq --version)"
+          fi
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 6. Download Detect JAR to /tmp — NEVER inside the target project
+      #    Keeps detect.jar out of the source tree so it is never scanned.
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Download Black Duck Detect to /tmp
+        shell: bash
+        run: |
+          DETECT_JAR="${DETECT_INSTALL_DIR}/${BD_JAR_NAME}"
+          echo "Downloading Detect JAR to: ${DETECT_JAR}"
+          curl -fSL -u "${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN}" -o "${DETECT_JAR}" "${ARTIFACTORY_BASE_URL}/${BD_JAR_NAME}"
+          ls -lh "${DETECT_JAR}"
+          echo "✔ detect.jar downloaded to /tmp (outside project workspace)"
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 6b. Download Signature Scanner ZIP to /tmp (only when SIGNATURE_SCAN enabled)
+      #     scan.cli-linux64.zip is pre-uploaded to Artifactory — same pattern as
+      #     detect.jar.  Detect reads it via --detect.blackduck.signature.scanner
+      #     .local.path and skips its own download from the BD server.
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Download Signature Scanner ZIP to /tmp
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.skip_signature_scan != 'true') }}
+        shell: bash
+        run: |
+          SCAN_CLI_ZIP="${DETECT_INSTALL_DIR}/${SCAN_CLI_NAME}"
+          SCAN_CLI_DIR="${DETECT_INSTALL_DIR}/scan-cli"
+          if [[ -f "${SCAN_CLI_ZIP}" ]]; then
+            echo "✔ Signature Scanner ZIP already present: ${SCAN_CLI_ZIP}"
+          else
+            echo "Downloading Signature Scanner ZIP to: ${SCAN_CLI_ZIP}"
+            curl -fSL -u "${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN}" \
+              -o "${SCAN_CLI_ZIP}" \
+              "${ARTIFACTORY_BASE_URL}/${SCAN_CLI_NAME}"
+            ls -lh "${SCAN_CLI_ZIP}"
+            echo "✔ ${SCAN_CLI_NAME} downloaded to /tmp"
+          fi
+          echo "Extracting Signature Scanner ZIP..."
+          mkdir -p "${SCAN_CLI_DIR}"
+          unzip -q "${SCAN_CLI_ZIP}" -d "${SCAN_CLI_DIR}"
+          echo "✔ Extracted scanner to: ${SCAN_CLI_DIR}"
+          ls "${SCAN_CLI_DIR}/"
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 7. Run Black Duck Intelligent Scan (Detector + Signature Scanner)
+      #    DETECTOR       → reads package manager manifest/lockfiles to build the BOM
+      #    SIGNATURE_SCAN → hashes every source file and matches against Black Duck's
+      #                     knowledge base of 3M+ open source components.
+      #                     Only file checksums are sent to the BD server — your
+      #                     source code is NEVER uploaded (upload.source=false).
+      #                     This catches embedded/vendored OSS that has no manifest,
+      #                     which is especially important for C/C++/embedded repos.
+      #
+      #    push/repository_dispatch → DETECTOR only (fast commit-time scan)
+      #    scheduled run           → both tools (thorough weekly sweep)
+      #    manual dispatch         → both by default; set skip_signature_scan=true for a quick debug run
+      #
+      #    --detect.project.name     → just the repo name (no org prefix)
+      #    --detect.source.path      → ${PROJECT_DIR} (GITHUB_WORKSPACE/project)
+      #                               This is the ONLY path Detect sees. All tool
+      #                               downloads (detect.jar, scan CLI, JDK) live
+      #                               in /tmp and are completely unreachable.
+      #    --detect.output.path      → /tmp (logs + BOM cache, never in project)
+      #    --detect.scan.output.path → /tmp (BDIO/signature files, never in project)
+      #    No --detect.excluded.directories: the full project tree is scanned.
+      #    Embedded/vendored libraries (e.g. deps/, mtb_shared/) are fully visible.
+      # ────────────────────────────────────────────────────────────────────────
+      # ────────────────────────────────────────────────────────────────────────
+      # 7b. Clean Detect output cache before scan
+      #     Removes any leftover BDIO/scan output from previous runs on this
+      #     runner so stale data cannot influence the current scan result.
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Clean Detect output cache before scan
+        shell: bash
+        run: |
+          rm -rf "${DETECT_INSTALL_DIR}/output" "${DETECT_INSTALL_DIR}/scans"
+          mkdir -p "${DETECT_INSTALL_DIR}/output" "${DETECT_INSTALL_DIR}/scans"
+          echo "✔ Detect output/scan cache cleared"
+          echo "✔ Scan will target: ${PROJECT_DIR}"
+
+      - name: Run Black Duck Intelligent Scan (Detector + Signature Scanner)
+        id: scan_full
+        shell: bash
+        run: |
+          set -euo pipefail
+          DETECT_JAR="${DETECT_INSTALL_DIR}/${BD_JAR_NAME}"
+          PROJECT_NAME="${{ github.event.repository.name }}"
+          TRUST_FLAG=""
+          [[ "${BD_TRUST_CERT}" == "true" ]] && TRUST_FLAG="--blackduck.trust.cert=true"
+
+          # Decide which tools to run:
+          #   schedule              → DETECTOR + SIGNATURE_SCAN (thorough weekly sweep)
+          #   workflow_dispatch     → user-controlled; both by default (skip_signature_scan=true for DETECTOR only)
+          #   push/repo_dispatch    → DETECTOR only (fast — no full source scan on every commit)
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            DETECT_TOOLS="DETECTOR,SIGNATURE_SCAN"
+            echo "ℹ Scheduled run — running both DETECTOR and SIGNATURE_SCAN"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${SKIP_SIGNATURE_SCAN}" != "true" ]]; then
+            DETECT_TOOLS="DETECTOR,SIGNATURE_SCAN"
+            echo "ℹ Manual dispatch (full scan) — running both DETECTOR and SIGNATURE_SCAN"
+          else
+            DETECT_TOOLS="DETECTOR"
+            echo "ℹ Push/dispatch trigger — running DETECTOR only (fast)"
+          fi
+
+          # Build signature scanner flags (only when SIGNATURE_SCAN is in use)
+          SIG_FLAGS=""
+          if [[ "${DETECT_TOOLS}" == *"SIGNATURE_SCAN"* ]]; then
+            SCAN_CLI_DIR="${DETECT_INSTALL_DIR}/scan-cli"
+            # local.path must point to the extracted scanner directory, not the ZIP
+            SCAN_CLI_INSTALL_DIR="$(find "${SCAN_CLI_DIR}" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)"
+            if [[ -n "${SCAN_CLI_INSTALL_DIR}" ]]; then
+              SIG_FLAGS="--detect.blackduck.signature.scanner.local.path=${SCAN_CLI_INSTALL_DIR}"
+              echo "ℹ Using local Signature Scanner: ${SCAN_CLI_INSTALL_DIR}"
+            else
+              echo "⚠ Signature Scanner not extracted — Detect will auto-download from BD server"
+            fi
+            SIG_FLAGS="${SIG_FLAGS} --detect.blackduck.signature.scanner.upload.source=false --detect.blackduck.signature.scanner.exclusion.name.patterns=*.jar,*.class,*.pyc,*.o,*.a,*.so,*.dll,*.exe,*.obj"
+          fi
+
+          # ── Pre-scan diagnostic: confirm exactly what will be scanned ───
+          echo "══════════════════════════════════════════════════"
+          echo "  SCAN TARGET SUMMARY"
+          echo "══════════════════════════════════════════════════"
+          echo "  Project cloned to : ${PROJECT_DIR}"
+          echo "  Detect JAR        : ${DETECT_INSTALL_DIR}/${BD_JAR_NAME}  [/tmp — NOT scanned]"
+          echo "  Detect output     : ${DETECT_INSTALL_DIR}/output  [/tmp — NOT scanned]"
+          echo "  Tools selected    : ${DETECT_TOOLS}"
+          echo "  Branch            : ${TARGET_BRANCH}"
+          echo ""
+          echo "  --- Files in project directory ---"
+          find "${PROJECT_DIR}" -type f | sort
+          echo ""
+          echo "  --- Directories in project ---"
+          find "${PROJECT_DIR}" -type d | sort
+          echo ""
+          echo "  --- Total file count: $(find "${PROJECT_DIR}" -type f | wc -l) files"
+          echo "  --- Total size     : $(du -sh "${PROJECT_DIR}" | cut -f1)"
+          echo "══════════════════════════════════════════════════"
+
+          java -jar "${DETECT_JAR}" \
+            --blackduck.url="${BLACKDUCK_URL}" \
+            --blackduck.api.token="${BLACKDUCK_TOKEN}" \
+            ${TRUST_FLAG} \
+            --detect.project.name="${PROJECT_NAME}" \
+            --detect.project.version.name="${TARGET_BRANCH}" \
+            --detect.source.path="${PROJECT_DIR}" \
+            --detect.output.path="${DETECT_INSTALL_DIR}/output" \
+            --detect.scan.output.path="${DETECT_INSTALL_DIR}/scans" \
+            --detect.blackduck.scan.mode=INTELLIGENT \
+            --detect.wait.for.results=true \
+            --detect.cleanup=false \
+            --detect.accuracy.required=NONE \
+            --detect.policy.check.fail.on.severities="${BD_SCAN_FAILURE_SEVERITIES}" \
+            --detect.tools="${DETECT_TOOLS}" \
+            --detect.detector.search.depth=10 \
+            ${SIG_FLAGS} \
+            --logging.level.com.blackduck.integration=INFO \
+            > "${DETECT_INSTALL_DIR}/detect.log" 2>&1 || true
+
+          cat "${DETECT_INSTALL_DIR}/detect.log"
+
+          # ── Post-scan summary ────────────────────────────────────────────
+          echo ""
+          echo "══════════════════════════════════════════════════"
+          echo "  SCAN COMPLETION SUMMARY"
+          echo "══════════════════════════════════════════════════"
+          echo "  Tools run         : ${DETECT_TOOLS}"
+          echo "  Source scanned    : ${PROJECT_DIR}"
+          _STATUS_LINE="$(grep 'Overall Status:' "${DETECT_INSTALL_DIR}/detect.log" | tail -1 | sed 's/.*--- //' || true)"
+          echo "  Detect result     : ${_STATUS_LINE:-unknown}"
+          _POLICY_LINE="$(grep 'Overall Policy Status' "${DETECT_INSTALL_DIR}/detect.log" | tail -1 | sed 's/.*--- //' || true)"
+          echo "  Policy            : ${_POLICY_LINE:-not reported}"
+          _SIG_RESULT="$(grep 'Signature scan' "${DETECT_INSTALL_DIR}/detect.log" | tail -1 | sed 's/.*--- //' || true)"
+          [[ -n "${_SIG_RESULT}" ]] && echo "  Signature scan    : ${_SIG_RESULT}"
+          _DET_RESULT="$(grep -E 'GIT: |Detectors actions' "${DETECT_INSTALL_DIR}/detect.log" | sed 's/.*--- //' | tr '\n' ' ' | xargs || true)"
+          [[ -n "${_DET_RESULT}" ]] && echo "  Detectors         : ${_DET_RESULT}"
+          _DURATION="$(grep 'Detect duration:' "${DETECT_INSTALL_DIR}/detect.log" | tail -1 | sed 's/.*--- //' || true)"
+          echo "  Duration          : ${_DURATION:-unknown}"
+          echo "══════════════════════════════════════════════════"
+
+          BOM_URL="$(grep -oE 'https?://[^ ]+/api/projects/[^/]+/versions/[^/]+/components' \
+            "${DETECT_INSTALL_DIR}/detect.log" 2>/dev/null | tail -1 || true)"
+
+          # If BOM URL absent from log (e.g. only Git detector ran, no BDIO uploaded),
+          # look up the project version URL directly via the Black Duck REST API.
+          if [[ -z "${BOM_URL}" ]]; then
+            echo "ℹ BOM URL not in detect.log — querying Black Duck API for project version..."
+            _TEMP_BEARER="$(curl -X POST -fsSL \
+              -H "Authorization: token ${BLACKDUCK_TOKEN}" \
+              -H "Accept: application/vnd.blackducksoftware.user-4+json" \
+              "${BLACKDUCK_URL%/}/api/tokens/authenticate" 2>/dev/null \
+              | jq -r '.bearerToken // empty' 2>/dev/null || true)"
+            if [[ -n "${_TEMP_BEARER}" ]]; then
+              _ENC_PROJ="${PROJECT_NAME// /%20}"
+              _PROJ_HREF="$(curl -fsSL \
+                -H "Authorization: Bearer ${_TEMP_BEARER}" \
+                -H "Accept: application/vnd.blackducksoftware.project-detail-4+json" \
+                "${BLACKDUCK_URL%/}/api/projects?q=name%3A${_ENC_PROJ}&limit=10" 2>/dev/null \
+                | jq -r --arg n "${PROJECT_NAME}" \
+                    '.items // [] | map(select(.name == $n)) | .[0]._meta.href // ""' \
+                  2>/dev/null || true)"
+              if [[ -n "${_PROJ_HREF}" ]]; then
+                _ENC_VER="${TARGET_BRANCH// /%20}"
+                _VER_HREF="$(curl -fsSL \
+                  -H "Authorization: Bearer ${_TEMP_BEARER}" \
+                  -H "Accept: application/vnd.blackducksoftware.project-detail-5+json" \
+                  "${_PROJ_HREF}/versions?q=versionName%3A${_ENC_VER}&limit=20" 2>/dev/null \
+                  | jq -r --arg v "${TARGET_BRANCH}" \
+                      '.items // [] | map(select(.versionName == $v)) | .[0]._meta.href // ""' \
+                    2>/dev/null || true)"
+                [[ -n "${_VER_HREF}" ]] && BOM_URL="${_VER_HREF}/components"
+              fi
+            fi
+          fi
+
+          if [[ -z "${BOM_URL}" ]]; then
+            echo "⚠ BOM URL not found in detect.log or via API — badge steps will be skipped"
+          else
+            echo "BOM_URL=${BOM_URL}" >> "$GITHUB_OUTPUT"
+
+            # ── Print Black Duck connection & project details ──────────────
+            _V_URL="$(echo "${BOM_URL}" | sed 's|/components$||')"
+            _P_ID="$(echo "${_V_URL}" | sed -n 's|.*/api/projects/\([^/]*\)/versions/.*|\1|p')"
+            _VER_ID="$(echo "${_V_URL}" | sed -n 's|.*/api/projects/[^/]*/versions/\([^/?]*\).*|\1|p')"
+            _BD_HOST="${BLACKDUCK_URL%/}"
+            echo ""
+            echo "══════════════════════════════════════════════════"
+            echo "  BLACK DUCK CONNECTION & PROJECT DETAILS"
+            echo "══════════════════════════════════════════════════"
+            echo "  BD Server URL   : ${_BD_HOST}"
+            echo "  Project Name    : ${PROJECT_NAME}"
+            echo "  Branch/Version  : ${TARGET_BRANCH}"
+            echo "  Project API URL : ${_BD_HOST}/api/projects/${_P_ID}"
+            echo "  Version API URL : ${_V_URL}"
+            echo "  BOM API URL     : ${BOM_URL}"
+            echo "  BD UI — Project  : ${_BD_HOST}/ui/versions/id:${_VER_ID}/view:components"
+            echo "══════════════════════════════════════════════════"
+            echo "ℹ Scan data has been UPLOADED to Black Duck server and is now in the BOM above."
+            echo "ℹ The next steps will query these APIs to read back results for badge generation."
+            echo ""
+          fi
+
+          # ── Extract policy violation severity counts from detect.log ──────
+          # The REST policy-status API may omit policySeverityDistribution;
+          # parse it directly from the scan log as a reliable source of truth.
+          LOG_SVCOUNTS="$(grep -m1 'Policy Severity counts:' "${DETECT_INSTALL_DIR}/detect.log" || true)"
+          extract_sev() { echo "${LOG_SVCOUNTS}" | grep -oP "[0-9]+(?= match(es)? ha(?:s|ve) a severity level of ${1})" 2>/dev/null | tail -1 || true; }
+          BLOCKER_LOG="$( extract_sev BLOCKER  )";  [[ "${BLOCKER_LOG}"  =~ ^[0-9]+$ ]] || BLOCKER_LOG=0
+          CRITICAL_LOG="$(extract_sev CRITICAL )";  [[ "${CRITICAL_LOG}" =~ ^[0-9]+$ ]] || CRITICAL_LOG=0
+          MAJOR_LOG="$(   extract_sev MAJOR    )";  [[ "${MAJOR_LOG}"    =~ ^[0-9]+$ ]] || MAJOR_LOG=0
+          echo "ℹ Severity from log — BLOCKER:${BLOCKER_LOG} CRITICAL:${CRITICAL_LOG} MAJOR:${MAJOR_LOG}"
+          echo "BLOCKER_LOG=${BLOCKER_LOG}"   >> "$GITHUB_OUTPUT"
+          echo "CRITICAL_LOG=${CRITICAL_LOG}" >> "$GITHUB_OUTPUT"
+          echo "MAJOR_LOG=${MAJOR_LOG}"       >> "$GITHUB_OUTPUT"
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 8. Acquire Bearer token for Black Duck REST API calls
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Get Black Duck Bearer Token
+        if: ${{ steps.scan_full.outputs.BOM_URL != '' }}
+        id: bearer_token
+        shell: bash
+        run: |
+          set -euo pipefail
+          BEARER_TOKEN="$(curl -X POST -fsSL -H "Authorization: token ${BLACKDUCK_TOKEN}" -H "Accept: application/vnd.blackducksoftware.user-4+json" "${BLACKDUCK_URL%/}/api/tokens/authenticate" | jq -r '.bearerToken // empty')"
+          if [[ -z "${BEARER_TOKEN}" ]]; then
+            echo "✖ Failed to obtain Bearer token from Black Duck"
+            exit 1
+          fi
+          echo "✔ Bearer token obtained"
+          echo "BEARER_TOKEN=${BEARER_TOKEN}" >> "$GITHUB_OUTPUT"
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 9. Download badge SVGs from ifx-shields and update README.md
+      #    The self-hosted runner is on the internal network and can reach
+      #    ifx-shields directly.  SVGs are committed to .github/badges/ so
+      #    GitHub serves them from the repo — no public camo proxy needed.
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Generate Badge SVGs and Update README
+        if: ${{ steps.scan_full.outputs.BOM_URL != '' }}
+        id: badges
+        shell: bash
+        env:
+          BEARER_TOKEN: ${{ steps.bearer_token.outputs.BEARER_TOKEN }}
+          BOM_URL:      ${{ steps.scan_full.outputs.BOM_URL }}
+          BLOCKER_LOG:  ${{ steps.scan_full.outputs.BLOCKER_LOG }}
+          CRITICAL_LOG: ${{ steps.scan_full.outputs.CRITICAL_LOG }}
+          MAJOR_LOG:    ${{ steps.scan_full.outputs.MAJOR_LOG }}
+        run: |
+          set -euo pipefail
+          SCAN_DATE="$(date -u '+%Y-%m-%d %H:%M UTC')"
+
+          VERSION_API_URL="$(echo "${BOM_URL}" | sed 's|/components$||')"
+          PROJECT_ID="$(echo "${VERSION_API_URL}" | sed -n 's|.*/api/projects/\([^/]*\)/versions/.*|\1|p')"
+          VERSION_ID="$( echo "${VERSION_API_URL}" | sed -n 's|.*/api/projects/[^/]*/versions/\([^/?]*\).*|\1|p')"
+
+          if [[ -z "${PROJECT_ID}" || -z "${VERSION_ID}" ]]; then
+            echo "✖ Could not parse PROJECT_ID / VERSION_ID from: ${VERSION_API_URL}"
+            exit 1
+          fi
+
+          # ── Fetch full project + version metadata from Black Duck ────────
+          PROJECT_JSON="$(curl -fsSL -H "Authorization: Bearer ${BEARER_TOKEN}" \
+            -H "Accept: application/vnd.blackducksoftware.project-detail-4+json" \
+            "${BLACKDUCK_URL%/}/api/projects/${PROJECT_ID}" 2>/dev/null || echo '{}')"
+
+          _BD_HOST="${BLACKDUCK_URL%/}"
+          _PROJ_NAME="$(echo "${PROJECT_JSON}" | jq -r '.name // "unknown"')"
+          _PROJ_DESC="$(echo "${PROJECT_JSON}" | jq -r '.description // "(none)"')"
+          _PROJ_GROUP_URL="$(echo "${PROJECT_JSON}" | jq -r '.projectGroup // ""')"
+          if [[ "${_PROJ_GROUP_URL}" == http* ]]; then
+            # BD project-groups endpoint requires the project-detail MIME type
+            _GROUP_JSON="$(curl -sSL \
+              -H "Authorization: Bearer ${BEARER_TOKEN}" \
+              -H "Accept: application/vnd.blackducksoftware.project-detail-4+json" \
+              "${_PROJ_GROUP_URL}" 2>/dev/null || echo '{}')"
+            # BD returns group name in .name
+            _PROJ_GROUP="$(echo "${_GROUP_JSON}" | jq -r '.name // ""')"
+            if [[ -z "${_PROJ_GROUP}" ]]; then
+              # Check if the response was an API error — extract errorMessage for clarity
+              _GRP_ERR="$(echo "${_GROUP_JSON}" | jq -r '.errorMessage // ""' 2>/dev/null || true)"
+              _GRP_UUID="$(echo "${_PROJ_GROUP_URL}" | grep -oE '[0-9a-f-]{36}$' || true)"
+              if [[ -n "${_GRP_ERR}" ]]; then
+                _PROJ_GROUP="(group UUID: ${_GRP_UUID:-unknown} — API error: ${_GRP_ERR})"
+              else
+                _GRP_KEYS="$(echo "${_GROUP_JSON}" | jq -r 'keys | join(", ")' 2>/dev/null || echo 'n/a')"
+                _PROJ_GROUP="(group UUID: ${_GRP_UUID:-unknown} — fields: ${_GRP_KEYS})"
+              fi
+            fi
+          else
+            _PROJ_GROUP="${_PROJ_GROUP_URL:-(none)}"
+          fi
+          _PROJ_CREATED="$(echo "${PROJECT_JSON}" | jq -r '.createdAt // "unknown"')"
+
+          # ── Resolve API links via HATEOAS _meta.links ─────────────────
+          VERSION_JSON="$(curl -fsSL -H "Authorization: Bearer ${BEARER_TOKEN}" -H "Accept: application/vnd.blackducksoftware.project-detail-5+json" "${VERSION_API_URL}" 2>/dev/null || echo '{}')"
+
+          _VER_NAME="$(echo "${VERSION_JSON}" | jq -r '.versionName // "unknown"')"
+          _VER_PHASE="$(echo "${VERSION_JSON}" | jq -r '.phase // "unknown"')"
+          _VER_DIST="$(echo "${VERSION_JSON}" | jq -r '.distribution // "unknown"')"
+          _VER_UPDATED="$(echo "${VERSION_JSON}" | jq -r '.settingUpdatedAt // "unknown"')"
+          _VER_LICENSE="$(echo "${VERSION_JSON}" | jq -r '.license.licenseDisplay // "Unknown License"')"
+
+          echo ""
+          echo "══════════════════════════════════════════════════"
+          echo "  BLACK DUCK PROJECT DETAILS (from BD API)"
+          echo "══════════════════════════════════════════════════"
+          echo "  BD Server        : ${_BD_HOST}"
+          echo "  Project Name     : ${_PROJ_NAME}"
+          echo "  Description      : ${_PROJ_DESC}"
+          echo "  Group            : ${_PROJ_GROUP}"
+          echo "  Project Created  : ${_PROJ_CREATED}"
+          echo "  Version/Branch   : ${_VER_NAME}"
+          echo "  Phase            : ${_VER_PHASE}"
+          echo "  Distribution     : ${_VER_DIST}"
+          echo "  License          : ${_VER_LICENSE}"
+          echo "  Last Updated     : ${_VER_UPDATED}"
+          echo ""
+          echo "  --- API URLs ---"
+          echo "  Project API  : ${_BD_HOST}/api/projects/${PROJECT_ID}"
+          echo "  Version API  : ${VERSION_API_URL}"
+          echo "  BOM API      : ${BOM_URL}"
+          echo "  Policy API   : ${VERSION_API_URL}/policy-status"
+          echo "  Risk API     : ${VERSION_API_URL}/risk-profile"
+          echo ""
+          echo "  --- BD UI URL (open in browser) ---"
+          echo "  ${_BD_HOST}/ui/versions/id:${VERSION_ID}/view:components"
+          echo "══════════════════════════════════════════════════"
+
+          # ── Fetch component count from BOM ────────────────────────────
+          BOM_JSON="$(curl -fsSL \
+            -H "Authorization: Bearer ${BEARER_TOKEN}" \
+            -H "Accept: application/vnd.blackducksoftware.bill-of-materials-6+json" \
+            "${BOM_URL}?limit=10&offset=0" 2>/dev/null || echo '{}')"
+          TOTAL_COMP="$(echo "${BOM_JSON}" | jq -r '.totalCount // 0')"
+          echo ""
+          echo "  --- Components in BOM: ${TOTAL_COMP} ---"
+          if [[ "${TOTAL_COMP}" -gt 0 ]]; then
+            echo "${BOM_JSON}" | jq -r '.items // [] | .[] | "  " + (.componentName // "?") + " @ " + (.componentVersionName // "?") + "  license: " + (.licenses[0].spdxId // .licenses[0].licenseDisplay // "?")' 2>/dev/null || true
+          else
+            echo "  (no OSS components found in BOM — repo contains only original source)"
+          fi
+          echo ""
+
+          get_link() {
+            local rel="$1" fallback="$2"
+            local href
+            href="$(echo "${VERSION_JSON}" | jq -r --arg r "$rel" '._meta.links // [] | map(select(.rel == $r)) | .[0].href // ""')"
+            echo "${href:-${fallback}}"
+          }
+
+          POLICY_STATUS_API="$(get_link "policy-status" "${VERSION_API_URL}/policy-status")"
+          RISK_PROFILE_API="$( get_link "riskProfile"   "${VERSION_API_URL}/risk-profile")"
+
+          echo "Resolved API endpoints:"
+          echo "  policy-status : ${POLICY_STATUS_API}"
+          echo "  risk-profile  : ${RISK_PROFILE_API}"
+
+          # ── Fetch policy data ──────────────────────────────────────────────
+          POLICY_JSON="$(curl -fsSL -H "Authorization: Bearer ${BEARER_TOKEN}" -H "Accept: application/json" "${POLICY_STATUS_API}" 2>/dev/null || echo '{}')"
+
+          POLICY_STATUS="$(      echo "${POLICY_JSON}" | jq -r '.overallStatus // "UNKNOWN"')"
+          COMP_IN_VIOLATION="$(  echo "${POLICY_JSON}" | jq -r '.componentVersionStatusCounts // [] | map(select(.name == "IN_VIOLATION")) | .[0].value // 0')"
+          BLOCKER_COUNT="$(      echo "${POLICY_JSON}" | jq -r '.policySeverityDistribution // [] | map(select(.name == "BLOCKER"))   | .[0].value // 0')"
+          CRITICAL_POL_COUNT="$( echo "${POLICY_JSON}" | jq -r '.policySeverityDistribution // [] | map(select(.name == "CRITICAL")) | .[0].value // 0')"
+          MAJOR_COUNT="$(        echo "${POLICY_JSON}" | jq -r '.policySeverityDistribution // [] | map(select(.name == "MAJOR"))    | .[0].value // 0')"
+          TRIVIAL_COUNT="$(      echo "${POLICY_JSON}" | jq -r '.policySeverityDistribution // [] | map(select(.name == "TRIVIAL"))  | .[0].value // 0')"
+
+          for v in COMP_IN_VIOLATION BLOCKER_COUNT CRITICAL_POL_COUNT MAJOR_COUNT TRIVIAL_COUNT; do
+            [[ "${!v}" =~ ^[0-9]+$ ]] || eval "$v=0"
+          done
+
+          # ── Fall back to detect.log counts if API returns zero ─────────────
+          [[ "${BLOCKER_COUNT}"      -gt 0 ]] || BLOCKER_COUNT="${BLOCKER_LOG:-0}"
+          [[ "${CRITICAL_POL_COUNT}" -gt 0 ]] || CRITICAL_POL_COUNT="${CRITICAL_LOG:-0}"
+          [[ "${MAJOR_COUNT}"        -gt 0 ]] || MAJOR_COUNT="${MAJOR_LOG:-0}"
+
+          echo "Policy: ${POLICY_STATUS} | ${COMP_IN_VIOLATION} in violation"
+          echo "Severity — B:${BLOCKER_COUNT} C:${CRITICAL_POL_COUNT} M:${MAJOR_COUNT} T:${TRIVIAL_COUNT}"
+
+          # ── Fetch vulnerability risk profile ───────────────────────────────
+          RISK_JSON="$(curl -fsSL -H "Authorization: Bearer ${BEARER_TOKEN}" -H "Accept: application/json" "${RISK_PROFILE_API}" 2>/dev/null || echo '{}')"
+
+          VULN_CRIT="$(echo "${RISK_JSON}" | jq -r '.categories.VULNERABILITY.CRITICAL // 0')"
+          VULN_HIGH="$(echo "${RISK_JSON}" | jq -r '.categories.VULNERABILITY.HIGH     // 0')"
+          VULN_MED="$( echo "${RISK_JSON}" | jq -r '.categories.VULNERABILITY.MEDIUM   // 0')"
+          VULN_LOW="$( echo "${RISK_JSON}" | jq -r '.categories.VULNERABILITY.LOW      // 0')"
+
+          for v in VULN_CRIT VULN_HIGH VULN_MED VULN_LOW; do
+            [[ "${!v}" =~ ^[0-9]+$ ]] || eval "$v=0"
+          done
+          VULN_TOTAL=$(( VULN_CRIT + VULN_HIGH + VULN_MED + VULN_LOW ))
+
+          echo "Vulns — C:${VULN_CRIT} H:${VULN_HIGH} M:${VULN_MED} L:${VULN_LOW} Total:${VULN_TOTAL}"
+
+          # ── Build shields.io badge URLs directly from scan results ──────────
+          # URLs are constructed locally — no SVG download, no ifx-shields call,
+          # no .github/badges/ folder needed.  img.shields.io is a public CDN
+          # reachable by GitHub's camo proxy, so images render in README.md.
+
+          # Helper: URL-encode a string for use in a shields.io path segment
+          urlencode() {
+            local s="$1"
+            s="${s// /%20}"
+            s="${s//:/%3A}"
+            s="${s//|/%7C}"
+            s="${s//-/--}"   # shields.io uses -- to render a literal dash
+            echo "${s}"
+          }
+
+          # Helper: build a shields.io static badge URL
+          # Usage: make_badge_url "Left Label" "Right Message" "color-hex-no-hash"
+          make_badge_url() {
+            local label msg color
+            label="$(urlencode "$1")"
+            msg="$(urlencode "$2")"
+            color="${3#\#}"
+            echo "https://img.shields.io/badge/${label}-${msg}-${color}"
+          }
+
+          # Badge 1: Policy Status
+          case "${POLICY_STATUS}" in
+            IN_VIOLATION)     POL_MSG="Policy Violation"; POL_COL="e05d44" ;;
+            NOT_IN_VIOLATION) POL_MSG="Pass";             POL_COL="4c1"    ;;
+            *)                POL_MSG="Monitored";        POL_COL="007ec6" ;;
+          esac
+          BADGE_POLICY_URL="$(make_badge_url "Black Duck | Policy" "${POL_MSG}" "${POL_COL}")"
+
+          # Badge 2: Policy Violations
+          if   (( BLOCKER_COUNT > 0 )); then
+            VIO_MSG="Blocker:${BLOCKER_COUNT} Critical:${CRITICAL_POL_COUNT} Major:${MAJOR_COUNT}"; VIO_COL="e05d44"
+          elif (( CRITICAL_POL_COUNT > 0 )); then
+            VIO_MSG="Critical:${CRITICAL_POL_COUNT} Major:${MAJOR_COUNT}"; VIO_COL="dfb317"
+          elif (( MAJOR_COUNT > 0 )); then
+            VIO_MSG="Major:${MAJOR_COUNT} Trivial:${TRIVIAL_COUNT}"; VIO_COL="fe7d37"
+          elif (( COMP_IN_VIOLATION > 0 )); then
+            VIO_MSG="${COMP_IN_VIOLATION} components"; VIO_COL="007ec6"
+          else
+            VIO_MSG="None"; VIO_COL="4c1"
+          fi
+          BADGE_VIOLATIONS_URL="$(make_badge_url "BD | Violations" "${VIO_MSG}" "${VIO_COL}")"
+
+          # Badge 3: Vulnerabilities
+          if   (( VULN_CRIT > 0 )); then SEC_MSG="C:${VULN_CRIT} H:${VULN_HIGH} M:${VULN_MED} L:${VULN_LOW}"; SEC_COL="e05d44"
+          elif (( VULN_HIGH > 0 )); then SEC_MSG="C:${VULN_CRIT} H:${VULN_HIGH} M:${VULN_MED} L:${VULN_LOW}"; SEC_COL="dfb317"
+          elif (( VULN_MED  > 0 )); then SEC_MSG="C:${VULN_CRIT} H:${VULN_HIGH} M:${VULN_MED} L:${VULN_LOW}"; SEC_COL="fe7d37"
+          elif (( VULN_LOW  > 0 )); then SEC_MSG="C:${VULN_CRIT} H:${VULN_HIGH} M:${VULN_MED} L:${VULN_LOW}"; SEC_COL="007ec6"
+          else                           SEC_MSG="None";                                                         SEC_COL="4c1"
+          fi
+          BADGE_VULN_URL="$(make_badge_url "BD | Vulnerabilities" "${SEC_MSG}" "${SEC_COL}")"
+
+          # Badge 4: License Risk
+          LIC_HIGH="$(echo "${RISK_JSON}" | jq -r '.categories.LICENSE.HIGH   // 0')"
+          LIC_MED="$( echo "${RISK_JSON}" | jq -r '.categories.LICENSE.MEDIUM // 0')"
+          LIC_LOW="$( echo "${RISK_JSON}" | jq -r '.categories.LICENSE.LOW    // 0')"
+          for v in LIC_HIGH LIC_MED LIC_LOW; do [[ "${!v}" =~ ^[0-9]+$ ]] || eval "$v=0"; done
+
+          if   (( LIC_HIGH > 0 )); then LIC_MSG="H:${LIC_HIGH} M:${LIC_MED} L:${LIC_LOW}"; LIC_COL="e05d44"
+          elif (( LIC_MED  > 0 )); then LIC_MSG="H:${LIC_HIGH} M:${LIC_MED} L:${LIC_LOW}"; LIC_COL="dfb317"
+          elif (( LIC_LOW  > 0 )); then LIC_MSG="H:${LIC_HIGH} M:${LIC_MED} L:${LIC_LOW}"; LIC_COL="fe7d37"
+          else                           LIC_MSG="OK";                                        LIC_COL="4c1"
+          fi
+          BADGE_LICENSE_URL="$(make_badge_url "BD | License Risk" "${LIC_MSG}" "${LIC_COL}")"
+
+          echo "✔ Badge URLs constructed:"
+          echo "  Policy      : ${BADGE_POLICY_URL}"
+          echo "  Violations  : ${BADGE_VIOLATIONS_URL}"
+          echo "  Vulns       : ${BADGE_VULN_URL}"
+          echo "  License     : ${BADGE_LICENSE_URL}"
+
+          # ── Build README badge block ───────────────────────────────────────
+          # Direct img.shields.io URLs — no SVG files, no .github/badges/ folder.
+          BD_START="<!-- BD_BADGES_START -->"
+          BD_END="<!-- BD_BADGES_END -->"
+
+          NEW_BADGE_BLOCK="$(printf '%s\n' \
+            "${BD_START}" \
+            "![BD Policy](${BADGE_POLICY_URL}) ![BD Violations](${BADGE_VIOLATIONS_URL}) ![BD Vulnerabilities](${BADGE_VULN_URL}) ![BD License](${BADGE_LICENSE_URL})" \
+            "" \
+            "<sub>Black Duck SCA — last scanned: ${SCAN_DATE}</sub>" \
+            "" \
+            "${BD_END}" \
+            "")"
+
+          # ── Update README.md and commit via git ───────────────────────────
+          # All file and git operations run inside the project checkout directory.
+          cd "${PROJECT_DIR}"
+          if [[ -f README.md ]]; then
+            if grep -qF "${BD_START}" README.md; then
+              awk -v s="${BD_START}" -v e="${BD_END}" \
+                'p==1 && index($0,e){p=0;next} p==1{next} index($0,s){p=1;next} {print}' \
+                README.md > README.md.clean
+              printf '%s' "${NEW_BADGE_BLOCK}" | cat - README.md.clean > README.md
+              rm -f README.md.clean
+            else
+              printf '%s' "${NEW_BADGE_BLOCK}" | cat - README.md > README.md.new
+              mv README.md.new README.md
+            fi
+          else
+            printf '%s\n' "${NEW_BADGE_BLOCK}" > README.md
+          fi
+
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add README.md
+          git diff --cached --quiet && echo "✔ README unchanged — no commit needed" || \
+            (git commit -m "chore(badges): update Black Duck badges [skip ci]" && git push && echo "✔ README.md updated and pushed")
+
+          # ── Propagate values for job summary ──────────────────────────────
+          echo "POLICY_STATUS=${POLICY_STATUS}"           >> "$GITHUB_OUTPUT"
+          echo "COMP_IN_VIOLATION=${COMP_IN_VIOLATION}"   >> "$GITHUB_OUTPUT"
+          echo "BLOCKER_COUNT=${BLOCKER_COUNT}"           >> "$GITHUB_OUTPUT"
+          echo "CRITICAL_POL_COUNT=${CRITICAL_POL_COUNT}" >> "$GITHUB_OUTPUT"
+          echo "MAJOR_COUNT=${MAJOR_COUNT}"               >> "$GITHUB_OUTPUT"
+          echo "TRIVIAL_COUNT=${TRIVIAL_COUNT}"           >> "$GITHUB_OUTPUT"
+          echo "VULN_CRIT=${VULN_CRIT}"                   >> "$GITHUB_OUTPUT"
+          echo "VULN_HIGH=${VULN_HIGH}"                   >> "$GITHUB_OUTPUT"
+          echo "VULN_MED=${VULN_MED}"                     >> "$GITHUB_OUTPUT"
+          echo "VULN_LOW=${VULN_LOW}"                     >> "$GITHUB_OUTPUT"
+          echo "VULN_TOTAL=${VULN_TOTAL}"                 >> "$GITHUB_OUTPUT"
+          echo "LIC_HIGH=${LIC_HIGH}"                     >> "$GITHUB_OUTPUT"
+          echo "LIC_MED=${LIC_MED}"                       >> "$GITHUB_OUTPUT"
+          echo "LIC_LOW=${LIC_LOW}"                       >> "$GITHUB_OUTPUT"
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 10. Open a GitHub Issue in the target repo when critical findings exist.
+      #     Idempotent — skips if an open 'black-duck-alert' issue already exists.
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Notify via GitHub Issue on critical findings
+        if: ${{ steps.scan_full.outputs.BOM_URL != '' }}
+        shell: bash
+        env:
+          POLICY_STATUS:     ${{ steps.badges.outputs.POLICY_STATUS }}
+          COMP_IN_VIOLATION: ${{ steps.badges.outputs.COMP_IN_VIOLATION }}
+          VULN_CRIT:         ${{ steps.badges.outputs.VULN_CRIT }}
+          VULN_HIGH:         ${{ steps.badges.outputs.VULN_HIGH }}
+          VULN_MED:          ${{ steps.badges.outputs.VULN_MED }}
+          VULN_LOW:          ${{ steps.badges.outputs.VULN_LOW }}
+          VULN_TOTAL:        ${{ steps.badges.outputs.VULN_TOTAL }}
+        run: |
+          # Only alert on policy violations or critical/high vulnerabilities
+          if [[ "${POLICY_STATUS:-}" != "IN_VIOLATION" && \
+                "${VULN_CRIT:-0}" == "0" && "${VULN_HIGH:-0}" == "0" ]]; then
+            echo "✔ No critical findings — skipping issue notification"
+            exit 0
+          fi
+
+          ISSUES_API="https://api.github.com/repos/${GITHUB_REPOSITORY}/issues"
+          LABEL="black-duck-alert"
+          SCAN_DATE="$(date -u '+%Y-%m-%d %H:%M UTC')"
+
+          # Ensure the label exists (ignore 422 conflict if already present)
+          curl -s -o /dev/null -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/labels" -d "{\"name\":\"${LABEL}\",\"color\":\"e05d44\",\"description\":\"Black Duck SCA security alert\"}" || true
+
+          # Idempotency check — skip if an open alert issue already exists
+          EXISTING="$(curl -fsSL -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" "${ISSUES_API}?state=open&labels=${LABEL}&per_page=1" 2>/dev/null || echo '[]')"
+          if [[ "$(echo "${EXISTING}" | jq 'if type=="array" then length else 0 end')" -gt 0 ]]; then
+            echo "✔ Open Black Duck alert issue already exists — skipping"
+            exit 0
+          fi
+
+          # Build issue body (echo-to-file avoids shell newline-escaping issues)
+          {
+            echo "## Black Duck SCA Alert"
+            echo ""
+            echo "**Branch:** \`${TARGET_BRANCH}\`"
+            echo "**Scanned:** ${SCAN_DATE}"
+            echo ""
+            echo "| Category | Result |"
+            echo "|---|---|"
+            echo "| Policy Status | \`${POLICY_STATUS}\` |"
+            echo "| Components in Violation | ${COMP_IN_VIOLATION} |"
+            echo "| Critical Vulnerabilities | ${VULN_CRIT} |"
+            echo "| High Vulnerabilities | ${VULN_HIGH} |"
+            echo "| Medium Vulnerabilities | ${VULN_MED} |"
+            echo "| Low Vulnerabilities | ${VULN_LOW} |"
+            echo "| **Total Vulnerabilities** | **${VULN_TOTAL}** |"
+            echo ""
+            echo "Please review and either remediate the affected components or document an accepted risk in Black Duck."
+            echo ""
+            echo "> Close this issue once all findings are addressed or acknowledged."
+          } > "${DETECT_INSTALL_DIR}/issue_body.md"
+
+          # POST the issue
+          jq -n --arg title "🦆 Black Duck SCA: Security findings on ${GITHUB_REPOSITORY} @ ${TARGET_BRANCH}" --arg body "$(cat "${DETECT_INSTALL_DIR}/issue_body.md")" --argjson labels '["black-duck-alert"]' '{title: $title, body: $body, labels: $labels}' > "${DETECT_INSTALL_DIR}/issue_payload.json"
+          curl -sf -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -H "Content-Type: application/json" "${ISSUES_API}" --data @"${DETECT_INSTALL_DIR}/issue_payload.json" > /dev/null && echo "✔ Alert issue created in ${GITHUB_REPOSITORY}" || echo "⚠ Could not create issue (non-fatal)"
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 11. Write job summary
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Write Job Summary
+        if: always()
+        shell: bash
+        env:
+          POLICY_STATUS:      ${{ steps.badges.outputs.POLICY_STATUS }}
+          COMP_IN_VIOLATION:  ${{ steps.badges.outputs.COMP_IN_VIOLATION }}
+          BLOCKER_COUNT:      ${{ steps.badges.outputs.BLOCKER_COUNT }}
+          CRITICAL_POL_COUNT: ${{ steps.badges.outputs.CRITICAL_POL_COUNT }}
+          MAJOR_COUNT:        ${{ steps.badges.outputs.MAJOR_COUNT }}
+          TRIVIAL_COUNT:      ${{ steps.badges.outputs.TRIVIAL_COUNT }}
+          VULN_CRIT:          ${{ steps.badges.outputs.VULN_CRIT }}
+          VULN_HIGH:          ${{ steps.badges.outputs.VULN_HIGH }}
+          VULN_MED:           ${{ steps.badges.outputs.VULN_MED }}
+          VULN_LOW:           ${{ steps.badges.outputs.VULN_LOW }}
+          VULN_TOTAL:         ${{ steps.badges.outputs.VULN_TOTAL }}
+          LIC_HIGH:           ${{ steps.badges.outputs.LIC_HIGH }}
+          LIC_MED:            ${{ steps.badges.outputs.LIC_MED }}
+          LIC_LOW:            ${{ steps.badges.outputs.LIC_LOW }}
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" << EOF
+          ## 🦆 Black Duck SCA Badge Summary
+
+          **Target:** ${GITHUB_REPOSITORY} @ ${TARGET_BRANCH}
+
+          | Category | Value |
+          |---|---|
+          | Policy Status | ${POLICY_STATUS:-N/A} |
+          | Components in Violation | ${COMP_IN_VIOLATION:-0} |
+          | Policy Violations | Blocker:${BLOCKER_COUNT:-0} Critical:${CRITICAL_POL_COUNT:-0} Major:${MAJOR_COUNT:-0} Trivial:${TRIVIAL_COUNT:-0} |
+          | All Vulnerabilities | C:${VULN_CRIT:-0} H:${VULN_HIGH:-0} M:${VULN_MED:-0} L:${VULN_LOW:-0} (${VULN_TOTAL:-0} total) |
+          | License Risk | H:${LIC_HIGH:-0} M:${LIC_MED:-0} L:${LIC_LOW:-0} |
+
+          > ✅ Badge URLs embedded directly in README.md — no SVG downloads
+          > ✅ README updated via git commit — no external API PUT needed
+          > ✅ Scan tools: DETECTOR (manifests/lockfiles) + SIGNATURE_SCAN (source file hashes)
+          EOF
+
+      # ────────────────────────────────────────────────────────────────────────
+      # 12. Cleanup: remove all Detect temp files from /tmp
+      # ────────────────────────────────────────────────────────────────────────
+      - name: Cleanup temp Detect files
+        if: always()
+        shell: bash
+        run: |
+          rm -rf "${DETECT_INSTALL_DIR}" || true
+          echo "✔ Cleaned up ${DETECT_INSTALL_DIR}"
