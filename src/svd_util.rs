@@ -17,7 +17,7 @@ pub enum ParseError {
     Unsupported(String),
 }
 
-pub(crate) trait ExpandedName: svd_parser::svd::Name {
+pub trait ExpandedName: svd_parser::svd::Name {
     /// Generate an identifier that can be used in derivedFrom tags
     /// CMSIS svd.xsd specification is not consisted with svdconv.exe.
     /// In xsd file derivedFrom is of type dimableIdentifierType and
@@ -31,15 +31,14 @@ pub(crate) trait ExpandedName: svd_parser::svd::Name {
 impl ExpandedName for svd::Cluster {
     fn get_expanded_name(&self) -> Result<String, ParseError> {
         match self {
-            svd::MaybeArray::Single(info) => Ok(info.name.clone()),
-            svd::MaybeArray::Array(info, dim_info) => Ok(svd::cluster::expand(info, dim_info)
+            Self::Single(info) => Ok(info.name.clone()),
+            Self::Array(info, dim_info) => Ok(svd::cluster::expand(info, dim_info)
                 .next()
-                .ok_or(ParseError::InvalidCluster {
+                .ok_or_else(|| ParseError::InvalidCluster {
                     cluster_name: self.name.clone(),
                     msg: "Array of size 0 is not allowed".to_string(),
                 })?
-                .name
-                .to_string()),
+                .name),
         }
     }
 }
@@ -47,15 +46,14 @@ impl ExpandedName for svd::Cluster {
 impl ExpandedName for svd::Register {
     fn get_expanded_name(&self) -> Result<String, ParseError> {
         match self {
-            svd::MaybeArray::Single(info) => Ok(info.name.clone()),
-            svd::MaybeArray::Array(info, dim_info) => Ok(svd::register::expand(info, dim_info)
+            Self::Single(info) => Ok(info.name.clone()),
+            Self::Array(info, dim_info) => Ok(svd::register::expand(info, dim_info)
                 .next()
-                .ok_or(ParseError::InvalidRegister {
+                .ok_or_else(|| ParseError::InvalidRegister {
                     register_name: self.name.clone(),
                     msg: "Array of size 0 is not allowed".to_string(),
                 })?
-                .name
-                .to_string()),
+                .name),
         }
     }
 }
@@ -63,21 +61,20 @@ impl ExpandedName for svd::Register {
 impl ExpandedName for svd::Peripheral {
     fn get_expanded_name(&self) -> Result<String, ParseError> {
         match self {
-            svd::MaybeArray::Single(info) => Ok(info.name.clone()),
-            svd::MaybeArray::Array(info, dim_info) => Ok(svd::peripheral::expand(info, dim_info)
+            Self::Single(info) => Ok(info.name.clone()),
+            Self::Array(info, dim_info) => Ok(svd::peripheral::expand(info, dim_info)
                 .next()
-                .ok_or(ParseError::InvalidPeripheral {
+                .ok_or_else(|| ParseError::InvalidPeripheral {
                     peripheral_name: self.name.clone(),
                     msg: "Array of size 0 is not allowed".to_string(),
                 })?
-                .name
-                .to_string()),
+                .name),
         }
     }
 }
 
 /// Trait to ger headerStructName field
-pub(crate) trait HeaderStructName {
+pub trait HeaderStructName {
     fn header_struct_name(&self) -> Option<String>;
 }
 

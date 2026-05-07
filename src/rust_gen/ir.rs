@@ -43,6 +43,10 @@ pub struct Device {
     pub peripheral_mod: IndexMap<String, Rc<RefCell<PeripheralMod>>>,
 }
 
+#[allow(
+    clippy::derive_partial_eq_without_eq,
+    reason = "We cannot guarantee that one value is semantically the same in all contexts (register field)"
+)]
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct EnumeratedSingleValue {
     pub name: String,
@@ -50,7 +54,7 @@ pub struct EnumeratedSingleValue {
     pub description: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum EnumeratedValueUsage {
     Read,
     Write,
@@ -77,9 +81,9 @@ pub struct FieldGetterSetter {
     pub enum_types: Vec<EnumeratedValueType>,
     /// if None then the field is not enumerated and api accept raw value
     /// if Some then the field is enumerated and api accept a type defined in the option
-    /// String shall match a name of EnumeratedValueType
+    /// String shall match a name of `EnumeratedValueType`
     pub enum_type_write: Option<String>,
-    /// The same as enum_type_write but for read function
+    /// The same as `enum_type_write` but for read function
     pub enum_type_read: Option<String>,
     pub access: RegisterBitfieldAccess,
     pub dim: u32,
@@ -87,7 +91,7 @@ pub struct FieldGetterSetter {
     pub dim_index: Vec<String>,
 }
 
-#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RegisterAccess {
     #[default]
     R,
@@ -95,7 +99,7 @@ pub enum RegisterAccess {
     RW,
 }
 
-#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RegisterBitfieldAccess {
     #[default]
     R,
@@ -103,7 +107,7 @@ pub enum RegisterBitfieldAccess {
     RW,
 }
 
-#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum BitSize {
     BIT64,
     #[default]
@@ -113,15 +117,15 @@ pub enum BitSize {
 }
 
 impl BitSize {
-    pub fn val_2_bit_size(val: u64) -> BitSize {
+    pub fn val_2_bit_size(val: u64) -> Self {
         if val <= u8::MAX.into() {
-            BitSize::BIT8
+            Self::BIT8
         } else if val <= u16::MAX.into() {
-            BitSize::BIT16
+            Self::BIT16
         } else if val <= u32::MAX.into() {
-            BitSize::BIT32
+            Self::BIT32
         } else {
-            BitSize::BIT64
+            Self::BIT64
         }
     }
 }
@@ -155,7 +159,7 @@ pub struct Cluster {
     pub dim_increment: u32,
     pub dim_index: Vec<String>,
     pub registers: IndexMap<String, Rc<RefCell<Register>>>,
-    pub clusters: IndexMap<String, Rc<RefCell<Cluster>>>,
+    pub clusters: IndexMap<String, Rc<RefCell<Self>>>,
     pub is_derived_from: bool,
     /// Full Rust path to module that contains the struct
     pub struct_module_path: Vec<String>,
@@ -214,9 +218,9 @@ pub struct IR {
     pub interrupt_table: Vec<Option<Interrupt>>,
     /// used only for cortex m target
     /// This could be none if no CPU is defined.
-    /// If not defined NVIC_PRIO_BITS constant will be not generated
+    /// If not defined `NVIC_PRIO_BITS` constant will be not generated
     pub nvic_prio_bits: Option<u32>,
-    /// used only for cortex m target. If it is false or None cortex-m::Systick module will be re-exported
+    /// used only for cortex m target. If it is false or None `cortex-m::Systick` module will be re-exported
     /// This could be none if no CPU is defined.
     pub vendor_systick_config: Option<bool>,
     /// This could be none if no CPU is defined.

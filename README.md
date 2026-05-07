@@ -29,16 +29,16 @@ This tool has a very different approach compared to `svd2rust` because our requi
 
 ## Known Limitations
 
-* Inheritance via `derivedFrom` attribute is presently not supported for bitfields declaration.
+- Inheritance via `derivedFrom` attribute is presently not supported for bitfields declaration.
   Moreover in the case that a parent is an element of an array, inheritance can only refer to the first element.
-* `resetMask` tag is ignored
-* `protection` tag is ignored
-* `writeConstraint` tag is ignored
-* `modifiedWriteValues` tag is ignored
-* `readAction` tag is ignored
-* `headerEnumName` tag is ignored
-* in `enumeratedValue` only `value` tag is supported. No support for _don't care bits_ and `isDefault` tag
-* `alternateGroup` is ignored therefore it is not possible to have two registers with same name.
+- `resetMask` tag is ignored
+- `protection` tag is ignored
+- `writeConstraint` tag is ignored
+- `modifiedWriteValues` tag is ignored
+- `readAction` tag is ignored
+- `headerEnumName` tag is ignored
+- in `enumeratedValue` only `value` tag is supported. No support for _don't care bits_ and `isDefault` tag
+- `alternateGroup` is ignored therefore it is not possible to have two registers with same name.
 
 ## How to install & prerequisite
 
@@ -55,16 +55,19 @@ rustup component add rustfmt
 ## How to use the tool
 
 Get a full overview for all cli flags:
+
 ```bash
 svd2pac -h
 ```
 
 Generate PAC without any platform specific code:
+
 ```bash
 svd2pac <your_svd_file> <target directory>
 ```
 
 To generated Aurix PACs use:
+
 ```bash
 svd2pac --target aurix <your_svd_file> <target directory>
 ```
@@ -72,18 +75,23 @@ svd2pac --target aurix <your_svd_file> <target directory>
 By default `svd2pac` performs strict validation of svd files.
 
 It is possible to relax or disable svd validation by using option `--svd-validation-level`
+
 ```bash
 svd2pac --svd-validation-level weak <your_svd_file> <target directory>
 ```
+
 ### Notable CLI flags
 
 ---
+
 #### Select target :`--target` option
+
 This option allows to have target specific code generation
 
 ##### `--target=generic`
+
 This target allows generation of generic code that is independent from any architecture.
-It ignores  nvicPrioBits, fpuPresent,mpuPresent, vendorSystickConfig attributes and interrupt tag.
+It ignores nvicPrioBits, fpuPresent,mpuPresent, vendorSystickConfig attributes and interrupt tag.
 
 ##### `--target=aurix`
 
@@ -99,10 +107,13 @@ In this way he can reuse the code related to CPU and develop peripheral driver u
 Extra feature compared to `generic` target
 
 - Re-export of cortex-m core peripherals
-- Peripherals type but now it is possible to call Peripheral::take without limitations.
+- Peripherals type but now it is possible to call `Peripheral::take` without limitations.
 - Interrupt table
+
 ---
+
 #### Enable register mocking: `--tracing` option
+
 Enable with the `--tracing` cli flag.
 Generate the PAC with a non-default feature flag to allow for tracing reads/writes, [see below](#tracing-feature)
 
@@ -120,22 +131,24 @@ This is speed-up the compilation process. The `features=["all"]` enable the comp
 ### Naming
 
 Some examples showing naming/case, given the timer module in `test_svd/simple.xml`:
+
 - `TIMER` instance of a module struct for a peripheral called "timer"
 - `timer::Timer` type of the module instance above
 - `TIMER::bitfield_reg()` access function for a register
-- `timer::bitfield_reg` module containing bitfield structs for the "BITFIELD_REG" register
+- `timer::bitfield_reg` module containing bitfield structs for the `BITFIELD_REG` register
 - `timer::bitfield_reg::Run` module containing enumeration values for the "RUN" bitfield
 - `timer::bitfield_reg::Run::RUNNING` bitfield value constant
 
 ### Examples
 
->**Note**
+> **Note**
 >
->The following examples are based on the `test_svd/simple.xml` svd used for testing.
->In this example we mostly use a `TIMER` module with a few registers, among them:
->- `SR` a status register that is mostly read-only
->- `BITFIELD_REG` which is a register with multiple bitfields
->- `NONBITFIELD_REG`, a register without bitfields
+> The following examples are based on the `test_svd/simple.xml` svd used for testing.
+> In this example we mostly use a `TIMER` module with a few registers, among them:
+>
+> - `SR` a status register that is mostly read-only
+> - `BITFIELD_REG` which is a register with multiple bitfields
+> - `NONBITFIELD_REG`, a register without bitfields
 
 #### Read
 
@@ -259,7 +272,9 @@ unsafe {
     })
 };
 ```
+
 #### Combine all the things
+
 Especially the read and write functionality can be combined, e.g.
 
 ```rust
@@ -271,6 +286,7 @@ if status.boolr().get() {
 ```
 
 #### Raw access
+
 For use cases like logging, initializing from a table, etc. it is
 possible to read/write registers as plain integers.
 
@@ -287,7 +303,8 @@ unsafe { TIMER.bitfield_reg().modify(|r| r.set_raw(0x1234)) };
 ```
 
 #### Modify Atomic (only Aurix)
-This function is available only for Aurix microcontrollers. It uses the  `ldmst` instruction
+
+This function is available only for Aurix microcontrollers. It uses the `ldmst` instruction
 to read-modify-write a value in a register. This instruction blocks the bus until the end of
 the transaction. Therefore it affects the other masters on the bus.
 
@@ -300,6 +317,7 @@ TIMER.bitfield_reg().modify_atomic(|f| {
         .set(3)
 });
 ```
+
 Code generation for Aurix is enabled using `--target aurix `
 
 #### Array of peripherals
@@ -319,6 +337,7 @@ for peri in UART {
 ```
 
 #### Array of registers
+
 Arrays of registers are modeled as an array of register structs in the module.
 
 ```rust
@@ -332,6 +351,7 @@ for reg in reg_array {
 ```
 
 #### Array of bitfields
+
 Arrays of bitfields are modeled as an array of bitfield structs in the register.
 
 ```rust
@@ -343,6 +363,7 @@ Arrays of bitfields are modeled as an array of bitfield structs in the register.
 ```
 
 #### Write an enumerated bitfield by passing an integer literal
+
 The size of value cannot exceed bit field size.
 Here the associated struct type can be created from the integer,
 as the `From` trait implementation is available for the bitfield structure.
@@ -358,7 +379,9 @@ unsafe {
 ```
 
 #### Get mask and offset of a bitfield
+
 It is possible to get mask and offset of a single bitfield using `mask` and `offset`. The returned mask is aligned to the LSB and not shifted (i.e. a 3-bit wide field has a mask of `0x7`, independent of position of the field).
+
 ```rust
  use test_pac::{timer, TIMER};
  unsafe {
@@ -369,9 +392,11 @@ It is possible to get mask and offset of a single bitfield using `mask` and `off
 ```
 
 ## Tracing feature
+
 When generating the PAC with the `--tracing` cli-flag, the PAC is generated with
 an optional feature flag `tracing`. Enabling the feature provides the following
 additional functionalities:
+
 - an interface where register accesses can be piped though, enabling
   developers to log accesses to registers or even mock registers outright.
   An implementaion of that interface is provided by [`regmock-rs`](https://github.com/Infineon/regmock-rs).
@@ -383,11 +408,13 @@ additional functionalities:
   addresses to string names of all registers that reside at an address.
 
 ### Examples
+
 Below, some simple examples on how to use the tracing APIs are shown.
 For a complete example of how to use the tracing features for
 e.g. unittesting see the documentation of [`regmock-rs`](https://github.com/Infineon/regmock-rs).
 
 #### Construcing a register value from a raw value with tracing
+
 When implementing tests using the tracing feature we want to be
 able to provide arbitrary data during those tests.
 
@@ -398,6 +425,7 @@ unsafe{ pac::PERIPHERAL.register().write(value) };
 ```
 
 #### Reading a value from a **write-only** register with tracing
+
 Again for testing: in a testcase we need to do the exact opposite
 of what normal code does, i.e. we need to "write" read-only registers
 and "read" write-only registers.
@@ -411,6 +439,7 @@ let value = unsafe{ pac::PERIPHERAL.write_only_register().read_write_only() };
 ```
 
 #### Get the names of registers at a specific address
+
 For better logging a map of address to name translation is generated/available
 if tracing is enabled.
 
@@ -427,6 +456,7 @@ It is possible to generate the PAC during the build of an application by calling
 
 To execute the tests it is required to add as target "thumbv7em-none-eabihf".
 This can be done using
+
 ```bash
 rustup target add thumbv7em-none-eabihf
 ```

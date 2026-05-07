@@ -1,5 +1,6 @@
 #![doc = include_str!("../README.md")]
-
+#![warn(clippy::pedantic)]
+#![warn(clippy::nursery)]
 mod rust_gen;
 mod svd_util;
 use crate::rust_gen::{GenPkgSettings, generate_rust_package};
@@ -81,9 +82,7 @@ where
     self::main(Args::parse_from(args));
 }
 
-/// Convert SVD file to PAC
 pub fn main(args: Args) {
-    // Use
     let env = Env::default()
         .filter_or("SVD2PAC_LOG_LEVEL", "info")
         .write_style_or("SVD2PAC_LOG_STYLE", "always");
@@ -91,27 +90,27 @@ pub fn main(args: Args) {
     // During test cases the logger is already initialized.
     // Just show a warn
     if let Err(error) = env_logger::try_init_from_env(env) {
-        warn!("{}", error);
+        warn!("{error}");
     }
 
     info!(
         "Reading register description file {}",
-        args.register_description_file_name.to_str().unwrap()
+        args.register_description_file_name.display()
     );
     let destination_folder = args.destination_folder;
 
     if !destination_folder.exists() {
-        info!("Create folder {}", &destination_folder.to_str().unwrap());
+        info!("Create folder {}", destination_folder.display());
         if let Err(err) = fs::create_dir_all(&destination_folder) {
-            error!("Failed to create destination folder: {}", err);
+            error!("Failed to create destination folder: {err}");
             exit(-1);
-        };
+        }
     }
 
     if let Err(err) = generate_rust_package(
         &args.register_description_file_name,
         &destination_folder,
-        GenPkgSettings {
+        &GenPkgSettings {
             run_rustfmt: !args.disable_rust_fmt,
             svd_validation_level: args.svd_validation_level,
             target: args.target,
@@ -121,7 +120,7 @@ pub fn main(args: Args) {
             svd2pac_version: VERSION.to_owned(),
         },
     ) {
-        error!("Failed to generate code with err {}", err);
+        error!("Failed to generate code with err {err}");
         exit(-1);
     }
 }
