@@ -37,12 +37,11 @@ fn filter_render_path(value: &Value, _args: &HashMap<String, Value>) -> tera::Re
                                 0 => path_chunk.path.clone(),
                                 _ => path_chunk.path.clone() + "()",
                             },
-                            match path_chunk.index {
-                                Some(index) => format!("[{index}]"),
-                                None => "".to_owned(),
-                            },
+                            path_chunk
+                                .index
+                                .map_or_else(String::new, |index| format!("[{index}]")),
                             match index {
-                                _i if (_i == path.len() - 1) => String::default(),
+                                i if (i == path.len() - 1) => String::default(),
                                 _ => ".".to_owned(),
                             }
                         );
@@ -82,11 +81,10 @@ fn filter_prepend_lines(value: &Value, args: &HashMap<String, Value>) -> tera::R
 /// Convert JSON number to hexadecimal String filter for tera template
 fn filter_to_hex(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
     if let Value::Number(number) = value {
-        if let Some(u64_val) = number.as_u64() {
-            Ok(Value::String(format!("0x{u64_val:x}")))
-        } else {
-            Err(tera::Error::msg("to_hex accept only unsigned numbers"))
-        }
+        number.as_u64().map_or_else(
+            || Err(tera::Error::msg("to_hex accept only unsigned numbers")),
+            |u64_val| Ok(Value::String(format!("0x{u64_val:x}"))),
+        )
     } else {
         Err(tera::Error::msg(format!(
             "to_hex accept only numbers as input. value:{value}"
@@ -98,13 +96,14 @@ fn filter_to_hex(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<
 /// in tera files as tera converts the key to strings regardless of the type.
 fn filter_num_str_to_hex(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
     if let Value::String(number_str) = value {
-        if let Ok(u64_val) = number_str.parse::<u64>() {
-            Ok(Value::String(format!("0x{u64_val:x}")))
-        } else {
-            Err(tera::Error::msg(format!(
-                "num_str_to_hex could not parse value:{value} as number"
-            )))
-        }
+        number_str.parse::<u64>().map_or_else(
+            |_| {
+                Err(tera::Error::msg(format!(
+                    "num_str_to_hex could not parse value:{value} as number"
+                )))
+            },
+            |u64_val| Ok(Value::String(format!("0x{u64_val:x}"))),
+        )
     } else {
         Err(tera::Error::msg(format!(
             "num_str_to_hex only accepts strings. value:{value}"
@@ -192,10 +191,10 @@ fn execute_template(
     let result = match tera.render(template_name, context) {
         Ok(s) => Ok(s),
         Err(e) => {
-            error!("Render Error: {}", e);
+            error!("Render Error: {e}");
             let mut cause = e.source();
             while let Some(e) = cause {
-                error!("Render Reason: {}", e);
+                error!("Render Reason: {e}");
                 cause = e.source();
             }
             Err(anyhow!("Failed to render"))
@@ -203,9 +202,10 @@ fn execute_template(
     }?;
     let folder = output_path
         .parent()
-        .unwrap_or_else(|| panic!("No parent folder for {output_path:?}"));
+        .unwrap_or_else(|| panic!("No parent folder for {}", output_path.display()));
     create_dir_all(folder)?;
-    fs::write(output_path, result).context(format!("Error while writing {output_path:?}"))?;
+    fs::write(output_path, result)
+        .context(format!("Error while writing {}", output_path.display()))?;
     Ok(())
 }
 
@@ -264,7 +264,7 @@ fn check_for_vendor_extension(path: &Path) -> Result<bool> {
     for line in reader.lines() {
         match line? {
             s if s.contains("vendorExtensions") => present = true,
-            _ => continue,
+            _ => {}
         }
     }
     Ok(present)
@@ -293,12 +293,12 @@ pub fn get_aurix_csfr_svd(path: &Path, svd_string: &mut String) -> Result<()> {
 
     let common_svd_tags: Vec<&str> = xml.split("<peripherals>").collect();
     let svd_split_vec: Vec<&str> = xml.split("<aurixCSFR>").collect();
-    let mut extended_peripherals: Vec<&str> = Vec::new();
-    if svd_split_vec.len() > 1 {
-        extended_peripherals = svd_split_vec[1].split("</aurixCSFR>").collect();
+    let extended_peripherals: Vec<&str> = if svd_split_vec.len() > 1 {
+        svd_split_vec[1].split("</aurixCSFR>").collect()
     } else {
         error_with_context()?;
-    }
+        Vec::new()
+    };
     *svd_string = format!(
         "{} {} {} {} {}",
         common_svd_tags[0],
@@ -474,11 +474,11 @@ fn generate_aurix_core_ir(
 
     info!("Start generating csfr rust code");
     // Read license file if specified
-    let custom_license_text = license_file
+    let custom_license_text: Option<String> = license_file
         .as_ref()
         .map(|path| {
             fs::read_to_string(path)
-                .with_context(|| format!("Unable to read license file {path:?}"))
+                .with_context(|| format!("Unable to read license file {}", path.display()))
         })
         .transpose()?;
     // If target is aurix, create csfr
@@ -488,20 +488,20 @@ fn generate_aurix_core_ir(
         get_aurix_csfr_svd(xml_path, svd_csfr_xml)?;
         let mut svd_device = xml2ir::parse_xml(svd_csfr_xml, *svd_validation_level)?;
         // Rename peripherals
-        for peri in svd_device.peripherals.iter_mut() {
-            peri.name = "csfr_".to_string() + &peri.name
+        for peri in &mut svd_device.peripherals {
+            peri.name = "csfr_".to_string() + &peri.name;
         }
-        let ir_csfr = xml2ir::svd_device2ir(&svd_device, &custom_license_text)?;
+        let ir_csfr = xml2ir::svd_device2ir(&svd_device, custom_license_text.as_ref())?;
         Ok(Some(ir_csfr))
     } else {
         Ok(None)
     }
 }
 
-pub(crate) fn generate_rust_package(
+pub fn generate_rust_package(
     xml_path: &Path,
     destination_folder: &Path,
-    settings: GenPkgSettings,
+    settings: &GenPkgSettings,
 ) -> anyhow::Result<()> {
     let GenPkgSettings {
         run_rustfmt,
@@ -511,7 +511,7 @@ pub(crate) fn generate_rust_package(
         ref package_name,
         ref license_file,
         ref svd2pac_version,
-    } = settings;
+    } = *settings;
 
     info!("Start generating rust code");
     // Read license file if specified
@@ -519,20 +519,20 @@ pub(crate) fn generate_rust_package(
         .as_ref()
         .map(|path| {
             fs::read_to_string(path)
-                .with_context(|| format!("Unable to read license file {path:?}"))
+                .with_context(|| format!("Unable to read license file {}", path.display()))
         })
         .transpose()?;
 
     let xml = &mut String::new();
     get_xml_string(xml_path, xml)?;
     let svd_device = xml2ir::parse_xml(xml, svd_validation_level)?;
-    let ir = xml2ir::svd_device2ir(&svd_device, &custom_license_text)?;
+    let ir = xml2ir::svd_device2ir(&svd_device, custom_license_text.as_ref())?;
     //Precompile templates
     let mut tera = get_tera_instance()?;
     precompile_tera(&mut tera);
 
     let package_name: String = match package_name {
-        None => ir.device.name.clone().to_lowercase(),
+        None => ir.device.name.to_lowercase(),
         Some(package_name) => package_name.clone(),
     };
 
@@ -567,7 +567,7 @@ pub(crate) fn generate_rust_package(
 
     // If target is aurix, create csfr modules
     if settings.target == Target::Aurix {
-        let ir_csfr = generate_aurix_core_ir(xml_path, &settings)?;
+        let ir_csfr = generate_aurix_core_ir(xml_path, settings)?;
 
         // Generate cpu peripheral modules
         if let Some(ref ir) = ir_csfr {
@@ -624,7 +624,7 @@ pub(crate) fn generate_rust_package(
                 );
             }
         }
-    };
+    }
     // Add license file
     fs::write(destination_folder.join("LICENSE.txt"), ir.license_text)?;
 

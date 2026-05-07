@@ -1,5 +1,5 @@
 use super::super::ir::PathChunk;
-use super::super::util::*;
+use super::super::util::ToSanitizedSymbol;
 use super::RegisterHelper;
 use indexmap::IndexMap;
 use svd_parser::svd::{self, MaybeArray};
@@ -29,12 +29,12 @@ trait AbsoluteAddress {
 }
 impl AbsoluteAddress for RegisterAbs<'_> {
     fn abs_address(&self) -> u64 {
-        self.base_addr + self.register.address_offset as u64
+        self.base_addr + u64::from(self.register.address_offset)
     }
 }
 impl AbsoluteAddress for ClusterAbs<'_> {
     fn abs_address(&self) -> u64 {
-        self.base_addr + self.cluster.address_offset as u64
+        self.base_addr + u64::from(self.cluster.address_offset)
     }
 }
 
@@ -83,7 +83,7 @@ impl<'svd> FQNFlatMaps<'svd> {
                             ret.collect_register_cluster_arrays(
                                 &prefix,
                                 register_cluster,
-                                p.base_address + (p_index * dim.dim_increment) as u64,
+                                p.base_address + u64::from(p_index * dim.dim_increment),
                             );
                         }
                     }
@@ -144,14 +144,14 @@ impl<'svd> FQNFlatMaps<'svd> {
                         key,
                         RegisterAbs {
                             register,
-                            base_addr: base_addr + (register_index * dim.dim_increment) as u64,
+                            base_addr: base_addr + u64::from(register_index * dim.dim_increment),
                         },
                     );
                 }
             }
         }
     }
-    /// Collect individual [`svd::Cluster`] into the FQN register_map.
+    /// Collect individual [`svd::Cluster`] into the FQN `register_map`.
     pub(super) fn collect_cluster_array<'prefix>(
         &mut self,
         prefix: &'prefix [PathChunk],
@@ -183,7 +183,7 @@ impl<'svd> FQNFlatMaps<'svd> {
                         self.collect_register_cluster_arrays(
                             &key,
                             child,
-                            base_addr + (cluster_index * dim.dim_increment) as u64,
+                            base_addr + u64::from(cluster_index * dim.dim_increment),
                         );
                     }
                 }
