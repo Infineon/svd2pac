@@ -1,0 +1,44 @@
+# Test license
+# 
+# Generated from SVD 1.2, with svd2pac 0.7.0 on Fri, 8 May 2026 12:32:27 +0000
+
+[package]
+name = "test_pac"
+version = "0.0.1"
+authors = ["Infineon developers"]
+edition = "2021"
+rust-version = "1.70"
+description = "Description tests"
+keywords = ["no_std", "infineon"]
+categories = ["embedded","hardware-support","no-std","no-std::no-alloc"]
+license-file = "LICENSE.txt"
+
+[lib]
+test = false
+bench = false
+
+
+[dependencies]
+cortex-m-rt= { version = "0.7", optional = true }
+cortex-m = "0.7.6"
+
+
+
+[features]
+timer = []
+uart = []
+foo = []
+escapetest = []
+derivedtest = []
+p33 = []
+derivedperipheral = [ "p33" ]
+hasheaderstruct = []
+hdrstrder = []
+hdrstrderhdrstruct = []
+dimindexperi = []
+
+all = ["timer" ,"uart" ,"foo" ,"escapetest" ,"derivedtest" ,"p33" ,"derivedperipheral" ,"hasheaderstruct" ,"hdrstrder" ,"hdrstrderhdrstruct" ,"dimindexperi"]
+rt = ["cortex-m-rt/device"]
+
+[package.metadata.docs.rs]
+features = ["all","rt"]

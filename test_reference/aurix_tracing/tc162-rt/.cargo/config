@@ -1,0 +1,12 @@
+[target.tc162-htc-none]
+rustflags = ["-C", "link-args=-Tlink.x -Map map"]
+linker = "rust-lld.exe"
+
+[build]
+target = "tc162-htc-none"
+
+[env]
+CC_tc162_htc_none = "clang"
+CFLAGS_tc162_htc_none = "-target tricore -march=tc162"
+AR_tc162_htc_none = "llvm-ar"
+ARFLAGS_tc162_htc_none = "r"

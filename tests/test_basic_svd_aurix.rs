@@ -62,6 +62,12 @@ fn compile_generated_aurix() {
         CargoCommand::Build,
         Some(env!("AURIX_TOOLCHAIN").to_string()),
     );
+    assert_cargo_command(
+        &generated_code_folder,
+        CargoCommand::Clean,
+        Some(env!("AURIX_TOOLCHAIN").to_string()),
+    );
+    assert_folders_eq("./test_reference/aurix", &generated_code_folder);
 }
 
 /// Generate PAC with tracing code but feature is disabled
@@ -121,4 +127,10 @@ fn compile_generated_aurix_tracing() {
         CargoCommand::Build,
         Some(env!("AURIX_TOOLCHAIN").to_string()),
     );
+    assert_cargo_command(
+        &generated_code_folder,
+        CargoCommand::Clean,
+        Some(env!("AURIX_TOOLCHAIN").to_string()),
+    );
+    assert_folders_eq("./test_reference/aurix_tracing", &generated_code_folder);
 }
