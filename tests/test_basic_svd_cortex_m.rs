@@ -31,4 +31,7 @@ fn compile_generated_cortex_m() {
     assert!(license_path.exists(), "Not found LICENSE.txt");
     assert_cargo_command(&workspace_folder, CargoCommand::Build, None);
     assert_cargo_command(&workspace_folder, CargoCommand::Clippy, None);
+
+    assert_cargo_command(&workspace_folder, CargoCommand::Clean, None);
+    assert_folders_eq("./test_reference/cortex_m", &workspace_folder);
 }

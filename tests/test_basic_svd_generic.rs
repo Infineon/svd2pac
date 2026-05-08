@@ -53,15 +53,17 @@ fn compile_generated_generic() {
 
     assert_cargo_command(&generated_code_folder, CargoCommand::Build, None);
     assert_cargo_command(&generated_code_folder, CargoCommand::Clippy, None);
+
     #[cfg(aurix_tests)]
     {
-        assert_cargo_command(&generated_code_folder, CargoCommand::Clean, None);
         assert_cargo_command(
             &generated_code_folder,
             CargoCommand::Build,
             Some(env!("AURIX_TOOLCHAIN").to_string()),
         );
     }
+    assert_cargo_command(&generated_code_folder, CargoCommand::Clean, None);
+    assert_folders_eq("./test_reference/generic", &generated_code_folder);
 }
 
 #[test]
