@@ -13,6 +13,7 @@
 #![cfg_attr(target_arch = "tricore", feature(stdsimd))]
 {% endif %}
 #![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 #![doc = "{{ir.device.description | svd_description_to_doc}}"]
 pub mod common;
 pub use common::*;
