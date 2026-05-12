@@ -507,6 +507,23 @@
 						</field>
 					</fields>
 				</register>
+          <register>
+            <name>REGISTER_WITH_DOUBLE__UNDERSCORE</name>
+            <description>Register with double underscore in name</description>
+            <addressOffset>0x70</addressOffset>
+            <access>read-write</access>
+            <resetValue>0x00000000</resetValue>
+            <resetMask>0xFFFFFFFF</resetMask>
+            <fields>
+              <field>
+                <name>FIELD_WITH_DOUBLE__UNDERSCORE</name>
+                <description>Field with double underscore in name</description>
+                <lsb>0</lsb>
+                <msb>7</msb>
+                <access>read-write</access>
+              </field>
+            </fields>
+          </register>
 				<register>
 					<name>TIMER</name>
 					<description>Register to test when peripheral has same name as register</description>

@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.7.0 on Fri, 8 May 2026 12:39:15 +0000
+// Generated from SVD 1.2, with svd2pac 0.7.0 on Tue, 12 May 2026 17:16:50 +0000
 
 //! Contains perfect hash function that maps form raw addresses to
 //! a string containing the names of all registers that point to an address.
@@ -63,6 +63,9 @@ static REGISTER_NAMES: phf::Map<u64, &'static str> = phf_map! {
     ",
   0x40010060u64 => "
       TIMER.register64bit(),
+    ",
+  0x40010070u64 => "
+      TIMER.register_with_double__underscore(),
     ",
   0x40012000u64 => "
       TIMER.timer(),

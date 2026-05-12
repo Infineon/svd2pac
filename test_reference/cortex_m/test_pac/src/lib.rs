@@ -5,6 +5,7 @@ Test license
 // Generated from SVD 1.2, with svd2pac 0.7.0 on Fri, 8 May 2026 12:32:27 +0000
 #![no_std]
 #![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 #![doc = "SVD Test for Rust PAC generator"]
 pub mod common;
 pub use common::*;

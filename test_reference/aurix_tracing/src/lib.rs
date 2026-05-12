@@ -8,6 +8,7 @@ Test license
 #![cfg_attr(target_arch = "tricore", feature(stdsimd))]
 
 #![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 #![doc = "SVD Test for Rust PAC generator"]
 pub mod common;
 pub use common::*;

@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.7.0 on Fri, 8 May 2026 12:32:27 +0000
+// Generated from SVD 1.2, with svd2pac 0.7.0 on Tue, 12 May 2026 17:14:35 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -136,6 +136,17 @@ impl super::Timer {
             crate::common::Reg::<self::Register64Bit_SPEC, crate::common::RW>::from_ptr(
                 self._svd2pac_as_ptr().add(96usize),
             )
+        }
+    }
+
+    #[doc = "Register with double underscore in name"]
+    #[inline(always)]
+    pub const fn register_with_double__underscore(
+        &self,
+    ) -> &'static crate::common::Reg<self::RegisterWithDoubleUnderscore_SPEC, crate::common::RW>
+    {
+        unsafe {
+            crate::common::Reg::<self::RegisterWithDoubleUnderscore_SPEC, crate::common::RW>::from_ptr(self._svd2pac_as_ptr().add(112usize))
         }
     }
 
@@ -743,6 +754,50 @@ pub mod register64bit {
         pub const FALSE: Self = Self::new(0);
     }
 }
+#[doc(hidden)]
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct RegisterWithDoubleUnderscore_SPEC;
+impl crate::sealed::RegSpec for RegisterWithDoubleUnderscore_SPEC {
+    type DataType = u32;
+}
+
+#[doc = "Register with double underscore in name"]
+pub type RegisterWithDoubleUnderscore = crate::RegValueT<RegisterWithDoubleUnderscore_SPEC>;
+
+impl RegisterWithDoubleUnderscore {
+    #[doc = "Field with double underscore in name"]
+    #[inline(always)]
+    pub fn field_with_double__underscore(
+        self,
+    ) -> crate::common::RegisterField<
+        0,
+        0xff,
+        1,
+        0,
+        u8,
+        u8,
+        RegisterWithDoubleUnderscore_SPEC,
+        crate::common::RW,
+    > {
+        crate::common::RegisterField::<
+            0,
+            0xff,
+            1,
+            0,
+            u8,
+            u8,
+            RegisterWithDoubleUnderscore_SPEC,
+            crate::common::RW,
+        >::from_register(self, 0)
+    }
+}
+impl ::core::default::Default for RegisterWithDoubleUnderscore {
+    #[inline(always)]
+    fn default() -> RegisterWithDoubleUnderscore {
+        <crate::RegValueT<RegisterWithDoubleUnderscore_SPEC> as RegisterValue<_>>::new(0)
+    }
+}
+
 #[doc(hidden)]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Timer_SPEC;
