@@ -74,8 +74,10 @@ fn main() -> ! {
                 .set(3)
         });
         {
+            use tracing::insanely_unsafe::*;
             // Write a read-only register
-            TIMER.sr().write_read_only(timer::Sr::default());
+            let register = TIMER.sr();
+            register.write_read_only(register.reset_value());
 
             // Read a write-only register
             let _ = TIMER.int().read_write_only();
@@ -95,9 +97,7 @@ mod test {
                 assert!(name.contains(name_expected));
             }
             None => {
-                panic!(
-                    "Address: {addr} is not in map of register names. This should not happen."
-                );
+                panic!("Address: {addr} is not in map of register names. This should not happen.");
             }
         }
     }
