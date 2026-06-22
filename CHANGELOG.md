@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Register trait design refactored: register types now directly implement `Reg`, `Read`, and `Write` traits instead of wrapping a `RegSpec` with an `Reg<T, A>` phantom struct. The access mode (read/write/read-write) is encoded by `unsafe impl Read`/`Write` on each generated register type.
+- Generated register spec structs renamed from `<Name>_SPEC` to `<Name>T` and changed from implementing `RegSpec` to implementing `Reg`.
+- Reset values are now obtained via `ResetValue::reset_value()` method instead of `Default::default()`. The `Default` implementation for register value types has been removed.
+- Access traits for bitfields renamed: `Access` → `AccessBitfield`, `Read` → `ReadBitfield`, `Write` → `WriteBitfield` to distinguish from the new register-level `Read`/`Write` unsafe traits.
+- `Modify` is now a blanket-implemented trait (for all `T: Read + Write`) instead of methods on `Reg<T, A>`.
+- `RegCore<T, A, ADDR>` simplified to `RegCore<T, ADDR>` — access type parameter removed; access is now part of the register type `T`.
+- `insanely_unsafe` module refactored: `WriteOnlyRead` and `ReadOnlyWrite` are now proper traits with blanket implementations.
+
 ## [0.7.0]
 
 ### Improvements

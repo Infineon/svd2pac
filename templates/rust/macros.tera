@@ -27,17 +27,17 @@ Unsupported register size
 {{self::doc_attribute(documentation=reg.description)}}
 #[inline(always)]
 {% if reg.dim == 1 -%}
-pub const fn {{reg.name | to_func_id }}(&self) -> &'static crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}> {
-    unsafe {   crate::common::Reg::<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>::from_ptr(self._svd2pac_as_ptr().add({{reg.offset}}usize)) }
+pub fn {{reg.name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
+    unsafe {   <{{reg_struct_name}}T as Reg>::from_ptr(self._svd2pac_as_ptr().add({{reg.offset}}usize)) }
 }
 {%- else -%}
-pub const fn {{reg.name | to_func_id }}(&self) -> &'static crate::common::ClusterRegisterArray<crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>, {{reg.dim}}, {{reg.dim_increment | to_hex}}> {
+pub const fn {{reg.name | to_func_id }}(&self) -> &'static crate::common::ClusterRegisterArray<{{reg_struct_name}}T, {{reg.dim}}, {{reg.dim_increment | to_hex}}> {
     unsafe { crate::common::ClusterRegisterArray::from_ptr(self._svd2pac_as_ptr().add({{reg.offset | to_hex}}usize)) }
 }
 {%- for func_name in reg.dim_index %}
 #[inline(always)]
-pub const fn {{func_name | to_func_id }}(&self) -> &'static crate::common::Reg<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}> {
-    unsafe {   crate::common::Reg::<{{reg_struct_name}}_SPEC, crate::common::{{reg.access}}>::from_ptr(self._svd2pac_as_ptr().add({{reg.offset + reg.dim_increment * loop.index0 | to_hex}}usize)) }
+pub fn {{func_name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
+    unsafe { <{{reg_struct_name}}T as Reg>::from_ptr(self._svd2pac_as_ptr().add({{reg.offset + reg.dim_increment * loop.index0 | to_hex}}usize)) }
 }
 {%- endfor -%}
 {%- endif -%}
@@ -46,7 +46,7 @@ pub const fn {{func_name | to_func_id }}(&self) -> &'static crate::common::Reg<{
 {%- macro bitfield_type(field,reg_struct_name,reg_mod_name,turbofish) -%}
 {%-if turbofish %}{%set separator = "::"%}{%else%}{%set separator = ""%}{%endif-%}
 {%- if  field.mask == 1 and 0 == field.enum_types | length %}
-    crate::common::RegisterFieldBool{{separator}}<{{field.offset}},{{field.dim}},{{field.dim_increment}},{{reg_struct_name}}_SPEC,crate::common::{{field.access}}>
+    crate::common::RegisterFieldBool{{separator}}<{{field.offset}},{{field.dim}},{{field.dim_increment}},{{reg_struct_name}}T,crate::common::{{field.access}}>
 {%- else -%}
     {%- if field.enum_type_read -%}
         {%- set enum_name_type_read= field.enum_type_read | to_struct_id -%}
@@ -60,7 +60,7 @@ pub const fn {{func_name | to_func_id }}(&self) -> &'static crate::common::Reg<{
     {%- else %}
         {%- set field_type_write= self::reg_size2num_type(bit_size=field.size) -%}
     {%- endif -%}
-    crate::common::RegisterField{{separator}}<{{field.offset}},{{field.mask | to_hex}},{{field.dim}},{{field.dim_increment}},{{field_type_read}},{{field_type_write}},{{reg_struct_name}}_SPEC,crate::common::{{field.access}}>
+    crate::common::RegisterField{{separator}}<{{field.offset}},{{field.mask | to_hex}},{{field.dim}},{{field.dim_increment}},{{field_type_read}},{{field_type_write}},{{reg_struct_name}}T,crate::common::{{field.access}}>
 {%- endif -%}
 {%- endmacro -%}
 
@@ -75,16 +75,23 @@ pub const fn {{func_name | to_func_id }}(&self) -> &'static crate::common::Reg<{
 {%- endif -%}
 
 #[doc(hidden)]
-#[derive(Copy, Clone,Eq, PartialEq)]
-pub struct {{reg_struct_name}}_SPEC;
-impl crate::sealed::RegSpec for {{reg_struct_name}}_SPEC {
+pub struct {{reg_struct_name}}T;
+impl crate::common::Reg for {{reg_struct_name}}T {
     type DataType = {{self::reg_size2num_type(bit_size=reg.size)}};
 }
+
+{% if reg.access == "R" or reg.access == "RW" -%}
+unsafe impl Read for {{reg_struct_name}}T {}
+{% endif -%}
+{% if reg.access == "W" or reg.access == "RW" -%}
+unsafe impl Write for {{reg_struct_name}}T {}
+{% endif -%}
+
 {{self::doc_attribute(documentation=reg.description)}}
-pub type  {{reg_struct_name}} = crate::RegValueT<{{reg_struct_name}}_SPEC>;
+pub type  {{reg_struct_name}} = crate::RegValueT<{{reg_struct_name}}T>;
 
 {% if not reg.fields %}
-impl NoBitfieldReg<{{reg_struct_name}}_SPEC> for {{reg_struct_name}} {}
+impl NoBitfieldReg<{{reg_struct_name}}T> for {{reg_struct_name}} {}
 {% else -%}
 impl {{reg_struct_name}} {
     {%- for field_name,field in reg.fields %}
@@ -110,10 +117,10 @@ impl {{reg_struct_name}} {
     {%- endfor %}
 }
 {% endif -%}
-impl ::core::default::Default for {{reg_struct_name}} {
+impl ResetValue for {{reg_struct_name}}T {
     #[inline(always)]
-    fn default() -> {{reg_struct_name}} {
-        <crate::RegValueT::<{{reg_struct_name}}_SPEC> as RegisterValue<_>>::new({{reg.reset_value}})
+    fn reset_value(&self) -> RegValueT<Self> {
+        RegValueT::<Self>::new({{reg.reset_value}})
     }
 }
 {% if reg.has_enumerated_fields -%}

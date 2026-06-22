@@ -218,15 +218,15 @@ unsafe {
 #### Write
 
 A register can be written with an instance of the appropriate struct. The struct instance can be obtained
-from a read by calling `.default()` (to start off with the register default value) or from a previous
+from a read, from `reset_value()` (to start off with the register reset value), or from a previous
 register read/write.
 
 ```rust
 use test_pac::{timer, TIMER};
 
-// start with default value, configure some stuff and write to
+// start with reset value, configure some stuff and write to
 // register.
-let reg = timer::BitfieldReg::default()
+let reg = TIMER.bitfield_reg().reset_value()
     .bitfieldrw()
     .set(1)
     .boolw()
@@ -248,7 +248,7 @@ unsafe { TIMER.bitfield_reg().write(reg) };
 `.init()` allows for the same functionality as `.write()`, but it is limited to start with the register
 default value. It can also be used as a shorthand for write-only registers.
 
-The closure passed to the `.init()` function gets the default value as input and writes back
+The closure passed to the `.init()` function gets the register reset value as input and writes back
 the return value of the closure to the register.
 
 ```rust
@@ -434,7 +434,7 @@ Tracing provides a backdoor to allow those actions that are not
 allowed in normal code.
 
 ```rust
-use pac::tracing::insanely_unsafe;
+use pac::tracing::insanely_unsafe::WriteOnlyRead;
 let value = unsafe{ pac::PERIPHERAL.write_only_register().read_write_only() };
 ```
 
