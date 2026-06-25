@@ -76,9 +76,12 @@ pub fn {{func_name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
 
 #[doc(hidden)]
 pub struct {{reg_struct_name}}T;
-impl crate::common::Reg for {{reg_struct_name}}T {
+impl crate::common::DataTypeT for {{reg_struct_name}}T {
     type DataType = {{self::reg_size2num_type(bit_size=reg.size)}};
 }
+
+impl crate::common::Reg for {{reg_struct_name}}T {}
+
 
 {% if reg.access == "R" or reg.access == "RW" -%}
 unsafe impl Read for {{reg_struct_name}}T {}
