@@ -119,7 +119,7 @@ set_access_fn!(LDMST, set_ldmst_fn, "ldmst_fn", fn(usize, u64),"Set the function
 pub mod insanely_unsafe {
     use crate::common::sealed::CastFrom;
     use crate::common::{Read, Reg, ResetValue, Write};
-    use crate::{RegValueT, RegisterValue};
+    use crate::common::{RegValueT, RegisterValue};
 
     pub trait WriteOnlyRead: Reg + Write {
         /// Read a **write-only** register.

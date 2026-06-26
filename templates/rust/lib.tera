@@ -15,7 +15,10 @@
 #![allow(non_camel_case_types)]
 #![doc = "{{ir.device.description | svd_description_to_doc}}"]
 pub mod common;
-pub use common::*;
+pub use crate::common::{
+    AsPtr as _, Modify as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
+    ResetValue as _, Write as _,
+};
 
 {% if tracing %}
 #[cfg(feature = "tracing")]

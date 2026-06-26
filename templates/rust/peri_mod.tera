@@ -8,9 +8,12 @@
 #![allow(clippy::module_inception)]
 #![allow(clippy::derivable_impls)]
 #[allow(unused_imports)]
-use crate::common::{*};
+use crate::common;
 #[allow(unused_imports)]
-use crate::common::sealed;
+use crate::common::{
+    AsPtr as _, DataTypeT as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
+    ResetValue as _, Write as _,
+};
 #[doc = r"{{peri.description | svd_description_to_doc}}"]
 {% set peri_struct = peri.struct_id -%}
 unsafe impl ::core::marker::Send for super::{{ peri_struct }} {}

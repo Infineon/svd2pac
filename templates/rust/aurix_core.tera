@@ -93,17 +93,17 @@ impl crate::common::Reg for {{reg_struct_name}}T {}
 
 
 {% if reg.access == "R" or reg.access == "RW" -%}
-unsafe impl ReadCore for {{reg_struct_name}}T {}
+unsafe impl crate::common::ReadCore for {{reg_struct_name}}T {}
 {% endif -%}
 {% if reg.access == "W" or reg.access == "RW" -%}
-unsafe impl WriteCore for {{reg_struct_name}}T {}
+unsafe impl crate::common::WriteCore for {{reg_struct_name}}T {}
 {% endif -%}
 
 {{macros::doc_attribute(documentation=reg.description)}}
-pub type  {{reg_struct_name}} = crate::RegValueT<{{reg_struct_name}}T>;
+pub type  {{reg_struct_name}} = crate::common::RegValueT<{{reg_struct_name}}T>;
 
 {% if not reg.fields %}
-impl NoBitfieldReg<{{reg_struct_name}}T> for {{reg_struct_name}} {}
+impl crate::common::NoBitfieldReg<{{reg_struct_name}}T> for {{reg_struct_name}} {}
 {% else -%}
 impl {{reg_struct_name}} {
     {%- for field_name,field in reg.fields %}
@@ -129,10 +129,10 @@ impl {{reg_struct_name}} {
     {%- endfor %}
 }
 {% endif -%}
-impl ResetValue for {{reg_struct_name}}T {
+impl crate::common::ResetValue for {{reg_struct_name}}T {
     #[inline(always)]
-    fn reset_value(&self) -> RegValueT<Self> {
-        RegValueT::<Self>::new({{reg.reset_value}})
+    fn reset_value(&self) -> crate::common::RegValueT<Self> {
+        crate::common::RegValueT::<Self>::new({{reg.reset_value}})
     }
 }
 {% if reg.has_enumerated_fields -%}
@@ -142,7 +142,7 @@ pub mod {{reg_mod_name}} {
     {%- set enum_name_type= enum_type.name | to_struct_id %}
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     pub struct {{enum_name_type}}_SPEC;
-    pub type  {{enum_name_type}} = crate::EnumBitfieldStruct<{{macros::reg_size2num_type(bit_size=enum_type.size)}},{{enum_name_type}}_SPEC>;
+    pub type  {{enum_name_type}} = crate::common::EnumBitfieldStruct<{{macros::reg_size2num_type(bit_size=enum_type.size)}},{{enum_name_type}}_SPEC>;
     impl {{enum_name_type}} {
         {%- for val in enum_type.values %}
         {{macros::doc_attribute(documentation=val.description)}}
@@ -165,9 +165,12 @@ pub mod {{reg_mod_name}} {
 #![allow(clippy::module_inception)]
 #![allow(clippy::derivable_impls)]
 #[allow(unused_imports)]
-use crate::common::{*};
+use crate::common;
 #[allow(unused_imports)]
-use crate::common::sealed;
+use crate::common::{
+    AsPtr as _, DataTypeT as _, NoBitfieldReg as _, ReadCore as _, Reg as _, RegisterValue as _,
+    ResetValue as _, WriteCore as _,
+};
 #[doc = r"{{peri.description | svd_description_to_doc}}"]
 {% set peri_struct = "CsfrCpu" | to_struct_id -%}
 {% set peri_base_addr = peri.base_addr[0]  -%}
