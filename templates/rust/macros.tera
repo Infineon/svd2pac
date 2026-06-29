@@ -28,7 +28,7 @@ Unsupported register size
 #[inline(always)]
 {% if reg.dim == 1 -%}
 pub fn {{reg.name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
-    unsafe {   <{{reg_struct_name}}T as crate::common::Reg>::from_ptr(self._svd2pac_as_ptr().add({{reg.offset}}usize)) }
+    unsafe {   {{reg_struct_name}}T::from_ptr(self._svd2pac_as_ptr().add({{reg.offset}}usize)) }
 }
 {%- else -%}
 pub const fn {{reg.name | to_func_id }}(&self) -> &'static crate::common::ClusterRegisterArray<{{reg_struct_name}}T, {{reg.dim}}, {{reg.dim_increment | to_hex}}> {
@@ -37,7 +37,7 @@ pub const fn {{reg.name | to_func_id }}(&self) -> &'static crate::common::Cluste
 {%- for func_name in reg.dim_index %}
 #[inline(always)]
 pub fn {{func_name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
-    unsafe { <{{reg_struct_name}}T as crate::common::Reg>::from_ptr(self._svd2pac_as_ptr().add({{reg.offset + reg.dim_increment * loop.index0 | to_hex}}usize)) }
+    unsafe { {{reg_struct_name}}T::from_ptr(self._svd2pac_as_ptr().add({{reg.offset + reg.dim_increment * loop.index0 | to_hex}}usize)) }
 }
 {%- endfor -%}
 {%- endif -%}
@@ -46,7 +46,7 @@ pub fn {{func_name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
 {%- macro bitfield_type(field,reg_struct_name,reg_mod_name,turbofish) -%}
 {%-if turbofish %}{%set separator = "::"%}{%else%}{%set separator = ""%}{%endif-%}
 {%- if  field.mask == 1 and 0 == field.enum_types | length %}
-    crate::common::RegisterFieldBool{{separator}}<{{field.offset}},{{field.dim}},{{field.dim_increment}},{{reg_struct_name}}T,common::{{field.access}}>
+    crate::common::RegisterFieldBool{{separator}}<{{field.offset}},{{field.dim}},{{field.dim_increment}},{{reg_struct_name}},common::{{field.access}}>
 {%- else -%}
     {%- if field.enum_type_read -%}
         {%- set enum_name_type_read= field.enum_type_read | to_struct_id -%}
@@ -60,7 +60,7 @@ pub fn {{func_name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
     {%- else %}
         {%- set field_type_write= self::reg_size2num_type(bit_size=field.size) -%}
     {%- endif -%}
-    crate::common::RegisterField{{separator}}<{{field.offset}},{{field.mask | to_hex}},{{field.dim}},{{field.dim_increment}},{{field_type_read}},{{field_type_write}},{{reg_struct_name}}T,common::{{field.access}}>
+    crate::common::RegisterField{{separator}}<{{field.offset}},{{field.mask | to_hex}},{{field.dim}},{{field.dim_increment}},{{field_type_read}},{{field_type_write}},{{reg_struct_name}},common::{{field.access}}>
 {%- endif -%}
 {%- endmacro -%}
 
@@ -74,27 +74,51 @@ pub fn {{func_name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
 {%- set reg_mod_name = reg.name | to_mod_id -%}
 {%- endif -%}
 
-#[doc(hidden)]
-pub struct {{reg_struct_name}}T;
-impl crate::common::DataTypeT for {{reg_struct_name}}T {
-    type DataType = {{self::reg_size2num_type(bit_size=reg.size)}};
+
+{{self::doc_attribute(documentation=reg.description)}}
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct {{reg_struct_name}} {
+    pub(crate) data: {{self::reg_size2num_type(bit_size=reg.size)}},
+    pub(crate) mask: {{self::reg_size2num_type(bit_size=reg.size)}}
 }
 
-impl crate::common::Reg for {{reg_struct_name}}T {}
+impl crate::common::RegisterValue for {{reg_struct_name}} {
+    type DataType = {{self::reg_size2num_type(bit_size=reg.size)}};
+
+    fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+        (&mut self.data, &mut self.mask)
+    }
+
+    fn inner(&self) -> (Self::DataType, Self::DataType) {
+        (self.data, self.mask)
+    }
+
+    fn new(data: Self::DataType) -> Self {
+        Self {
+            data,
+            mask: 0x0,
+        }
+    }
+}
+
+
+#[doc(hidden)]
+pub struct {{reg_struct_name}}T;
+unsafe impl crate::common::AsPtr for {{reg_struct_name}}T {}
+impl crate::common::Reg<{{reg_struct_name}}> for {{reg_struct_name}}T {}
 
 
 {% if reg.access == "R" or reg.access == "RW" -%}
-unsafe impl crate::common::Read for {{reg_struct_name}}T {}
+unsafe impl crate::common::Read<{{reg_struct_name}}> for {{reg_struct_name}}T {}
 {% endif -%}
 {% if reg.access == "W" or reg.access == "RW" -%}
-unsafe impl crate::common::Write for {{reg_struct_name}}T {}
+unsafe impl crate::common::Write<{{reg_struct_name}}> for {{reg_struct_name}}T {}
 {% endif -%}
 
-{{self::doc_attribute(documentation=reg.description)}}
-pub type  {{reg_struct_name}} = crate::common::RegValueT<{{reg_struct_name}}T>;
+
 
 {% if not reg.fields %}
-impl crate::common::NoBitfieldReg<{{reg_struct_name}}T> for {{reg_struct_name}} {}
+impl crate::common::NoBitfieldReg for {{reg_struct_name}} {}
 {% else -%}
 impl {{reg_struct_name}} {
     {%- for field_name,field in reg.fields %}
@@ -120,10 +144,10 @@ impl {{reg_struct_name}} {
     {%- endfor %}
 }
 {% endif -%}
-impl crate::common::ResetValue for {{reg_struct_name}}T {
+impl crate::common::ResetValue<{{reg_struct_name}}> for {{reg_struct_name}}T {
     #[inline(always)]
-    fn reset_value(&self) -> crate::common::RegValueT<Self> {
-        crate::common::RegValueT::<Self>::new({{reg.reset_value}})
+    fn reset_value(&self) -> {{reg_struct_name}} {
+        {{reg_struct_name}}::new({{reg.reset_value}})
     }
 }
 {% if reg.has_enumerated_fields -%}
@@ -132,7 +156,7 @@ pub mod {{reg_mod_name}} {
     use crate::common;
     #[allow(unused_imports)]
     use crate::common::{
-        AsPtr as _, DataTypeT as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
+        AsPtr as _,  NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
         ResetValue as _, Write as _,
     };
     {% for field_name,field in reg.fields -%}
@@ -228,7 +252,7 @@ pub mod {{cluster_mod}} {
     use crate::common;
     #[allow(unused_imports)]
     use crate::common::{
-        AsPtr as _, DataTypeT as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
+        AsPtr as _,  NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
         ResetValue as _, Write as _,
     };
     {% for register_name,reg in cluster.registers -%}
