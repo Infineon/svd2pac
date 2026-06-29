@@ -9,12 +9,12 @@
 #[doc = r"{{reg.description | svd_description_to_doc}}"]
 #[inline(always)]
 {% if reg.dim == 1 -%}
-pub const fn {{reg.name | to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}T, {{reg_addr}}> {
+pub const fn {{reg.name | to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}, {{reg_addr}},{{reg.reset_value}}> {
     unsafe { crate::common::RegCore::new() }
 }
 {%- else -%}
 {%- for index in range(end=reg.dim) -%}
-pub const fn {{reg.name~index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}T, {{base_addr+reg.offset+index*reg.dim_increment | to_hex }}> {
+pub const fn {{reg.name~index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}, {{base_addr+reg.offset+index*reg.dim_increment | to_hex }},{{reg.reset_value}}> {
     unsafe { crate::common::RegCore::new() }
 }
 {% endfor -%}
@@ -31,22 +31,22 @@ pub const fn {{reg.name~index| to_func_id }}(&self)-> crate::common::RegCore<{{r
 #[inline(always)]
 {% if reg.dim == 1 -%}
 {% if cluster.dim == 1 -%}
-pub const fn {{cluster.name~"_"~reg.name| to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}T, {{reg_addr}}> {
+pub const fn {{cluster.name~"_"~reg.name| to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}, {{reg_addr}},{{reg.reset_value}}> {
     unsafe { crate::common::RegCore::new() }
 }
 {%- else -%}
-pub const fn {{cluster.name~"_"~reg.name~cluster_index| to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}T, {{reg_addr}}> {
+pub const fn {{cluster.name~"_"~reg.name~cluster_index| to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}, {{reg_addr}},{{reg.reset_value}}> {
     unsafe { crate::common::RegCore::new() }
 }
 {%- endif -%}
 {%- else -%}
 {%- for reg_index in range(end=reg.dim) -%}
 {% if cluster.dim == 1 -%}
-pub const fn {{cluster.name~"_"~reg.name~reg_index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}T, {{base_addr+reg.offset+reg_index*reg.dim_increment | to_hex }}> {
+pub const fn {{cluster.name~"_"~reg.name~reg_index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}, {{base_addr+reg.offset+reg_index*reg.dim_increment | to_hex }},{{reg.reset_value}}> {
     unsafe { crate::common::RegCore::new() }
 }
 {%- else -%}
-pub const fn {{cluster.name~"_"~reg.name~"_"~cluster_index~"_"~reg_index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}T, {{base_addr+reg.offset+reg_index*reg.dim_increment | to_hex }}> {
+pub const fn {{cluster.name~"_"~reg.name~"_"~cluster_index~"_"~reg_index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}T, {{base_addr+reg.offset+reg_index*reg.dim_increment | to_hex }},{{reg.reset_value}}> {
     unsafe { crate::common::RegCore::new() }
 }
 {%- endif -%}
@@ -83,27 +83,47 @@ pub const fn {{cluster.name~"_"~reg.name~"_"~cluster_index~"_"~reg_index| to_fun
 {%- set reg_mod_name = reg.name | to_mod_id -%}
 {%- endif -%}
 
-#[doc(hidden)]
-pub struct {{reg_struct_name}}T;
-impl crate::common::DataTypeT for {{reg_struct_name}}T {
-    type DataType = {{macros::reg_size2num_type(bit_size=reg.size)}};
+
+{{macros::doc_attribute(documentation=reg.description)}}
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct {{reg_struct_name}} {
+    pub(crate) data: {{macros::reg_size2num_type(bit_size=reg.size)}},
+    pub(crate) mask: {{macros::reg_size2num_type(bit_size=reg.size)}}
 }
 
-impl crate::common::Reg for {{reg_struct_name}}T {}
+impl crate::common::RegisterValue for {{reg_struct_name}} {
+    type DataType = {{macros::reg_size2num_type(bit_size=reg.size)}};
+
+    fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+        (&mut self.data, &mut self.mask)
+    }
+
+    fn inner(&self) -> (Self::DataType, Self::DataType) {
+        (self.data, self.mask)
+    }
+
+    fn new(data: Self::DataType) -> Self {
+        Self {
+            data,
+            mask: 0x0,
+        }
+    }
+}
+
+
 
 
 {% if reg.access == "R" or reg.access == "RW" -%}
-unsafe impl crate::common::ReadCore for {{reg_struct_name}}T {}
+unsafe impl crate::common::ReadCore for {{reg_struct_name}} {}
 {% endif -%}
 {% if reg.access == "W" or reg.access == "RW" -%}
-unsafe impl crate::common::WriteCore for {{reg_struct_name}}T {}
+unsafe impl crate::common::WriteCore for {{reg_struct_name}} {}
 {% endif -%}
 
-{{macros::doc_attribute(documentation=reg.description)}}
-pub type  {{reg_struct_name}} = crate::common::RegValueT<{{reg_struct_name}}T>;
+
 
 {% if not reg.fields %}
-impl crate::common::NoBitfieldReg<{{reg_struct_name}}T> for {{reg_struct_name}} {}
+impl crate::common::NoBitfieldReg for {{reg_struct_name}} {}
 {% else -%}
 impl {{reg_struct_name}} {
     {%- for field_name,field in reg.fields %}
@@ -129,12 +149,7 @@ impl {{reg_struct_name}} {
     {%- endfor %}
 }
 {% endif -%}
-impl crate::common::ResetValue for {{reg_struct_name}}T {
-    #[inline(always)]
-    fn reset_value(&self) -> crate::common::RegValueT<Self> {
-        crate::common::RegValueT::<Self>::new({{reg.reset_value}})
-    }
-}
+
 {% if reg.has_enumerated_fields -%}
 pub mod {{reg_mod_name}} {
     {% for field_name,field in reg.fields -%}
@@ -168,7 +183,7 @@ pub mod {{reg_mod_name}} {
 use crate::common;
 #[allow(unused_imports)]
 use crate::common::{
-    AsPtr as _, DataTypeT as _, NoBitfieldReg as _, ReadCore as _, Reg as _, RegisterValue as _,
+    AsPtr as _, NoBitfieldReg as _, ReadCore as _, Reg as _, RegisterValue as _,
     ResetValue as _, WriteCore as _,
 };
 #[doc = r"{{peri.description | svd_description_to_doc}}"]

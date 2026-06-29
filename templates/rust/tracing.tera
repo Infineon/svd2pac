@@ -118,25 +118,26 @@ set_access_fn!(LDMST, set_ldmst_fn, "ldmst_fn", fn(usize, u64),"Set the function
 #[cfg(feature = "tracing")]
 pub mod insanely_unsafe {
     use crate::common::sealed::CastFrom;
+    use crate::common::RegisterValue;
     use crate::common::{Read, Reg, ResetValue, Write};
-    use crate::common::{RegValueT, RegisterValue};
 
-    pub trait WriteOnlyRead: Reg + Write {
+    pub trait WriteOnlyRead<RegValueT: RegisterValue>: Reg<RegValueT> + Write<RegValueT> {
         /// Read a **write-only** register.
         ///
         /// # Safety
         /// Reading from a write-only register can cause undefined behavior on target devices.
         /// This function shall only ever be used on non-embedded devices when simulating registers.
         #[inline(always)]
-        unsafe fn read_write_only(&self) -> RegValueT<Self> {
+        unsafe fn read_write_only(&self) -> RegValueT {
             let val = {
                 let mut buf: u64 = 0x0;
                 super::READ_FN.with(|rf| {
-                    buf = rf.get().unwrap()(self.addr(), std::mem::size_of::<Self::DataType>());
+                    buf =
+                        rf.get().unwrap()(self.addr(), std::mem::size_of::<RegValueT::DataType>());
                 });
-                Self::DataType::cast_from(buf)
+                RegValueT::DataType::cast_from(buf)
             };
-            <RegValueT<_> as RegisterValue<_>>::new(val)
+            RegValueT::new(val)
         }
 
         #[inline(always)]
@@ -152,14 +153,14 @@ pub mod insanely_unsafe {
         /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
         /// Register is Send and Sync to allow complete freedom. Developer is responsible for proper use with multithreaded tests.
         ///
-        unsafe fn modify_write_only(&self, f: impl FnOnce(RegValueT<Self>) -> RegValueT<Self>) {
+        unsafe fn modify_write_only(&self, f: impl FnOnce(RegValueT) -> RegValueT) {
             let val = self.read_write_only();
             let res = f(val);
             self.write(res);
         }
     }
-    impl<T: Write> WriteOnlyRead for T {}
-    pub trait ReadOnlyWrite: Read {
+    impl<T: Write<RegValueT>, RegValueT: RegisterValue> WriteOnlyRead<RegValueT> for T {}
+    pub trait ReadOnlyWrite<RegValueT: RegisterValue>: Read<RegValueT> {
         /// Write register value back to **read-only** register.
         ///
         /// # Arguments
@@ -171,12 +172,12 @@ pub mod insanely_unsafe {
         /// behavior. This function shall only ever be used on non-embedded targets
         /// (e.g. when simulating registers).
         #[inline(always)]
-        unsafe fn write_read_only(&self, reg_value: RegValueT<Self>) {
+        unsafe fn write_read_only(&self, reg_value: RegValueT) {
             super::WRITE_FN.with(|wf| {
                 wf.get().unwrap()(
                     self.addr(),
-                    std::mem::size_of::<Self::DataType>(),
-                    reg_value.data.into(),
+                    std::mem::size_of::<RegValueT::DataType>(),
+                    reg_value.get_raw().into(),
                 )
             });
         }
@@ -193,9 +194,9 @@ pub mod insanely_unsafe {
         ///
         #[inline(always)]
         /// Write value computed by closure that receive as input the reset value of register
-        unsafe fn init_read_only(&self, f: impl FnOnce(RegValueT<Self>) -> RegValueT<Self>)
+        unsafe fn init_read_only(&self, f: impl FnOnce(RegValueT) -> RegValueT)
         where
-            Self: ResetValue,
+            Self: ResetValue<RegValueT>,
         {
             let val = self.reset_value();
             let res = f(val);
@@ -215,11 +216,11 @@ pub mod insanely_unsafe {
         /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
         /// Register is Send and Sync to allow complete freedom. Developer is responsible for proper use with multithreaded tests.
         ///
-        unsafe fn modify_read_only(&self, f: impl FnOnce(RegValueT<Self>) -> RegValueT<Self>) {
+        unsafe fn modify_read_only(&self, f: impl FnOnce(RegValueT) -> RegValueT) {
             let val = self.read();
             let res = f(val);
             self.write_read_only(res);
         }
     }
-    impl<T: Read> ReadOnlyWrite for T {}
+    impl<T: Read<RegValueT>, RegValueT: RegisterValue> ReadOnlyWrite<RegValueT> for T {}
 }

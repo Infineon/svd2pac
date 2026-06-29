@@ -11,7 +11,7 @@
 use crate::common;
 #[allow(unused_imports)]
 use crate::common::{
-    AsPtr as _, DataTypeT as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
+    AsPtr as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
     ResetValue as _, Write as _,
 };
 #[doc = r"{{peri.description | svd_description_to_doc}}"]
