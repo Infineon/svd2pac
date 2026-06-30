@@ -4,6 +4,17 @@
 {% endfor -%}
 # Generated from SVD {{ir.version}}, with svd2pac {{svd2pac_version}} on {{now}}
 
+[workspace]
+members = [
+    "common",
+    {%- for peri_mod_name, peri in ir.device.peripheral_mod %}
+    {%- if not (peri.derived_from is string) %}
+    "{{peri.module_id}}",
+    {%- endif %}
+    {%- endfor %}
+]
+resolver = "2"
+
 [package]
 name = "{{package_name}}"
 version = "0.0.1"
@@ -19,21 +30,23 @@ license-file = "LICENSE.txt"
 test = false
 bench = false
 
-{% if tracing or target=="CortexM"%}
 [dependencies]
+common = { path = "./common" }
+{%- for peri_mod_name, peri in ir.device.peripheral_mod %}
+{%- if not (peri.derived_from is string) %}
+{{package_name}}_{{peri.module_id}} = { path = "./{{peri.module_id}}", optional = true }
 {%- endif %}
+{%- endfor %}
 {%- if tracing %}
 phf = { version = "0.11", features = ["macros"], optional = true }
 {%- endif %}
 {%- if target=="CortexM" %}
-cortex-m-rt= { version = "0.7", optional = true }
+cortex-m-rt = { version = "0.7", optional = true }
 cortex-m = "0.7.6"
 {%- endif %}
 
-
-
 [features]
-{{ macros::cargo_features(ir=ir, tracing=tracing, target=target, workspace_mode=false, package_name=package_name, ir_csfr=ir_csfr | default(value=false)) }}
+{{ macros::cargo_features(ir=ir, tracing=tracing, target=target, workspace_mode=true, package_name=package_name, ir_csfr=ir_csfr | default(value=false)) }}
 
 [package.metadata.docs.rs]
 features = ["all"{% if target=="CortexM" %},"rt"{%endif%}]

@@ -2,15 +2,18 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.7.0 on Fri, 8 May 2026 12:39:15 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 14:31:13 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
 #![allow(clippy::derivable_impls)]
 #[allow(unused_imports)]
-use crate::common::sealed;
+use crate::common;
 #[allow(unused_imports)]
-use crate::common::*;
+use crate::common::{
+    AsPtr as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _, ResetValue as _,
+    Write as _,
+};
 #[doc = r"Test Dim Index"]
 unsafe impl ::core::marker::Send for super::DimIndexPeri {}
 unsafe impl ::core::marker::Sync for super::DimIndexPeri {}
@@ -49,7 +52,7 @@ impl super::DimIndexPeri {
     }
 }
 
-#[doc = "Array cluster index"]
+#[doc(hidden)]
 #[non_exhaustive]
 pub struct _Clust;
 
@@ -69,118 +72,64 @@ impl _Clust {
     }
 
     #[inline(always)]
-    pub const fn areg(
-        &self,
-    ) -> &'static crate::common::ClusterRegisterArray<
-        crate::common::Reg<clust::AReg_SPEC, crate::common::RW>,
-        3,
-        0x4,
-    > {
+    pub const fn areg(&self) -> &'static crate::common::ClusterRegisterArray<clust::ARegT, 3, 0x4> {
         unsafe {
             crate::common::ClusterRegisterArray::from_ptr(self._svd2pac_as_ptr().add(0x0usize))
         }
     }
     #[inline(always)]
-    pub const fn aregd(&self) -> &'static crate::common::Reg<clust::AReg_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<clust::AReg_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(0x0usize),
-            )
-        }
+    pub fn aregd(&self) -> &'static clust::ARegT {
+        unsafe { clust::ARegT::from_ptr(self._svd2pac_as_ptr().add(0x0usize)) }
     }
     #[inline(always)]
-    pub const fn aregf(&self) -> &'static crate::common::Reg<clust::AReg_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<clust::AReg_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(0x4usize),
-            )
-        }
+    pub fn aregf(&self) -> &'static clust::ARegT {
+        unsafe { clust::ARegT::from_ptr(self._svd2pac_as_ptr().add(0x4usize)) }
     }
     #[inline(always)]
-    pub const fn aregg(&self) -> &'static crate::common::Reg<clust::AReg_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<clust::AReg_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(0x8usize),
-            )
-        }
+    pub fn aregg(&self) -> &'static clust::ARegT {
+        unsafe { clust::ARegT::from_ptr(self._svd2pac_as_ptr().add(0x8usize)) }
     }
 
     #[inline(always)]
-    pub const fn breg(
-        &self,
-    ) -> &'static crate::common::ClusterRegisterArray<
-        crate::common::Reg<clust::BReg_SPEC, crate::common::RW>,
-        3,
-        0x4,
-    > {
+    pub const fn breg(&self) -> &'static crate::common::ClusterRegisterArray<clust::BRegT, 3, 0x4> {
         unsafe {
             crate::common::ClusterRegisterArray::from_ptr(self._svd2pac_as_ptr().add(0xcusize))
         }
     }
     #[inline(always)]
-    pub const fn breg2(&self) -> &'static crate::common::Reg<clust::BReg_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<clust::BReg_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(0xcusize),
-            )
-        }
+    pub fn breg2(&self) -> &'static clust::BRegT {
+        unsafe { clust::BRegT::from_ptr(self._svd2pac_as_ptr().add(0xcusize)) }
     }
     #[inline(always)]
-    pub const fn breg3(&self) -> &'static crate::common::Reg<clust::BReg_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<clust::BReg_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(0x10usize),
-            )
-        }
+    pub fn breg3(&self) -> &'static clust::BRegT {
+        unsafe { clust::BRegT::from_ptr(self._svd2pac_as_ptr().add(0x10usize)) }
     }
     #[inline(always)]
-    pub const fn breg4(&self) -> &'static crate::common::Reg<clust::BReg_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<clust::BReg_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(0x14usize),
-            )
-        }
+    pub fn breg4(&self) -> &'static clust::BRegT {
+        unsafe { clust::BRegT::from_ptr(self._svd2pac_as_ptr().add(0x14usize)) }
     }
 
     #[inline(always)]
-    pub const fn creg(
-        &self,
-    ) -> &'static crate::common::ClusterRegisterArray<
-        crate::common::Reg<clust::CReg_SPEC, crate::common::RW>,
-        3,
-        0x4,
-    > {
+    pub const fn creg(&self) -> &'static crate::common::ClusterRegisterArray<clust::CRegT, 3, 0x4> {
         unsafe {
             crate::common::ClusterRegisterArray::from_ptr(self._svd2pac_as_ptr().add(0x18usize))
         }
     }
     #[inline(always)]
-    pub const fn cregc(&self) -> &'static crate::common::Reg<clust::CReg_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<clust::CReg_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(0x18usize),
-            )
-        }
+    pub fn cregc(&self) -> &'static clust::CRegT {
+        unsafe { clust::CRegT::from_ptr(self._svd2pac_as_ptr().add(0x18usize)) }
     }
     #[inline(always)]
-    pub const fn cregd(&self) -> &'static crate::common::Reg<clust::CReg_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<clust::CReg_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(0x1cusize),
-            )
-        }
+    pub fn cregd(&self) -> &'static clust::CRegT {
+        unsafe { clust::CRegT::from_ptr(self._svd2pac_as_ptr().add(0x1cusize)) }
     }
     #[inline(always)]
-    pub const fn crege(&self) -> &'static crate::common::Reg<clust::CReg_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<clust::CReg_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(0x20usize),
-            )
-        }
+    pub fn crege(&self) -> &'static clust::CRegT {
+        unsafe { clust::CRegT::from_ptr(self._svd2pac_as_ptr().add(0x20usize)) }
     }
 }
 
-unsafe impl AsPtr for _Clust {
+unsafe impl crate::common::AsPtr for _Clust {
     fn as_ptr(&self) -> *mut u8 {
         self._svd2pac_as_ptr()
     }
@@ -193,126 +142,191 @@ unsafe impl AsPtr for _Clust {
 
 pub mod clust {
     #[allow(unused_imports)]
-    use crate::common::*;
-    #[doc(hidden)]
+    use crate::common;
+    #[allow(unused_imports)]
+    use crate::common::{
+        AsPtr as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _, ResetValue as _,
+        Write as _,
+    };
+
     #[derive(Copy, Clone, Eq, PartialEq)]
-    pub struct AReg_SPEC;
-    impl crate::sealed::RegSpec for AReg_SPEC {
-        type DataType = u32;
+    pub struct AReg {
+        pub(crate) data: u32,
+        pub(crate) mask: u32,
     }
 
-    pub type AReg = crate::RegValueT<AReg_SPEC>;
+    impl crate::common::RegisterValue for AReg {
+        type DataType = u32;
 
+        fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+            (&mut self.data, &mut self.mask)
+        }
+
+        fn inner(&self) -> (Self::DataType, Self::DataType) {
+            (self.data, self.mask)
+        }
+
+        fn new(data: Self::DataType) -> Self {
+            Self { data, mask: 0x0 }
+        }
+    }
+
+    #[doc(hidden)]
+    pub struct ARegT;
+    unsafe impl crate::common::AsPtr for ARegT {}
+    impl crate::common::Reg<AReg> for ARegT {}
+
+    unsafe impl crate::common::Read<AReg> for ARegT {}
+    unsafe impl crate::common::Write<AReg> for ARegT {}
     impl AReg {
         #[inline(always)]
         pub fn arraybitfield_(
             self,
             index: u8,
-        ) -> crate::common::RegisterField<1, 0x3, 3, 2, u8, u8, AReg_SPEC, crate::common::RW>
-        {
+        ) -> crate::common::RegisterField<1, 0x3, 3, 2, u8, u8, AReg, common::RW> {
             assert!(index < 3);
-            crate::common::RegisterField::<1,0x3,3,2,u8,u8,AReg_SPEC,crate::common::RW>::from_register(self,index)
+            crate::common::RegisterField::<1, 0x3, 3, 2, u8, u8, AReg, common::RW>::from_register(
+                self, index,
+            )
         }
         #[inline(always)]
         pub fn arraybitfield_c(
             self,
-        ) -> crate::common::RegisterField<1, 0x3, 3, 2, u8, u8, AReg_SPEC, crate::common::RW>
-        {
-            crate::common::RegisterField::<1,0x3,3,2,u8,u8,AReg_SPEC,crate::common::RW>::from_register(self,0)
+        ) -> crate::common::RegisterField<1, 0x3, 3, 2, u8, u8, AReg, common::RW> {
+            crate::common::RegisterField::<1, 0x3, 3, 2, u8, u8, AReg, common::RW>::from_register(
+                self, 0,
+            )
         }
 
         #[inline(always)]
         pub fn arraybitfield_d(
             self,
-        ) -> crate::common::RegisterField<1, 0x3, 3, 2, u8, u8, AReg_SPEC, crate::common::RW>
-        {
-            crate::common::RegisterField::<1,0x3,3,2,u8,u8,AReg_SPEC,crate::common::RW>::from_register(self,1)
+        ) -> crate::common::RegisterField<1, 0x3, 3, 2, u8, u8, AReg, common::RW> {
+            crate::common::RegisterField::<1, 0x3, 3, 2, u8, u8, AReg, common::RW>::from_register(
+                self, 1,
+            )
         }
 
         #[inline(always)]
         pub fn arraybitfield_e(
             self,
-        ) -> crate::common::RegisterField<1, 0x3, 3, 2, u8, u8, AReg_SPEC, crate::common::RW>
-        {
-            crate::common::RegisterField::<1,0x3,3,2,u8,u8,AReg_SPEC,crate::common::RW>::from_register(self,2)
+        ) -> crate::common::RegisterField<1, 0x3, 3, 2, u8, u8, AReg, common::RW> {
+            crate::common::RegisterField::<1, 0x3, 3, 2, u8, u8, AReg, common::RW>::from_register(
+                self, 2,
+            )
         }
     }
-    impl ::core::default::Default for AReg {
+    impl crate::common::ResetValue<AReg> for ARegT {
         #[inline(always)]
-        fn default() -> AReg {
-            <crate::RegValueT<AReg_SPEC> as RegisterValue<_>>::new(0)
+        fn reset_value(&self) -> AReg {
+            AReg::new(0)
+        }
+    }
+
+    #[derive(Copy, Clone, Eq, PartialEq)]
+    pub struct BReg {
+        pub(crate) data: u32,
+        pub(crate) mask: u32,
+    }
+
+    impl crate::common::RegisterValue for BReg {
+        type DataType = u32;
+
+        fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+            (&mut self.data, &mut self.mask)
+        }
+
+        fn inner(&self) -> (Self::DataType, Self::DataType) {
+            (self.data, self.mask)
+        }
+
+        fn new(data: Self::DataType) -> Self {
+            Self { data, mask: 0x0 }
         }
     }
 
     #[doc(hidden)]
-    #[derive(Copy, Clone, Eq, PartialEq)]
-    pub struct BReg_SPEC;
-    impl crate::sealed::RegSpec for BReg_SPEC {
-        type DataType = u32;
-    }
+    pub struct BRegT;
+    unsafe impl crate::common::AsPtr for BRegT {}
+    impl crate::common::Reg<BReg> for BRegT {}
 
-    pub type BReg = crate::RegValueT<BReg_SPEC>;
-
+    unsafe impl crate::common::Read<BReg> for BRegT {}
+    unsafe impl crate::common::Write<BReg> for BRegT {}
     impl BReg {
         #[inline(always)]
         pub fn arraybitfieldbool_(
             self,
             index: u8,
-        ) -> crate::common::RegisterFieldBool<0, 3, 1, BReg_SPEC, crate::common::RW> {
+        ) -> crate::common::RegisterFieldBool<0, 3, 1, BReg, common::RW> {
             assert!(index < 3);
 
-            crate::common::RegisterFieldBool::<0, 3, 1, BReg_SPEC, crate::common::RW>::from_register(
+            crate::common::RegisterFieldBool::<0, 3, 1, BReg, common::RW>::from_register(
                 self, index,
             )
         }
         #[inline(always)]
         pub fn arraybitfieldbool_c(
             self,
-        ) -> crate::common::RegisterFieldBool<0, 3, 1, BReg_SPEC, crate::common::RW> {
-            crate::common::RegisterFieldBool::<0, 3, 1, BReg_SPEC, crate::common::RW>::from_register(
-                self, 0,
-            )
+        ) -> crate::common::RegisterFieldBool<0, 3, 1, BReg, common::RW> {
+            crate::common::RegisterFieldBool::<0, 3, 1, BReg, common::RW>::from_register(self, 0)
         }
 
         #[inline(always)]
         pub fn arraybitfieldbool_d(
             self,
-        ) -> crate::common::RegisterFieldBool<0, 3, 1, BReg_SPEC, crate::common::RW> {
-            crate::common::RegisterFieldBool::<0, 3, 1, BReg_SPEC, crate::common::RW>::from_register(
-                self, 1,
-            )
+        ) -> crate::common::RegisterFieldBool<0, 3, 1, BReg, common::RW> {
+            crate::common::RegisterFieldBool::<0, 3, 1, BReg, common::RW>::from_register(self, 1)
         }
 
         #[inline(always)]
         pub fn arraybitfieldbool_e(
             self,
-        ) -> crate::common::RegisterFieldBool<0, 3, 1, BReg_SPEC, crate::common::RW> {
-            crate::common::RegisterFieldBool::<0, 3, 1, BReg_SPEC, crate::common::RW>::from_register(
-                self, 2,
-            )
+        ) -> crate::common::RegisterFieldBool<0, 3, 1, BReg, common::RW> {
+            crate::common::RegisterFieldBool::<0, 3, 1, BReg, common::RW>::from_register(self, 2)
         }
     }
-    impl ::core::default::Default for BReg {
+    impl crate::common::ResetValue<BReg> for BRegT {
         #[inline(always)]
-        fn default() -> BReg {
-            <crate::RegValueT<BReg_SPEC> as RegisterValue<_>>::new(0)
+        fn reset_value(&self) -> BReg {
+            BReg::new(0)
+        }
+    }
+
+    #[derive(Copy, Clone, Eq, PartialEq)]
+    pub struct CReg {
+        pub(crate) data: u32,
+        pub(crate) mask: u32,
+    }
+
+    impl crate::common::RegisterValue for CReg {
+        type DataType = u32;
+
+        fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+            (&mut self.data, &mut self.mask)
+        }
+
+        fn inner(&self) -> (Self::DataType, Self::DataType) {
+            (self.data, self.mask)
+        }
+
+        fn new(data: Self::DataType) -> Self {
+            Self { data, mask: 0x0 }
         }
     }
 
     #[doc(hidden)]
-    #[derive(Copy, Clone, Eq, PartialEq)]
-    pub struct CReg_SPEC;
-    impl crate::sealed::RegSpec for CReg_SPEC {
-        type DataType = u32;
-    }
+    pub struct CRegT;
+    unsafe impl crate::common::AsPtr for CRegT {}
+    impl crate::common::Reg<CReg> for CRegT {}
 
-    pub type CReg = crate::RegValueT<CReg_SPEC>;
+    unsafe impl crate::common::Read<CReg> for CRegT {}
+    unsafe impl crate::common::Write<CReg> for CRegT {}
 
-    impl NoBitfieldReg<CReg_SPEC> for CReg {}
-    impl ::core::default::Default for CReg {
+    impl crate::common::NoBitfieldReg for CReg {}
+    impl crate::common::ResetValue<CReg> for CRegT {
         #[inline(always)]
-        fn default() -> CReg {
-            <crate::RegValueT<CReg_SPEC> as RegisterValue<_>>::new(0)
+        fn reset_value(&self) -> CReg {
+            CReg::new(0)
         }
     }
 }

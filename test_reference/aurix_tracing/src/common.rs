@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.7.0 on Fri, 8 May 2026 12:51:25 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 14:35:47 +0000
 
 use ::core::convert::From;
 use ::core::marker::PhantomData;
@@ -21,46 +21,12 @@ pub struct W;
 
 pub(crate) mod sealed {
     use super::*;
-    pub trait Access {}
-    impl Access for R {}
-    impl Access for W {}
-    impl Access for RW {}
+    pub trait AccessBitfield {}
+    impl AccessBitfield for R {}
+    impl AccessBitfield for W {}
+    impl AccessBitfield for RW {}
     use ::core::ops::{BitAnd, BitAndAssign, BitOrAssign, Not, Shl, Shr};
     
-    // It would be better with const fn
-    // waiting for RFC: const functions in traits #3490
-    pub trait CastFrom<A> {
-            fn cast_from(val: A) -> Self;
-        }
-        
-    impl CastFrom<u64> for u8 {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            val as Self
-        }
-    }
-        
-    impl CastFrom<u64> for u16 {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            val as Self
-        }
-    }
-        
-    impl CastFrom<u64> for u32 {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            val as Self
-        }
-    }
-        
-    impl CastFrom<u64> for u64 {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            val as Self
-        }
-    }
-
     pub trait RegNumberT:
         Copy
             + From<u8>
@@ -79,36 +45,69 @@ impl RegNumberT for u16 {}
 impl RegNumberT for u32 {}
 impl RegNumberT for u64 {}
 
-    pub trait RegSpec {
-        type DataType: RegNumberT;
-        }
 }
 
-pub trait Access: sealed::Access + Copy {}
-impl Access for R {}
-impl Access for W {}
-impl Access for RW {}
+// It would be better with const fn
+// waiting for RFC: const functions in traits #3490
+pub trait CastFrom<A> {
+        fn cast_from(val: A) -> Self;
+    }
+    
+impl CastFrom<u64> for u8 {
+    #[inline(always)]
+    fn cast_from(val: u64) -> Self {
+        val as Self
+    }
+}
+    
+impl CastFrom<u64> for u16 {
+    #[inline(always)]
+    fn cast_from(val: u64) -> Self {
+        val as Self
+    }
+}
+    
+impl CastFrom<u64> for u32 {
+    #[inline(always)]
+    fn cast_from(val: u64) -> Self {
+        val as Self
+    }
+}
+    
+impl CastFrom<u64> for u64 {
+    #[inline(always)]
+    fn cast_from(val: u64) -> Self {
+        val as Self
+    }
+}
 
-pub trait Read: Access {}
-impl Read for RW {}
-impl Read for R {}
+pub trait AccessBitfield: sealed::AccessBitfield + Copy {}
+impl AccessBitfield for R {}
+impl AccessBitfield for W {}
+impl AccessBitfield for RW {}
 
-pub trait Write: Access {}
-impl Write for RW {}
-impl Write for W {}
+pub trait ReadBitfield: AccessBitfield {}
+impl ReadBitfield for RW {}
+impl ReadBitfield for R {}
+
+pub trait WriteBitfield: AccessBitfield {}
+impl WriteBitfield for RW {}
+impl WriteBitfield for W {}
 
 /// Trait for the `as_ptr` and `from_ptr` methods,
 /// allowing register and cluster types to be converted to and from raw pointers.
-/// 
+///
 /// # Safety
 ///
 /// This trait is intended to be implemented by register and cluster types. The
 /// `as_ptr` method must return a valid pointer to the register's MMIO address,
 /// and calling `from_ptr` with the result of `as_ptr` (and vice versa) must
 /// correctly roundtrip.
-pub unsafe trait AsPtr {
+pub unsafe trait AsPtr: Sized {
     /// Returns a raw pointer with the address of `self`.
-    fn as_ptr(&self) -> *mut u8;
+    fn as_ptr(&self) -> *mut u8 {
+        self as *const _ as *mut u8
+    }
 
     /// Creates a new instance of this type from a raw pointer.
     ///
@@ -116,29 +115,56 @@ pub unsafe trait AsPtr {
     ///
     /// The pointer must be non-null, as well as valid and properly aligned for the read and write operations
     /// performed on the resulting register instance.
-    unsafe fn from_ptr(ptr: *mut u8) -> &'static Self;
+    #[inline(always)]
+    #[must_use]
+    unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
+        unsafe { &*(ptr as *const Self) }
+    }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Reg<T, A: Access> {
-    phantom: PhantomData<*mut (T, A)>,
+
+
+/// Trait for memory-mapped peripheral registers.
+///
+/// Extends [`AsPtr`] with utility methods to obtain a typed pointer to the register's
+/// MMIO address. Implement this on the zero-sized spec type for each memory-mapped register.
+/// For Aurix Core Special Function Registers (CSFRs) — which are accessed via the
+/// `__mfcr`/`__mtcr` intrinsics rather than memory-mapped I/O — implement [`ReadCore`]
+/// and/or [`WriteCore`] on the spec type instead of [`Read`]/[`Write`].
+pub trait Reg<RegValueT: RegisterValue>: Sized + AsPtr {
+    #[inline(always)]
+    #[must_use]
+    fn ptr(&self) -> *mut RegValueT::DataType {
+        self.as_ptr() as *mut RegValueT::DataType
+    }
+
+    
+    /// Returns the address of the register.
+    fn addr(&self) -> usize {
+        (self as *const _) as usize
+    }
+    
 }
-unsafe impl<T, A: Access> Send for Reg<T, A> {}
-unsafe impl<T, A: Access> Sync for Reg<T, A> {}
 
-
-
-use sealed::CastFrom;
-
-use sealed::{RegNumberT, RegSpec};
-#[doc(hidden)]
-#[derive(Copy, Clone)]
-pub struct RegValueT<Reg: sealed::RegSpec> {
-    pub(crate) data: Reg::DataType,
-    pub(crate) mask: Reg::DataType,
+/// Reset value of a register
+pub trait ResetValue<RegValueT: RegisterValue>: Reg<RegValueT> {
+    fn reset_value(&self) -> RegValueT;
 }
 
-pub trait RegisterValue<T: RegSpec> {
+
+
+use sealed::RegNumberT;
+
+
+
+
+pub trait RegisterValue: Sized + Clone + Copy + Sized {
+    type DataType: RegNumberT;
+
+    fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType);
+
+    fn inner(&self) -> (Self::DataType, Self::DataType);
+
     /// Create a register value that could be written to a register from raw integer
     ///
     /// ```rust, ignore
@@ -150,7 +176,7 @@ pub trait RegisterValue<T: RegSpec> {
     /// TIMER.bitfield_reg().write(to_write);
     /// ```
     #[must_use]
-    fn new(data: T::DataType) -> Self;
+    fn new(data: Self::DataType) -> Self;
 
     /// Get raw integer from value read from register
     ///
@@ -160,7 +186,11 @@ pub trait RegisterValue<T: RegSpec> {
     /// let x = TIMER.bitfield_reg().read().get_raw();
     /// ```
     #[must_use]
-    fn get_raw(&self) -> T::DataType;
+    #[inline(always)]
+    fn get_raw(&self) -> Self::DataType {
+        let (data, _) = self.inner();
+        data
+    }
 
     /// Prepare a register value that could be written to a register with an arbitrary value
     ///
@@ -174,60 +204,18 @@ pub trait RegisterValue<T: RegSpec> {
     /// TIMER.bitfield_reg().init(|r| r.set_raw(0xdeadbeef))
     /// ```
     #[must_use]
-    fn set_raw(self, value: T::DataType) -> Self;
-}
-
-impl<T: RegSpec> RegisterValue<T> for RegValueT<T> {
-    /// Create a register value that could be written to a register from raw integer
-    ///
-    /// ```rust, ignore
-    /// // example with generic names
-    /// // needs: use pac::{timer, RegisterValue, TIMER}
-    /// let to_write = timer::BitfieldReg::new(0xdeadbeef);
-    /// TIMER.bitfield_reg().write(to_write);
-    /// let to_write = to_write.boolw().set(true);
-    /// TIMER.bitfield_reg().write(to_write);
-    /// ```
     #[inline(always)]
-    fn new(data: T::DataType) -> RegValueT<T> {
-        Self {
-            data,
-            mask: 0x0u8.into(),
-        }
-    }
-
-    /// Get raw integer from value read from register
-    ///
-    /// ```rust,ignore
-    /// // example with generic names
-    /// // needs: use pac::{RegisterValue, TIMER}
-    /// let x = TIMER.bitfield_reg().read().get_raw();
-    /// ```
-    #[inline(always)]
-    fn get_raw(&self) -> T::DataType {
-        self.data
-    }
-
-    /// Prepare a register value that could be written to a register with an arbitrary value
-    ///
-    /// Use this function for setting a register to a custom value, independent
-    /// of bitfields, enumerations, etc. No checks are performed on the passed
-    /// value.
-    ///
-    /// ```rust,ignore
-    /// // example with generic names
-    /// // needs: use pac::{RegisterValue, TIMER}
-    /// TIMER.bitfield_reg().init(|r| r.set_raw(0xdeadbeef))
-    /// ```
-    #[inline(always)]
-    fn set_raw(mut self, value: T::DataType) -> Self {
-        self.data = value;
-        self.mask = !(Into::<T::DataType>::into(0x0u8));
+    fn set_raw(mut self, value: Self::DataType) -> Self {
+        let (data, mask) = self.inner_mut();
+        *data = value;
+        *mask = !(Into::<Self::DataType>::into(0x0u8));
         self
     }
 }
 
-pub trait NoBitfieldReg<Reg: RegSpec>: RegisterValue<Reg>
+
+
+pub trait NoBitfieldReg: RegisterValue
 where
     Self: Sized,
 {
@@ -240,7 +228,7 @@ where
     /// ```
     #[inline(always)]
     #[must_use]
-    fn get(&self) -> Reg::DataType {
+    fn get(&self) -> Self::DataType {
         self.get_raw()
     }
 
@@ -253,59 +241,17 @@ where
     /// ```
     #[inline(always)]
     #[must_use]
-    fn set(self, value: Reg::DataType) -> Self {
+    fn set(self, value: Self::DataType) -> Self {
         self.set_raw(value)
     }
 }
 
-impl<T, A> Reg<T, A>
-where
-    T: RegSpec,
-    A: Access,
-{
-    #[inline(always)]
-    #[must_use]
-    pub(crate) const fn from_ptr(ptr: *mut u8) -> &'static Self {
-        unsafe { &*(ptr as *const Self) }
-    }
 
-    #[inline(always)]
-    #[must_use]
-    pub const fn ptr(&self) -> *mut T::DataType {
-        self as *const _ as *mut T::DataType
-    }
-
-    
-    /// Returns the address of the register.
-    pub fn addr(&self) -> usize {
-        (self as *const _) as usize
-    }
-    
-}
-
-
-unsafe impl<T, A> AsPtr for Reg<T, A>
-where
-    T: RegSpec + 'static,
-    A: Access + 'static,
-{
-    #[inline(always)]
-    fn as_ptr(&self) -> *mut u8 {
-        self.ptr() as *mut u8
-    }
-
-    #[inline(always)]
-    unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
-        Self::from_ptr(ptr)
-    }
-}
-
-
-impl<T, A> Reg<T, A>
-where
-    T: RegSpec,
-    A: Read,
-{
+/// Readable register trait
+///
+/// # Safety
+/// Read operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
+pub unsafe trait  Read<RegValueT: RegisterValue>: Reg<RegValueT> {
     /// Read register and return a register value
     ///
     /// # Safety
@@ -320,37 +266,37 @@ where
     /// ```
     #[inline(always)]
     #[must_use]
-    pub unsafe fn read(&self) -> RegValueT<T> {
+    unsafe fn read(&self) -> RegValueT {
         
         #[cfg(feature = "tracing")]
         let val = {
             let mut buf: u64 = 0x0;
             tracing::READ_FN.with(|rf| {
                 if let Some(rf) = rf.get() {
-                    buf = rf(self.addr(), std::mem::size_of::<T::DataType>());
+                    buf = rf(self.addr(), std::mem::size_of::<RegValueT::DataType>());
                 } else {
                     #[cfg(not(feature = "tracing_dummy"))]
                     panic!("Please, provide an handler for read with tracing::set_read_fn(callback);");
                 }
             });
-            T::DataType::cast_from(buf)
+            RegValueT::DataType::cast_from(buf)
         };
         #[cfg(not(feature = "tracing"))]
         let val = self.ptr().read_volatile();
-        RegValueT::<T>::new(val)
+        RegValueT::new(val)
     }
 }
 
-impl<T, A> Reg<T, A>
-where
-    T: RegSpec,
-    A: Write,
-{
+/// Writable register trait
+///
+/// # Safety
+/// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
+pub unsafe trait Write<RegValueT: RegisterValue>: Reg<RegValueT> {
     /// Write register value back to register
     ///
     /// # Arguments
     ///
-    /// * `reg_value` - A string slice that holds the name of the person
+    /// * `reg_value` - Register value to write back to the register
     ///
     /// # Safety
     /// Write operation could cause undefined behavior for some peripheral. Developers shall read the device user manual.
@@ -363,25 +309,25 @@ where
     /// let reg = unsafe { TIMER.bitfield_reg().read() };
     /// // or start with a known value
     /// let reg = timer::BitfieldReg::new(0).bitfieldw().set(0x55);
-    /// // or start with the register default
-    /// let reg = timer::BitfieldReg::default();
+    /// // or start with the register reset value
+    /// let reg = TIMER.bitfield_reg().reset_value();
     ///
     /// let reg = reg.bitfieldrw().set(0x77);
     ///
     /// // no change has taken place to the register due to `set` calls - do that now by writing back the result
     /// unsafe { TIMER.bitfield_reg().write(reg) }
     /// ```
-    /// See also: [`Reg<T, A>::init`] which provides the default value to a closure
+    /// See also: [`Write::init`] which provides the reset value to a closure
     #[inline(always)]
-    pub unsafe fn write(&self, reg_value: RegValueT<T>) {
+    unsafe fn write(&self, reg_value: RegValueT) {
         
         #[cfg(feature = "tracing")]
         tracing::WRITE_FN.with(|wf| {
             if let Some(wf) = wf.get() {
                 wf(
                     self.addr(),
-                    std::mem::size_of::<T::DataType>(),
-                    reg_value.data.into(),
+                    std::mem::size_of::<RegValueT::DataType>(),
+                    reg_value.get_raw().into(),
                 )
             } else {
                 #[cfg(not(feature = "tracing_dummy"))]
@@ -389,14 +335,14 @@ where
             }
         });
         #[cfg(not(feature = "tracing"))]
-        self.ptr().write_volatile(reg_value.data);
+        self.ptr().write_volatile(reg_value.get_raw());
     }
 
 
     /// Write an arbitrary integer to register
     ///
     /// Use this function when e.g. loading data to be written from a config-page.
-    /// For normal use prefer either [`Reg<T, A>::write`] if the value was read before, or [`Reg<T, A>::init`],
+    /// For normal use prefer either [`Write::write`] if the value was read before, or [`Write::init`],
     /// both of which provide some restrictions available register fields, enums, etc.
     ///
     /// # Arguments
@@ -413,16 +359,16 @@ where
     /// // example with generic names
     /// unsafe { TIMER.bitfield_reg().write_raw(0xdead) }
     /// ```
-    /// See also [`Reg<T, A>::init`] and [`Reg<T, A>::write`] both of which are the safe, preferred functions.
+    /// See also [`Write::init`] and [`Write::write`] both of which are the preferred functions.
     #[inline(always)]
-    pub unsafe fn write_raw(&self, value: T::DataType) {
+    unsafe fn write_raw(&self, value: RegValueT::DataType) {
         
         #[cfg(feature = "tracing")]
         tracing::WRITE_FN.with(|wf| {
             if let Some(wf) = wf.get() {
                 wf(
                     self.addr(),
-                    std::mem::size_of::<T::DataType>(),
+                    std::mem::size_of::<RegValueT::DataType>(),
                     value.into(),
                 )
             } else {
@@ -434,19 +380,12 @@ where
         
         self.ptr().write_volatile(value);
     }
-}
 
-impl<T, A> Reg<T, A>
-where
-    T: RegSpec,
-    A: Write,
-RegValueT<T>: Default,
-{
-    /// Write register with register value built from default register value
+    /// Write register with register value built from the register reset value
     ///
     /// # Arguments
     ///
-    /// * `f` - Closure that receive as input a register value initialized with register value at Power On Reset.
+    /// * `f` - Closure that receives as input the register reset value (value at Power On Reset).
     ///
     /// # Safety
     /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
@@ -461,18 +400,17 @@ RegValueT<T>: Default,
     /// ```
     #[inline(always)]
     /// Write value computed by closure that receive as input the reset value of register
-    pub unsafe fn init(&self, f: impl FnOnce(RegValueT<T>) -> RegValueT<T>) {
-        let val = RegValueT::<T>::default();
+    unsafe fn init(&self, f: impl FnOnce(RegValueT) -> RegValueT)
+    where
+        Self: ResetValue<RegValueT>,
+    {
+        let val = self.reset_value();
         let res = f(val);
         self.write(res);
     }
 }
 
-impl<T, A> Reg<T, A>
-where
-    T: RegSpec,
-    A: Read + Write,
-{
+pub trait Modify<RegValueT: RegisterValue>: Read<RegValueT> + Write<RegValueT> {
     /// Read/modify/write register
     ///
     /// # Arguments
@@ -492,19 +430,12 @@ where
     ///     .modify(|r| r.boolrw().set(!r.boolrw().get()));
     /// ```
     #[inline(always)]
-    pub unsafe fn modify(&self, f: impl FnOnce(RegValueT<T>) -> RegValueT<T>) {
+    unsafe fn modify(&self, f: impl FnOnce(RegValueT) -> RegValueT) {
         let val = self.read();
         let res = f(val);
         self.write(res);
     }
-}
 
-impl<T, A: Write> Reg<T, A>
-where
-    T: RegSpec<DataType = u32>,
-    RegValueT<T>: Default,
-    A: Write,
-{
     /// Read/modify/write register atomically
     ///
     /// Only the bitfield updated by closure are written back to the register.
@@ -527,8 +458,12 @@ where
     ///     .modify_atomic(|r| r.boolrw().set(!r.boolrw().get()));
     /// ```
     #[inline(always)]
-    pub unsafe fn modify_atomic(&self, f: impl FnOnce(RegValueT<T>) -> RegValueT<T>) {
-        let val = RegValueT::<T>::default();
+    unsafe fn modify_atomic(&self, f: impl FnOnce(RegValueT) -> RegValueT) 
+    where
+        Self: ResetValue<RegValueT>,
+        RegValueT: RegisterValue<DataType = u32>,
+    {
+        let val = self.reset_value();
         let res = f(val);
         
         #[cfg(feature="tracing")]
@@ -542,21 +477,28 @@ where
         });
         #[cfg(not(feature="tracing"))]
         unsafe {
-            ::core::arch::tricore::intrinsics::__ldmst(self.ptr(), res.data, res.mask);
+            let (data, mask) = res.inner();
+            ::core::arch::tricore::intrinsics::__ldmst(self.ptr(), data, mask);
         }
 
     }
-}
+    }
+
+
+
+
+impl<RegValueT: RegisterValue, T: Read<RegValueT> + Write<RegValueT>> Modify<RegValueT> for T {}
+
 
 #[cfg(not(feature="tracing"))]
 use ::core::arch::tricore::intrinsics::{__mfcr, __mtcr};
 
 /// Type of core special register of Aurix (CSFR)
-pub struct RegCore<T: RegSpec, A: Access, const ADDR: u16> {
-    phantom: PhantomData<*mut (T, A)>,
+pub struct RegCore<RegValueT: RegisterValue, const ADDR: u16, const RESET_VALUE:u32> {
+    phantom: PhantomData<*mut RegValueT>,
 }
 
-impl<T: RegSpec, A: Access, const ADDR: u16> RegCore<T, A, ADDR> {
+impl<RegValueT: RegisterValue, const ADDR: u16, const RESET_VALUE:u32> RegCore<RegValueT, ADDR, RESET_VALUE> {
     pub const unsafe fn new() -> Self {
         RegCore {
             phantom: PhantomData,
@@ -564,9 +506,23 @@ impl<T: RegSpec, A: Access, const ADDR: u16> RegCore<T, A, ADDR> {
     }
 }
 
-unsafe impl<T: RegSpec, A: Access, const ADDR: u16> Send for RegCore<T, A, ADDR> {}
-unsafe impl<T: RegSpec, A: Access, const ADDR: u16> Sync for RegCore<T, A, ADDR> {}
-impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR> 
+unsafe impl<RegValueT: RegisterValue, const ADDR: u16, const RESET_VALUE:u32> Send for RegCore<RegValueT, ADDR, RESET_VALUE> {}
+unsafe impl<RegValueT: RegisterValue, const ADDR: u16, const RESET_VALUE:u32> Sync for RegCore<RegValueT, ADDR,RESET_VALUE> {}
+
+/// Marker trait for readable Aurix Core Special Function Registers (CSFRs).
+///
+/// Unlike [`Read`], which is for memory-mapped registers, this trait marks CSFR spec types
+/// whose value is read via the `__mfcr` intrinsic inside [`RegCore::read`].
+pub unsafe trait ReadCore{}
+
+/// Marker trait for writable Aurix Core Special Function Registers (CSFRs).
+///
+/// Unlike [`Write`], which is for memory-mapped registers, this trait marks CSFR spec types
+/// whose value is written via the `__mtcr` intrinsic inside [`RegCore::write`] and [`RegCore::init`].
+pub unsafe trait WriteCore{}
+
+
+impl<RegValueT: RegisterValue<DataType = u32>, const RESET_VALUE:u32, const ADDR: u16> RegCore<RegValueT, ADDR,RESET_VALUE>
 
 {
     /// Read Aurix core register (32 bit wide) and return a register value
@@ -584,28 +540,28 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
     /// ```
     #[inline(always)]
     #[must_use]
-    pub unsafe fn read(&self) -> RegValueT<T>
+    pub unsafe fn read(&self) -> RegValueT
     where
-        A: Read,
+        RegValueT: ReadCore,
      {
         #[cfg(feature = "tracing")]
         let val = {
             let mut buf: u64 = 0x0;
             tracing::READ_FN.with(|rf| {
-                buf = rf.get().unwrap()(ADDR as usize, std::mem::size_of::<T::DataType>());
+                buf = rf.get().unwrap()(ADDR as usize, std::mem::size_of::<RegValueT::DataType>());
             });
             T::DataType::cast_from(buf)
         };
         #[cfg(not(feature = "tracing"))]
-        let val: T::DataType = __mfcr::<ADDR>();
-        RegValueT::<T>::new(val)
+        let val: RegValueT::DataType = __mfcr::<ADDR>();
+        RegValueT::new(val)
             }
 
     /// Write Aurix core register (32 bit wide) value back to register
     ///
     /// # Arguments
     ///
-    /// * `reg_value` - A string slice that holds the name of the person
+    /// * `reg_value` - Register value to write to the core register
     ///
     /// # Safety
     /// Write operation could cause undefined behavior for some core register. Developer shall read device user manual.
@@ -624,27 +580,27 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
     /// CSFR_CPU.dy0().write(dy0);
     /// ```
     #[inline(always)]
-    pub unsafe fn write(&self, reg_value: RegValueT<T>) 
+    pub unsafe fn write(&self, reg_value: RegValueT) 
     where
-        A: Write,
+        RegValueT: WriteCore,
     {
         #[cfg(feature = "tracing")]
         tracing::WRITE_FN.with(|wf| {
             wf.get().unwrap()(
                 ADDR as usize,
-                std::mem::size_of::<T::DataType>(),
+                std::mem::size_of::<RegValueT::DataType>(),
                 reg_value.data.into(),
             )
         });
         #[cfg(not(feature = "tracing"))]
-        __mtcr::<ADDR>(reg_value.data);
+        __mtcr::<ADDR>(reg_value.get_raw());
     }
 
-    /// Write Aurix core register (32 bit wide) with value built from default register value
+    /// Write Aurix core register (32 bit wide) with value built from the register reset value
     ///
     /// # Arguments
     ///
-    /// * `f` - Closure that receive as input a register value initialized with register value at Power On Reset.
+    /// * `f` - Closure that receives as input the register reset value (value at Power On Reset).
     ///
     /// # Safety
     /// Write operation could cause undefined behavior for some peripheral. Developer shall read device user manual.
@@ -656,13 +612,12 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
     /// CSFR_CPU.dy0().init(|r| r.data().set(0x1234_5678));
     /// ```
     #[inline(always)]
-    pub unsafe fn init(&self, f: impl FnOnce(RegValueT<T>) -> RegValueT<T>) 
+    pub unsafe fn init(&self, f: impl FnOnce(RegValueT) -> RegValueT) 
     where
-        A: Write,
-        RegValueT<T>: Default,
+        RegValueT: WriteCore,
     {
-        let val = Default::default();
-        let res = f(val);
+        let val = RESET_VALUE;
+        let res = f(RegValueT::new(val));
         self.write(res);
     }
 
@@ -684,9 +639,9 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
     ///     .modify(|r| r.data().set(r.data().get() + 0x1234_5678));
     /// ```
     #[inline(always)]
-    pub unsafe fn modify(&self, f: impl FnOnce(RegValueT<T>) -> RegValueT<T>) 
+    pub unsafe fn modify(&self, f: impl FnOnce(RegValueT) -> RegValueT) 
     where
-        A: Read + Write,
+        RegValueT: ReadCore + WriteCore,
     {
         let val = self.read();
         let res = f(val);
@@ -695,35 +650,9 @@ impl<T: RegSpec<DataType = u32>, A: Access, const ADDR: u16> RegCore<T, A, ADDR>
 }
 
 
-/// Proxy struct for enumerated bitfields
-#[repr(transparent)]
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub struct EnumBitfieldStruct<Q: RegNumberT, T>(pub Q, PhantomData<T>);
-
-impl<Q: RegNumberT, T> EnumBitfieldStruct<Q, T> {
-    pub const fn new(value: Q) -> Self {
-        Self(value, PhantomData)
-    }
-}
-
-impl<Q: RegNumberT, T> From<EnumBitfieldStruct<Q, T>> for u64 {
-    #[inline(always)]
-    fn from(value: EnumBitfieldStruct<Q, T>) -> Self {
-        value.0.into()
-    }
-}
-impl<Q: RegNumberT, T> CastFrom<u64> for EnumBitfieldStruct<Q, T> {
-    #[inline(always)]
-    fn cast_from(val: u64) -> Self {
-        Self(Q::cast_from(val), PhantomData)
-    }
-}
-
-impl<Q: RegNumberT, T> From<Q> for EnumBitfieldStruct<Q, T> {
-    #[inline(always)]
-    fn from(value: Q) -> Self {
-        Self(value, PhantomData)
-    }
+pub trait EnumBitfieldStruct: Clone + Copy + Sized {
+    type RegNumberT: RegNumberT;
+    fn value(&self) -> Self::RegNumberT;
 }
 
 /// Proxy struct for numeric bitfields
@@ -737,10 +666,10 @@ pub struct RegisterField<
     T,
     A,
 > where
-    T: RegSpec,
-    A: Access,
+    T: RegisterValue,
+    A: AccessBitfield,
 {
-    data: RegValueT<T>,
+    data: T,
     index: u8,
     marker: PhantomData<(ValueTypeRead,ValueTypeWrite, A)>,
 }
@@ -756,12 +685,13 @@ impl<
         A,
     > RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueTypeRead,ValueTypeWrite, T, A>
 where
-    T: RegSpec,
-    A: Access,
+    T: RegisterValue,
+    A: AccessBitfield,
 {
     #[allow(dead_code)]
     #[inline(always)]
-    pub(crate) fn from_register(data: RegValueT<T>, index: u8) -> Self {
+    #[doc(hidden)]
+    pub fn from_register(data: T, index: u8) -> Self {
         Self {
             data,
             index,
@@ -801,15 +731,15 @@ impl<
         A,
     > RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueTypeRead,ValueTypeWrite, T, A>
 where
-    T: RegSpec,
-    A: Read,
+    T: RegisterValue,
+    A: ReadBitfield,
     ValueTypeRead: CastFrom<u64>,
 {
     /// Extract bitfield from read register value
     #[inline(always)]
     pub fn get(&self) -> ValueTypeRead {
         let offset = START_OFFSET + (self.index * DIM_INCREMENT) as usize;
-        let filtered: T::DataType = (self.data.data >> offset) & T::DataType::cast_from(MASK);
+        let filtered: T::DataType = (self.data.get_raw() >> offset) & T::DataType::cast_from(MASK);
         ValueTypeRead::cast_from(filtered.into())
     }
 }
@@ -825,8 +755,8 @@ impl<
         A,
     > RegisterField<START_OFFSET, MASK, DIM, DIM_INCREMENT, ValueTypeRead,ValueTypeWrite, T, A>
 where
-    T: RegSpec,
-    A: Write,
+    T: RegisterValue,
+    A: WriteBitfield,
     u64: From<ValueTypeWrite>,
 {
     /// Prepare bitfield value that could be written to register
@@ -838,8 +768,8 @@ where
     /// let values = TIMER.bitfield_reg().read();
     /// // or by starting with a known value
     /// let value = timer::BitfieldReg::new(0);
-    /// // or by starting with the default
-    /// let value = timer::BitfieldReg::default();
+    /// // or by starting with the register reset value
+    /// let value = TIMER.bitfield_reg().reset_value();
     /// 
     /// // set bitfields
     /// let value = value
@@ -858,14 +788,15 @@ where
     /// ```
     #[inline(always)]
     #[must_use]
-    pub fn set(mut self, value: ValueTypeWrite) -> RegValueT<T> {
+    pub fn set(mut self, value: ValueTypeWrite) -> T {
         let mask = T::DataType::cast_from(MASK);
         let value: T::DataType = T::DataType::cast_from(Into::<u64>::into(value)) & mask;
         let offset = START_OFFSET + (self.index * DIM_INCREMENT) as usize;
         let masked_offset: T::DataType = mask << offset;
-        self.data.mask |= masked_offset;
-        self.data.data &= !masked_offset;
-        self.data.data |= value << offset;
+        let (data, mask) = self.data.inner_mut();
+        *mask |= masked_offset;
+        *data &= !masked_offset;
+        *data |= value << offset;
         self.data
     }
 }
@@ -878,10 +809,10 @@ pub struct RegisterFieldBool<
     T,
     A,
 > where
-    T: RegSpec,
-    A: Access,
+    T: RegisterValue,
+    A: AccessBitfield,
 {
-    data: RegValueT<T>,
+    data: T,
     index: u8,
     marker: PhantomData<A>,
 }
@@ -889,14 +820,14 @@ pub struct RegisterFieldBool<
 impl<const START_OFFSET: usize, const DIM: u8, const DIM_INCREMENT: u8, T, A>
     RegisterFieldBool<START_OFFSET, DIM, DIM_INCREMENT, T, A>
 where 
-    T: RegSpec,
-    A: Read,
+    T: RegisterValue,
+    A: ReadBitfield,
 {
     /// Extract bitfield from read register value
     #[inline(always)]
     pub fn get(&self) -> bool {
         let offset = START_OFFSET + (self.index * DIM_INCREMENT) as usize;
-        let filtered = (self.data.data.into() >> offset) & 1;
+        let filtered = (self.data.get_raw().into() >> offset) & 1;
         filtered == 1
     }
 }
@@ -904,8 +835,8 @@ where
 impl<const START_OFFSET: usize, const DIM: u8, const DIM_INCREMENT: u8, T, A>
     RegisterFieldBool<START_OFFSET, DIM, DIM_INCREMENT, T, A>
 where 
-    T: RegSpec,
-    A: Write,
+    T: RegisterValue,
+    A: WriteBitfield,
 {
     /// Prepare bitfield value to be written to register
     ///
@@ -916,8 +847,8 @@ where
     /// let values = TIMER.bitfield_reg().read();
     /// // or by starting with a known value
     /// let value = timer::BitfieldReg::new(0);
-    /// // or by starting with the default
-    /// let value = timer::BitfieldReg::default();
+    /// // or by starting with the register reset value
+    /// let value = TIMER.bitfield_reg().reset_value();
     /// 
     /// // set bitfield
     /// let value = value
@@ -929,7 +860,7 @@ where
     /// ```
     #[inline(always)]
     #[must_use]
-    pub fn set(mut self, value: bool) -> RegValueT<T> {
+    pub fn set(mut self, value: bool) -> T {
         let value: T::DataType = if value {
             T::DataType::cast_from(1u64)
         } else {
@@ -937,9 +868,10 @@ where
         };
         let offset = START_OFFSET + (self.index * DIM_INCREMENT) as usize;
         let masked_offset = T::DataType::cast_from(0x1u64) << offset;
-        self.data.mask |= masked_offset;
-        self.data.data &= !masked_offset;
-        self.data.data |= value << offset;
+        let (data, mask) = self.data.inner_mut();
+        *mask |= masked_offset;
+        *data &= !masked_offset;
+        *data |= value << offset;
         self.data
     }
 }
@@ -947,12 +879,13 @@ where
 impl<const START_OFFSET: usize, const DIM: u8, const DIM_INCREMENT: u8, T, A>
     RegisterFieldBool<START_OFFSET, DIM, DIM_INCREMENT, T, A>
 where 
-    T: RegSpec,
-    A: Access,
+    T: RegisterValue,
+    A: AccessBitfield,
 {
     #[inline(always)]
     #[allow(dead_code)]
-    pub(crate) fn from_register(data: RegValueT<T>, index: u8) -> Self {
+    #[doc(hidden)]
+    pub fn from_register(data: T, index: u8) -> Self {
         Self {
             data,
             index,
@@ -1025,7 +958,8 @@ impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ClusterRegisterArra
     }
 
     #[inline(always)]
-    pub(crate) const unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
+    #[doc(hidden)]
+    pub const unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
         &*(ptr as *const Self)
     }
 

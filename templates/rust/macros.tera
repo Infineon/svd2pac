@@ -156,19 +156,55 @@ pub mod {{reg_mod_name}} {
     use crate::common;
     #[allow(unused_imports)]
     use crate::common::{
-        AsPtr as _,  NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
+        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
         ResetValue as _, Write as _,
     };
     {% for field_name,field in reg.fields -%}
     {%- for enum_type in field.enum_types -%}
     {%- set enum_name_type= enum_type.name | to_struct_id %}
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    pub struct {{enum_name_type}}_SPEC;
-    pub type  {{enum_name_type}} =crate::common::EnumBitfieldStruct<{{self::reg_size2num_type(bit_size=enum_type.size)}},{{enum_name_type}}_SPEC>;
+    #[repr(transparent)]
+    pub struct {{enum_name_type}}({{self::reg_size2num_type(bit_size=enum_type.size)}});
+    
+    impl {{enum_name_type}} {
+        pub fn new(value: {{self::reg_size2num_type(bit_size=enum_type.size)}}) -> Self {
+            Self(value)
+        }
+    }
+
+    impl crate::common::EnumBitfieldStruct for {{enum_name_type}} {
+        type RegNumberT = {{self::reg_size2num_type(bit_size=enum_type.size)}};
+
+        fn value(&self) -> Self::RegNumberT {
+            self.0
+        }
+    }
+
+    impl From<{{self::reg_size2num_type(bit_size=enum_type.size)}}> for {{enum_name_type}} {
+        #[inline(always)]
+        fn from(value: {{self::reg_size2num_type(bit_size=enum_type.size)}}) -> Self {
+            Self(value)
+        }
+    }
+
+    impl From<{{enum_name_type}}> for u64 {
+        #[inline(always)]
+        fn from(value: {{enum_name_type}}) -> Self {
+            value.value().into()
+        }
+    }
+
+    impl CastFrom<u64> for {{enum_name_type}} {
+        #[inline(always)]
+        fn cast_from(val: u64) -> Self {
+            Self({{self::reg_size2num_type(bit_size=enum_type.size)}}::cast_from(val))
+        }
+    }
+
     impl {{enum_name_type}} {
         {%- for val in enum_type.values %}
         {{self::doc_attribute(documentation=val.description)}}
-        pub const {{val.name | to_enumerated_const_id }}:Self =Self::new({{val.value}});
+        pub const {{val.name | to_enumerated_const_id }}:Self =Self({{val.value}});
         {%- endfor %}
     }
     {%- endfor -%}
@@ -178,11 +214,17 @@ pub mod {{reg_mod_name}} {
 {%- endmacro -%}
 
 {# Generate getter for clusters #}
-{%- macro cluster_func(types_mod,cluster) -%}
+{%- macro cluster_func(types_mod,cluster,workspace_mode=false,package_name="",current_module_id="") -%}
 {%- set mod_struct_path = cluster.struct_module_path | join(sep="::") -%}
+{%- set first_seg = cluster.struct_module_path | first -%}
+{%- if workspace_mode and first_seg != current_module_id -%}
+{%- set crate_prefix = package_name ~ "_" ~ first_seg -%}
+{%- else -%}
+{%- set crate_prefix = "crate" -%}
+{%- endif -%}
 {%- set cluster_struct_id = cluster.struct_id | to_struct_id -%}
-{%- set cluster_struct_path = "crate" ~ "::" ~ mod_struct_path ~ "::" ~ cluster_struct_id -%}
-{%- set underscored_cluster_struct_path = "crate" ~ "::" ~ mod_struct_path ~ "::_" ~ cluster_struct_id -%}
+{%- set cluster_struct_path = crate_prefix ~ "::" ~ mod_struct_path ~ "::" ~ cluster_struct_id -%}
+{%- set underscored_cluster_struct_path = crate_prefix ~ "::" ~ mod_struct_path ~ "::_" ~ cluster_struct_id -%}
 {%- set cluster_func = cluster.name | to_func_id -%}
 {{self::doc_attribute(documentation=cluster.description)}}
 #[inline(always)]
@@ -205,11 +247,12 @@ pub fn {{func_name | to_func_id}}(self) -> {{cluster_struct_path}} {
 
 
 {# Macro to generate structure and module for a cluster#}
-{%- macro cluster_struct(cluster) -%}
+{%- macro cluster_struct(cluster,workspace_mode=false,package_name="",current_module_id="") -%}
 {%- if not cluster.is_derived_from -%}
 {%- set cluster_struct = cluster.struct_id | to_struct_id -%}
 {%- set cluster_mod = cluster.module_id -%}
-{{self::doc_attribute(documentation=cluster.description)}}
+
+#[doc(hidden)]
 #[non_exhaustive]
 pub struct _{{ cluster_struct }};
 {{self::doc_attribute(documentation=cluster.description)}}
@@ -218,7 +261,8 @@ pub type {{ cluster_struct }} = &'static _{{ cluster_struct }};
 unsafe impl ::core::marker::Sync for _{{ cluster_struct }} {}
 impl _{{cluster_struct}} {
     #[inline(always)]
-    pub(crate) const unsafe fn _svd2pac_from_ptr(ptr: *mut u8) -> &'static Self {
+    {% if workspace_mode %}#[doc(hidden)]
+    pub{% else %}pub(crate){% endif %} const unsafe fn _svd2pac_from_ptr(ptr: *mut u8) -> &'static Self {
         &*(ptr as *const _)
     }
 
@@ -231,7 +275,7 @@ impl _{{cluster_struct}} {
     {{self::register_func(types_mod=cluster_mod,reg=reg)}}
     {% endfor -%}
     {% for cluster_name,cluster in cluster.clusters -%}
-    {{self::cluster_func(types_mod=cluster_mod,cluster=cluster)}}
+    {{self::cluster_func(types_mod=cluster_mod,cluster=cluster,workspace_mode=workspace_mode,package_name=package_name,current_module_id=current_module_id)}}
     {% endfor -%}
 }
 
@@ -259,10 +303,186 @@ pub mod {{cluster_mod}} {
     {{self::register_struct(reg=reg)}}
     {% endfor -%}
     {% for cluster_name,cluster in cluster.clusters -%}
-    {{self::cluster_struct(cluster=cluster) }}
+    {{self::cluster_struct(cluster=cluster,workspace_mode=workspace_mode,package_name=package_name,current_module_id=current_module_id) }}
     {% endfor -%}
 }
 {%- endif -%} {# if not cluster.is_derived_from #}
 {%- endmacro -%}
+
+{# ----------------------------------------------------------------------- #}
+{# Shared macros used by both single-package and workspace generation.      #}
+{# ----------------------------------------------------------------------- #}
+
+{# Render the [features] section of a Cargo.toml.                           #}
+{# When workspace_mode is true, base-peripheral features pull in their own  #}
+{# crate via `dep:<package_name>_<module_id>` and the tracing features      #}
+{# propagate to the `common` crate. In single-package mode the output is    #}
+{# unchanged. Feature names are always `name | lower`; only the `dep:`      #}
+{# crate identifier uses `module_id`.                                       #}
+{%- macro cargo_features(ir, tracing, target, workspace_mode, package_name="", ir_csfr=false) -%}
+{%- set_global all_peripheral_features = [] -%} {# array of all features #}
+{%- for peri_mod_name, peri in ir.device.peripheral_mod %}
+{%- set feature_name = peri.name | lower -%}
+{% set_global all_peripheral_features = all_peripheral_features | concat(with=feature_name) %}
+{%- if peri.derived_from is string %}
+{{feature_name}} = ["{{peri.derived_from | lower}}"]
+{%- elif workspace_mode %}
+{{feature_name}} = ["dep:{{package_name}}_{{peri.module_id}}"]
+{%- else %}
+{{feature_name}} = []
+{%- endif %}
+{%- endfor %}
+{% if ir_csfr %}
+{%- for peri_mod_name, peri in ir_csfr.device.peripheral_mod %}
+{%- set feature_name = peri.name | lower %}
+{{feature_name}} = []
+{%- endfor %}
+{%- endif %}
+{# collect all module id and remove duplicated#}
+{%- set_global all_peripheral_features = all_peripheral_features | unique -%}
+all = ["{{all_peripheral_features | join(sep='" ,"')}}"]
+{%- if tracing %}
+{%- if workspace_mode %}
+tracing = ["dep:phf", "common/tracing"]
+tracing_dummy = ["common/tracing_dummy"]
+{%- else %}
+tracing = ["dep:phf"]
+tracing_dummy = []
+{%- endif %}
+{%- endif %}
+{%- if target=="CortexM" %}
+rt = ["cortex-m-rt/device"]
+{%- endif %}
+{%- endmacro cargo_features -%}
+
+{# Render the Cortex-M interrupt vector table, Interrupt enum and the       #}
+{# cortex_m re-exports. Used by both lib.tera and workspace_lib.tera.       #}
+{%- macro cortex_m_interrupt_table(ir) -%}
+pub use cortex_m::peripheral::Peripherals as CorePeripherals;
+pub use cortex_m::peripheral::{CBP, CPUID, DCB, DWT, FPB, {%if ir.fpu_present %}FPU ,{%endif%} ITM, {%if ir.mpu_present %}MPU ,{%endif%} NVIC, SCB, {%if not ir.vendor_systick_config %}SYST,{%endif%} TPIU};
+{%- if ir.nvic_prio_bits %}
+#[doc = "Number available in the NVIC for configuring priority"]
+pub const NVIC_PRIO_BITS: u8 = {{ir.nvic_prio_bits}};
+{%- endif %}
+#[doc(hidden)]
+pub union Vector {
+    _handler: unsafe extern "C" fn(),
+    _reserved: u32,
+}
+{%- if ir.interrupt_table  | length > 0 %}
+#[cfg(feature = "rt")]
+pub use self::Interrupt as interrupt;
+#[cfg(feature = "rt")]
+pub use cortex_m_rt::interrupt;
+#[cfg(feature = "rt")]
+pub mod interrupt_handlers {
+    extern "C" {
+        {% for interrupt in ir.interrupt_table -%}
+        {% if interrupt -%}
+        pub fn {{interrupt.name | upper}}();
+        {% endif -%}
+        {% endfor -%}
+    }
+}
+#[cfg(feature = "rt")]
+#[doc(hidden)]
+#[link_section = ".vector_table.interrupts"]
+#[no_mangle]
+pub static __INTERRUPTS: [Vector; {{ir.interrupt_table  | length}}] = [
+    {% for interrupt in ir.interrupt_table -%}
+    {% if interrupt -%}
+    Vector { _handler: interrupt_handlers::{{interrupt.name | upper}} },
+    {% else -%}
+    Vector { _reserved: 0 },
+    {% endif -%}
+    {% endfor -%}
+];
+#[doc = "Enumeration of all the interrupts."]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[repr(u16)]
+pub enum Interrupt {
+    {% for interrupt in ir.interrupt_table -%}
+    {% if interrupt -%}
+    {% if interrupt.description %}
+    #[doc = "{{interrupt.description | svd_description_to_doc}}"]
+    {% endif -%}
+    {{interrupt.name | upper}} = {{interrupt.value}},
+    {% endif -%}
+    {% endfor -%}
+}
+unsafe impl cortex_m::interrupt::InterruptNumber for Interrupt {
+    #[inline(always)]
+    fn number(self) -> u16 {
+        self as u16
+    }
+}
+{% endif -%}
+{%- endmacro cortex_m_interrupt_table -%}
+
+{# Render the `Peripherals` struct (RTIC compatibility) with its take()/    #}
+{# steal() helpers. Used by both lib.tera and workspace_lib.tera. In        #}
+{# workspace mode the per-peripheral structs and constants are resolved     #}
+{# through the root crate's glob re-exports.                                #}
+{%- macro cortex_m_peripherals_struct(ir, ir_csfr=false) -%}
+#[allow(non_snake_case)]
+/// Required for compatibility with RTIC and other frameworks
+pub struct Peripherals {
+    {% for name,p in ir.device.peripheral_mod %}
+    {%- set module_name = p.module_id -%}
+    {%- set module_struct = p.struct_id -%}
+    {%- set feature_name = p.name | lower -%}
+    {%- set full_path_struct = "self::" ~ module_struct -%}
+    #[cfg(feature = "{{feature_name}}")]
+    {%- if p.base_addr | length == 1 %}
+    pub {{name | upper}}: {{full_path_struct}},
+    {% else %}
+    pub {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}],
+    {%- endif -%}
+    {%- endfor -%}
+    {% if ir_csfr %}
+    {% for name,p in ir_csfr.device.peripheral_mod %}
+    {%- set module_name = p.module_id -%}
+    {%- set module_struct = p.struct_id -%}
+    {%- set full_path_struct = module_name ~ "::" ~ module_struct -%}
+    #[cfg(feature = "{{feature_name}}")]
+    {%- if p.base_addr | length == 1 %}
+    pub {{name | upper}}: {{full_path_struct}},
+    {% else %}
+    pub {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}],
+    {%- endif -%}
+    {%- endfor -%}
+    {%- endif -%}
+
+
+}
+
+impl Peripherals {
+    /// Returns Peripheral struct multiple times
+    /// Required for compatibility with RTIC and other frameworks
+    #[inline]
+    pub fn take() -> Option<Self> {
+        Some(Self::steal())
+    }
+
+    /// Returns Peripheral struct multiple times
+    /// Required for compatibility with RTIC and other frameworks
+    #[inline]
+    pub fn steal() -> Self {
+        
+        Peripherals{
+            {% for name,p in ir.device.peripheral_mod %}
+            {%- set module_name = p.module_id -%}
+            {%- set module_struct = p.struct_id -%}
+            {%- set full_path_struct = module_name ~ "::" ~ module_struct %}
+            {%- set feature_name = p.name | lower -%}
+            #[cfg(feature = "{{feature_name}}")]
+            {{name | upper}}: crate::{{name | upper}},
+            {%- endfor %}
+        
+        }
+        
+    }
+}
+{%- endmacro cortex_m_peripherals_struct -%}
 
 

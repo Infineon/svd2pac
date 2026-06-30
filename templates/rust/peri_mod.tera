@@ -1,4 +1,6 @@
 {% import "macros.tera" as macros %}
+{%- set ws_mode = workspace_mode | default(value=false) -%}
+{%- set pkg_name = package_name | default(value="") -%}
 /*
 {{ir.license_text}}
 */
@@ -29,14 +31,14 @@ impl super::{{ peri_struct }} {
 {{macros::register_func(types_mod="self",reg=reg)}}
 {% endfor -%}
 {% for cluster_name,cluster in peri.clusters -%}
-{{macros::cluster_func(types_mod="self",cluster=cluster)}}
+{{macros::cluster_func(types_mod="self",cluster=cluster,workspace_mode=ws_mode,package_name=pkg_name,current_module_id=peri.module_id)}}
 {% endfor %}
 }
 {% for register_name,reg in peri.registers -%}
 {{macros::register_struct(reg=reg)}}
 {% endfor %}
 {% for cluster_name,cluster in peri.clusters -%}
-{{macros::cluster_struct(cluster=cluster)}}
+{{macros::cluster_struct(cluster=cluster,workspace_mode=ws_mode,package_name=pkg_name,current_module_id=peri.module_id)}}
 {% endfor %}
 
 

@@ -1,0 +1,75 @@
+/*
+{{ir.license_text}}
+*/
+// Generated from SVD {{ir.version}}, with svd2pac {{svd2pac_version}} on {{now}}
+#![no_std]
+#![allow(non_camel_case_types)]
+// `extern crate common;` binds the `common` crate into this crate's root so
+// that the generated peripheral module (which uses `crate::common::...`) keeps
+// resolving unchanged.
+extern crate common;
+
+// `EnumBitfieldStruct` is defined per peripheral crate (instead of in `common`)
+// so that the generated inherent `impl` blocks providing the enumerated
+// constants stay legal under Rust's orphan rules. Its trait bounds come from
+// the shared `common` crate.
+use ::core::marker::PhantomData;
+#[doc(hidden)]
+#[repr(transparent)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub struct EnumBitfieldStruct<Q: common::RegNumberT, T>(pub Q, PhantomData<T>);
+
+impl<Q: common::RegNumberT, T> EnumBitfieldStruct<Q, T> {
+    #[inline(always)]
+    pub const fn new(value: Q) -> Self {
+        Self(value, PhantomData)
+    }
+}
+
+impl<Q: common::RegNumberT, T> From<EnumBitfieldStruct<Q, T>> for u64 {
+    #[inline(always)]
+    fn from(value: EnumBitfieldStruct<Q, T>) -> Self {
+        value.0.into()
+    }
+}
+
+impl<Q: common::RegNumberT, T> common::CastFrom<u64> for EnumBitfieldStruct<Q, T> {
+    #[inline(always)]
+    fn cast_from(val: u64) -> Self {
+        Self(<Q as common::CastFrom<u64>>::cast_from(val), PhantomData)
+    }
+}
+
+impl<Q: common::RegNumberT, T> From<Q> for EnumBitfieldStruct<Q, T> {
+    #[inline(always)]
+    fn from(value: Q) -> Self {
+        Self(value, PhantomData)
+    }
+}
+
+{% set peri_struct = peri.struct_id -%}
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct {{ peri_struct }} {
+    pub(crate) ptr: *mut u8,
+}
+
+impl {{ peri_struct }} {
+    /// Build the peripheral struct from a base address.
+    ///
+    /// Used by the root crate to materialise constants of derived peripherals.
+    #[doc(hidden)]
+    #[inline(always)]
+    pub const fn _new(ptr: *mut u8) -> Self {
+        Self { ptr }
+    }
+}
+
+pub mod {{ peri.module_id }};
+
+{# Peripheral instance constant(s). Only non-derived peripherals own a crate. #}
+{%- set full_path_struct = "self::" ~ peri_struct -%}
+{% if peri.base_addr | length == 1 %}
+pub const {{ peri.name | upper }}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{ peri.base_addr[0] | to_hex }}u32 as _};
+{% else %}
+pub const {{ peri.name | upper }}:[{{full_path_struct}};{{ peri.base_addr | length }}] = [{%- for addr in peri.base_addr %}  {{full_path_struct}}{ptr:{{ addr | to_hex }}u32 as _}, {% endfor -%}];
+{% endif %}

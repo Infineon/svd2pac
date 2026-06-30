@@ -2,12 +2,15 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.7.0 on Fri, 8 May 2026 12:32:27 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 14:40:30 +0000
 #![no_std]
 #![allow(non_camel_case_types)]
 #![doc = "SVD Test for Rust PAC generator"]
 pub mod common;
-pub use common::*;
+pub use crate::common::{
+    AsPtr as _, Modify as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
+    ResetValue as _, Write as _,
+};
 
 #[cfg(feature = "derivedtest")]
 pub mod derivedtest;
@@ -234,6 +237,7 @@ unsafe impl cortex_m::interrupt::InterruptNumber for Interrupt {
         self as u16
     }
 }
+
 #[allow(non_snake_case)]
 /// Required for compatibility with RTIC and other frameworks
 pub struct Peripherals {
