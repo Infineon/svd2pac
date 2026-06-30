@@ -2,13 +2,30 @@
 {{ir.license_text}}
 */
 // Generated from SVD {{ir.version}}, with svd2pac {{svd2pac_version}} on {{now}}
-
+{% if workspace_mode %}
+{%- if tracing %}
+#![cfg_attr(not(feature = "tracing"), no_std)]
+{%- else %}
+#![no_std]
+{%- endif %}
+{%- if target=="Aurix" %}
+#![cfg_attr(target_arch = "tricore", feature(stdsimd))]
+{%- endif %}
+{% endif %}
 use ::core::convert::From;
 use ::core::marker::PhantomData;
 
 {% if tracing %}
+{%- if workspace_mode %}
+#[cfg(feature = "tracing")]
+#[allow(unused_imports)]
+pub(crate) use crate as common;
+#[cfg(feature = "tracing")]
+pub mod tracing;
+{%- else %}
 #[cfg(feature = "tracing")]
 use crate::tracing;
+{%- endif %}
 {% endif %}
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -26,40 +43,6 @@ pub(crate) mod sealed {
     impl AccessBitfield for RW {}
     use ::core::ops::{BitAnd, BitAndAssign, BitOrAssign, Not, Shl, Shr};
     
-    // It would be better with const fn
-    // waiting for RFC: const functions in traits #3490
-    pub trait CastFrom<A> {
-            fn cast_from(val: A) -> Self;
-        }
-        
-    impl CastFrom<u64> for u8 {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            val as Self
-        }
-    }
-        
-    impl CastFrom<u64> for u16 {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            val as Self
-        }
-    }
-        
-    impl CastFrom<u64> for u32 {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            val as Self
-        }
-    }
-        
-    impl CastFrom<u64> for u64 {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            val as Self
-        }
-    }
-
     pub trait RegNumberT:
         Copy
             + From<u8>
@@ -78,6 +61,40 @@ impl RegNumberT for u16 {}
 impl RegNumberT for u32 {}
 impl RegNumberT for u64 {}
 
+}
+
+// It would be better with const fn
+// waiting for RFC: const functions in traits #3490
+pub trait CastFrom<A> {
+        fn cast_from(val: A) -> Self;
+    }
+    
+impl CastFrom<u64> for u8 {
+    #[inline(always)]
+    fn cast_from(val: u64) -> Self {
+        val as Self
+    }
+}
+    
+impl CastFrom<u64> for u16 {
+    #[inline(always)]
+    fn cast_from(val: u64) -> Self {
+        val as Self
+    }
+}
+    
+impl CastFrom<u64> for u32 {
+    #[inline(always)]
+    fn cast_from(val: u64) -> Self {
+        val as Self
+    }
+}
+    
+impl CastFrom<u64> for u64 {
+    #[inline(always)]
+    fn cast_from(val: u64) -> Self {
+        val as Self
+    }
 }
 
 pub trait AccessBitfield: sealed::AccessBitfield + Copy {}
@@ -125,7 +142,7 @@ pub unsafe trait AsPtr: Sized {
 
 /// Trait for memory-mapped peripheral registers.
 ///
-/// Extends [`DataTypeT`] with utility methods to obtain a typed pointer to the register's
+/// Extends [`AsPtr`] with utility methods to obtain a typed pointer to the register's
 /// MMIO address. Implement this on the zero-sized spec type for each memory-mapped register.
 {% if target=="Aurix" -%}
 /// For Aurix Core Special Function Registers (CSFRs) — which are accessed via the
@@ -155,9 +172,12 @@ pub trait ResetValue<RegValueT: RegisterValue>: Reg<RegValueT> {
 
 
 
-use sealed::CastFrom;
-
+{% if workspace_mode -%}
+#[doc(hidden)]
+pub use sealed::RegNumberT;
+{%- else -%}
 use sealed::RegNumberT;
+{%- endif %}
 
 
 
@@ -669,35 +689,9 @@ impl<RegValueT: RegisterValue<DataType = u32>, const RESET_VALUE:u32, const ADDR
 }
 {% endif %}
 
-/// Proxy struct for enumerated bitfields
-#[repr(transparent)]
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub struct EnumBitfieldStruct<Q: RegNumberT, T>(pub Q, PhantomData<T>);
-
-impl<Q: RegNumberT, T> EnumBitfieldStruct<Q, T> {
-    pub const fn new(value: Q) -> Self {
-        Self(value, PhantomData)
-    }
-}
-
-impl<Q: RegNumberT, T> From<EnumBitfieldStruct<Q, T>> for u64 {
-    #[inline(always)]
-    fn from(value: EnumBitfieldStruct<Q, T>) -> Self {
-        value.0.into()
-    }
-}
-impl<Q: RegNumberT, T> CastFrom<u64> for EnumBitfieldStruct<Q, T> {
-    #[inline(always)]
-    fn cast_from(val: u64) -> Self {
-        Self(Q::cast_from(val), PhantomData)
-    }
-}
-
-impl<Q: RegNumberT, T> From<Q> for EnumBitfieldStruct<Q, T> {
-    #[inline(always)]
-    fn from(value: Q) -> Self {
-        Self(value, PhantomData)
-    }
+pub trait EnumBitfieldStruct: Clone + Copy + Sized {
+    type RegNumberT: RegNumberT;
+    fn value(&self) -> Self::RegNumberT;
 }
 
 /// Proxy struct for numeric bitfields
@@ -735,7 +729,8 @@ where
 {
     #[allow(dead_code)]
     #[inline(always)]
-    pub(crate) fn from_register(data: T, index: u8) -> Self {
+    #[doc(hidden)]
+    pub fn from_register(data: T, index: u8) -> Self {
         Self {
             data,
             index,
@@ -928,7 +923,8 @@ where
 {
     #[inline(always)]
     #[allow(dead_code)]
-    pub(crate) fn from_register(data: T, index: u8) -> Self {
+    #[doc(hidden)]
+    pub fn from_register(data: T, index: u8) -> Self {
         Self {
             data,
             index,
@@ -1001,7 +997,8 @@ impl<T: Sized, const DIM: usize, const DIM_INCREMENT: usize> ClusterRegisterArra
     }
 
     #[inline(always)]
-    pub(crate) const unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
+    #[doc(hidden)]
+    pub const unsafe fn from_ptr(ptr: *mut u8) -> &'static Self {
         &*(ptr as *const Self)
     }
 

@@ -60,6 +60,9 @@ pub struct Args {
     /// Specify a license file whose content is used instead of one defined in SVD.
     #[arg(long,value_parser=clap::value_parser!(PathBuf),default_value=None)]
     pub license_file: Option<PathBuf>,
+    /// Generate a Cargo workspace where each peripheral is its own crate instead of a single package.
+    #[arg(long,value_parser=clap::value_parser!(bool),default_value_t=false)]
+    pub workspace_generation: bool,
 }
 
 /// Main function that parses command line parameters after parsing it invoking [`main`]
@@ -118,6 +121,7 @@ pub fn main(args: Args) {
             package_name: args.package_name,
             license_file: args.license_file,
             svd2pac_version: VERSION.to_owned(),
+            workspace_generation: args.workspace_generation,
         },
     ) {
         error!("Failed to generate code with err {err}");

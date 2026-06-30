@@ -117,7 +117,7 @@ set_access_fn!(LDMST, set_ldmst_fn, "ldmst_fn", fn(usize, u64),"Set the function
 /// read-only buffer register.
 #[cfg(feature = "tracing")]
 pub mod insanely_unsafe {
-    use crate::common::sealed::CastFrom;
+    use crate::common::CastFrom;
     use crate::common::RegisterValue;
     use crate::common::{Read, Reg, ResetValue, Write};
 

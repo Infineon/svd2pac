@@ -2,15 +2,18 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.7.0 on Fri, 8 May 2026 12:39:15 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 14:31:13 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
 #![allow(clippy::derivable_impls)]
 #[allow(unused_imports)]
-use crate::common::sealed;
+use crate::common;
 #[allow(unused_imports)]
-use crate::common::*;
+use crate::common::{
+    AsPtr as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _, ResetValue as _,
+    Write as _,
+};
 #[doc = r"Fake Peripheral to test cluster and register with derivedFrom attribute"]
 unsafe impl ::core::marker::Send for super::DerivedTest {}
 unsafe impl ::core::marker::Sync for super::DerivedTest {}
@@ -23,36 +26,18 @@ impl super::DerivedTest {
 
     #[doc = "BaseRegister"]
     #[inline(always)]
-    pub const fn baseregister(
-        &self,
-    ) -> &'static crate::common::Reg<self::BaseRegister_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<self::BaseRegister_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(4096usize),
-            )
-        }
+    pub fn baseregister(&self) -> &'static self::BaseRegisterT {
+        unsafe { self::BaseRegisterT::from_ptr(self._svd2pac_as_ptr().add(4096usize)) }
     }
 
     #[inline(always)]
-    pub const fn derivedregister(
-        &self,
-    ) -> &'static crate::common::Reg<self::DerivedRegister_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<self::DerivedRegister_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(4098usize),
-            )
-        }
+    pub fn derivedregister(&self) -> &'static self::DerivedRegisterT {
+        unsafe { self::DerivedRegisterT::from_ptr(self._svd2pac_as_ptr().add(4098usize)) }
     }
 
     #[inline(always)]
-    pub const fn derivedfromfaraway(
-        &self,
-    ) -> &'static crate::common::Reg<self::DerivedFromFarAway_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<self::DerivedFromFarAway_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(4100usize),
-            )
-        }
+    pub fn derivedfromfaraway(&self) -> &'static self::DerivedFromFarAwayT {
+        unsafe { self::DerivedFromFarAwayT::from_ptr(self._svd2pac_as_ptr().add(4100usize)) }
     }
 
     #[doc = "Cluster that defines the base type"]
@@ -94,16 +79,37 @@ impl super::DerivedTest {
         }
     }
 }
-#[doc(hidden)]
-#[derive(Copy, Clone, Eq, PartialEq)]
-pub struct BaseRegister_SPEC;
-impl crate::sealed::RegSpec for BaseRegister_SPEC {
-    type DataType = u16;
-}
 
 #[doc = "BaseRegister"]
-pub type BaseRegister = crate::RegValueT<BaseRegister_SPEC>;
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct BaseRegister {
+    pub(crate) data: u16,
+    pub(crate) mask: u16,
+}
 
+impl crate::common::RegisterValue for BaseRegister {
+    type DataType = u16;
+
+    fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+        (&mut self.data, &mut self.mask)
+    }
+
+    fn inner(&self) -> (Self::DataType, Self::DataType) {
+        (self.data, self.mask)
+    }
+
+    fn new(data: Self::DataType) -> Self {
+        Self { data, mask: 0x0 }
+    }
+}
+
+#[doc(hidden)]
+pub struct BaseRegisterT;
+unsafe impl crate::common::AsPtr for BaseRegisterT {}
+impl crate::common::Reg<BaseRegister> for BaseRegisterT {}
+
+unsafe impl crate::common::Read<BaseRegister> for BaseRegisterT {}
+unsafe impl crate::common::Write<BaseRegister> for BaseRegisterT {}
 impl BaseRegister {
     #[doc = "Shows if Timer is running or not"]
     #[inline(always)]
@@ -116,8 +122,8 @@ impl BaseRegister {
         0,
         baseregister::Run,
         baseregister::Run,
-        BaseRegister_SPEC,
-        crate::common::R,
+        BaseRegister,
+        common::R,
     > {
         crate::common::RegisterField::<
             0,
@@ -126,65 +132,151 @@ impl BaseRegister {
             0,
             baseregister::Run,
             baseregister::Run,
-            BaseRegister_SPEC,
-            crate::common::R,
+            BaseRegister,
+            common::R,
         >::from_register(self, 0)
     }
 }
-impl ::core::default::Default for BaseRegister {
+impl crate::common::ResetValue<BaseRegister> for BaseRegisterT {
     #[inline(always)]
-    fn default() -> BaseRegister {
-        <crate::RegValueT<BaseRegister_SPEC> as RegisterValue<_>>::new(0)
+    fn reset_value(&self) -> BaseRegister {
+        BaseRegister::new(0)
     }
 }
 pub mod baseregister {
+    #[allow(unused_imports)]
+    use crate::common;
+    #[allow(unused_imports)]
+    use crate::common::{
+        AsPtr as _, CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _,
+        RegisterValue as _, ResetValue as _, Write as _,
+    };
 
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    pub struct Run_SPEC;
-    pub type Run = crate::EnumBitfieldStruct<u8, Run_SPEC>;
+    #[repr(transparent)]
+    pub struct Run(u8);
+
+    impl Run {
+        pub fn new(value: u8) -> Self {
+            Self(value)
+        }
+    }
+
+    impl crate::common::EnumBitfieldStruct for Run {
+        type RegNumberT = u8;
+
+        fn value(&self) -> Self::RegNumberT {
+            self.0
+        }
+    }
+
+    impl From<u8> for Run {
+        #[inline(always)]
+        fn from(value: u8) -> Self {
+            Self(value)
+        }
+    }
+
+    impl From<Run> for u64 {
+        #[inline(always)]
+        fn from(value: Run) -> Self {
+            value.value().into()
+        }
+    }
+
+    impl CastFrom<u64> for Run {
+        #[inline(always)]
+        fn cast_from(val: u64) -> Self {
+            Self(u8::cast_from(val))
+        }
+    }
+
     impl Run {
         #[doc = "Timer is not running"]
-        pub const STOPPED: Self = Self::new(0);
+        pub const STOPPED: Self = Self(0);
 
         #[doc = "Timer is running"]
-        pub const RUNNING: Self = Self::new(1);
+        pub const RUNNING: Self = Self(1);
     }
 }
-#[doc(hidden)]
+
 #[derive(Copy, Clone, Eq, PartialEq)]
-pub struct DerivedRegister_SPEC;
-impl crate::sealed::RegSpec for DerivedRegister_SPEC {
+pub struct DerivedRegister {
+    pub(crate) data: u16,
+    pub(crate) mask: u16,
+}
+
+impl crate::common::RegisterValue for DerivedRegister {
     type DataType = u16;
-}
 
-pub type DerivedRegister = crate::RegValueT<DerivedRegister_SPEC>;
+    fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+        (&mut self.data, &mut self.mask)
+    }
 
-impl NoBitfieldReg<DerivedRegister_SPEC> for DerivedRegister {}
-impl ::core::default::Default for DerivedRegister {
-    #[inline(always)]
-    fn default() -> DerivedRegister {
-        <crate::RegValueT<DerivedRegister_SPEC> as RegisterValue<_>>::new(0)
+    fn inner(&self) -> (Self::DataType, Self::DataType) {
+        (self.data, self.mask)
+    }
+
+    fn new(data: Self::DataType) -> Self {
+        Self { data, mask: 0x0 }
     }
 }
 
 #[doc(hidden)]
-#[derive(Copy, Clone, Eq, PartialEq)]
-pub struct DerivedFromFarAway_SPEC;
-impl crate::sealed::RegSpec for DerivedFromFarAway_SPEC {
-    type DataType = u32;
-}
+pub struct DerivedRegisterT;
+unsafe impl crate::common::AsPtr for DerivedRegisterT {}
+impl crate::common::Reg<DerivedRegister> for DerivedRegisterT {}
 
-pub type DerivedFromFarAway = crate::RegValueT<DerivedFromFarAway_SPEC>;
+unsafe impl crate::common::Read<DerivedRegister> for DerivedRegisterT {}
+unsafe impl crate::common::Write<DerivedRegister> for DerivedRegisterT {}
 
-impl NoBitfieldReg<DerivedFromFarAway_SPEC> for DerivedFromFarAway {}
-impl ::core::default::Default for DerivedFromFarAway {
+impl crate::common::NoBitfieldReg for DerivedRegister {}
+impl crate::common::ResetValue<DerivedRegister> for DerivedRegisterT {
     #[inline(always)]
-    fn default() -> DerivedFromFarAway {
-        <crate::RegValueT<DerivedFromFarAway_SPEC> as RegisterValue<_>>::new(0)
+    fn reset_value(&self) -> DerivedRegister {
+        DerivedRegister::new(0)
     }
 }
 
-#[doc = "Cluster that defines the base type"]
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct DerivedFromFarAway {
+    pub(crate) data: u32,
+    pub(crate) mask: u32,
+}
+
+impl crate::common::RegisterValue for DerivedFromFarAway {
+    type DataType = u32;
+
+    fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+        (&mut self.data, &mut self.mask)
+    }
+
+    fn inner(&self) -> (Self::DataType, Self::DataType) {
+        (self.data, self.mask)
+    }
+
+    fn new(data: Self::DataType) -> Self {
+        Self { data, mask: 0x0 }
+    }
+}
+
+#[doc(hidden)]
+pub struct DerivedFromFarAwayT;
+unsafe impl crate::common::AsPtr for DerivedFromFarAwayT {}
+impl crate::common::Reg<DerivedFromFarAway> for DerivedFromFarAwayT {}
+
+unsafe impl crate::common::Read<DerivedFromFarAway> for DerivedFromFarAwayT {}
+unsafe impl crate::common::Write<DerivedFromFarAway> for DerivedFromFarAwayT {}
+
+impl crate::common::NoBitfieldReg for DerivedFromFarAway {}
+impl crate::common::ResetValue<DerivedFromFarAway> for DerivedFromFarAwayT {
+    #[inline(always)]
+    fn reset_value(&self) -> DerivedFromFarAway {
+        DerivedFromFarAway::new(0)
+    }
+}
+
+#[doc(hidden)]
 #[non_exhaustive]
 pub struct _BaseClusterType;
 
@@ -204,29 +296,17 @@ impl _BaseClusterType {
     }
 
     #[inline(always)]
-    pub const fn reg1(
-        &self,
-    ) -> &'static crate::common::Reg<baseclustertype::Reg1_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<baseclustertype::Reg1_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(0usize),
-            )
-        }
+    pub fn reg1(&self) -> &'static baseclustertype::Reg1T {
+        unsafe { baseclustertype::Reg1T::from_ptr(self._svd2pac_as_ptr().add(0usize)) }
     }
 
     #[inline(always)]
-    pub const fn reg2(
-        &self,
-    ) -> &'static crate::common::Reg<baseclustertype::Reg2_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<baseclustertype::Reg2_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(4usize),
-            )
-        }
+    pub fn reg2(&self) -> &'static baseclustertype::Reg2T {
+        unsafe { baseclustertype::Reg2T::from_ptr(self._svd2pac_as_ptr().add(4usize)) }
     }
 }
 
-unsafe impl AsPtr for _BaseClusterType {
+unsafe impl crate::common::AsPtr for _BaseClusterType {
     fn as_ptr(&self) -> *mut u8 {
         self._svd2pac_as_ptr()
     }
@@ -239,38 +319,86 @@ unsafe impl AsPtr for _BaseClusterType {
 
 pub mod baseclustertype {
     #[allow(unused_imports)]
-    use crate::common::*;
-    #[doc(hidden)]
+    use crate::common;
+    #[allow(unused_imports)]
+    use crate::common::{
+        AsPtr as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _, ResetValue as _,
+        Write as _,
+    };
+
     #[derive(Copy, Clone, Eq, PartialEq)]
-    pub struct Reg1_SPEC;
-    impl crate::sealed::RegSpec for Reg1_SPEC {
-        type DataType = u32;
+    pub struct Reg1 {
+        pub(crate) data: u32,
+        pub(crate) mask: u32,
     }
 
-    pub type Reg1 = crate::RegValueT<Reg1_SPEC>;
+    impl crate::common::RegisterValue for Reg1 {
+        type DataType = u32;
 
-    impl NoBitfieldReg<Reg1_SPEC> for Reg1 {}
-    impl ::core::default::Default for Reg1 {
-        #[inline(always)]
-        fn default() -> Reg1 {
-            <crate::RegValueT<Reg1_SPEC> as RegisterValue<_>>::new(0)
+        fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+            (&mut self.data, &mut self.mask)
+        }
+
+        fn inner(&self) -> (Self::DataType, Self::DataType) {
+            (self.data, self.mask)
+        }
+
+        fn new(data: Self::DataType) -> Self {
+            Self { data, mask: 0x0 }
         }
     }
 
     #[doc(hidden)]
-    #[derive(Copy, Clone, Eq, PartialEq)]
-    pub struct Reg2_SPEC;
-    impl crate::sealed::RegSpec for Reg2_SPEC {
-        type DataType = u32;
+    pub struct Reg1T;
+    unsafe impl crate::common::AsPtr for Reg1T {}
+    impl crate::common::Reg<Reg1> for Reg1T {}
+
+    unsafe impl crate::common::Read<Reg1> for Reg1T {}
+    unsafe impl crate::common::Write<Reg1> for Reg1T {}
+
+    impl crate::common::NoBitfieldReg for Reg1 {}
+    impl crate::common::ResetValue<Reg1> for Reg1T {
+        #[inline(always)]
+        fn reset_value(&self) -> Reg1 {
+            Reg1::new(0)
+        }
     }
 
-    pub type Reg2 = crate::RegValueT<Reg2_SPEC>;
+    #[derive(Copy, Clone, Eq, PartialEq)]
+    pub struct Reg2 {
+        pub(crate) data: u32,
+        pub(crate) mask: u32,
+    }
 
-    impl NoBitfieldReg<Reg2_SPEC> for Reg2 {}
-    impl ::core::default::Default for Reg2 {
+    impl crate::common::RegisterValue for Reg2 {
+        type DataType = u32;
+
+        fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+            (&mut self.data, &mut self.mask)
+        }
+
+        fn inner(&self) -> (Self::DataType, Self::DataType) {
+            (self.data, self.mask)
+        }
+
+        fn new(data: Self::DataType) -> Self {
+            Self { data, mask: 0x0 }
+        }
+    }
+
+    #[doc(hidden)]
+    pub struct Reg2T;
+    unsafe impl crate::common::AsPtr for Reg2T {}
+    impl crate::common::Reg<Reg2> for Reg2T {}
+
+    unsafe impl crate::common::Read<Reg2> for Reg2T {}
+    unsafe impl crate::common::Write<Reg2> for Reg2T {}
+
+    impl crate::common::NoBitfieldReg for Reg2 {}
+    impl crate::common::ResetValue<Reg2> for Reg2T {
         #[inline(always)]
-        fn default() -> Reg2 {
-            <crate::RegValueT<Reg2_SPEC> as RegisterValue<_>>::new(0)
+        fn reset_value(&self) -> Reg2 {
+            Reg2::new(0)
         }
     }
 }

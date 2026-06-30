@@ -176,6 +176,7 @@ pub fn assert_cargo_test(package_folder: &tempfile::TempDir, toolchain_override:
 /// - Verifies that all files are present with the same name in both folders
 /// - Verifies there are no extra files
 /// - Uses assert_files_eq to compare the content of files with the same relative path
+#[allow(dead_code)]
 pub fn assert_folders_eq<T: AsRef<Path>, Q: AsRef<Path>>(ref_folder: T, gen_folder: Q) {
     let ref_folder = ref_folder.as_ref();
     let gen_folder = gen_folder.as_ref();

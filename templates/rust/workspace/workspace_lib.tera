@@ -3,7 +3,6 @@
 {{ir.license_text}}
 */
 // Generated from SVD {{ir.version}}, with svd2pac {{svd2pac_version}} on {{now}}
-
 {%- if tracing %}
 #![cfg_attr(not(feature = "tracing"), no_std)]
 {%- else %}
@@ -14,10 +13,13 @@
 {% endif %}
 #![allow(non_camel_case_types)]
 #![doc = "{{ir.device.description | svd_description_to_doc}}"]
+
+// Re-export the shared `common` crate and bring its traits into scope so the
+// public API matches the single-package generation mode.
 #[doc(hidden)]
-pub mod common;
+pub use common;
 #[doc(hidden)]
-pub use crate::common::{
+pub use common::{
     AsPtr as _, Modify as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
     ResetValue as _, Write as _,
 };
@@ -26,15 +28,22 @@ pub use crate::common::{
 #[cfg(feature = "tracing")]
 pub mod reg_name;
 #[cfg(feature = "tracing")]
-pub mod tracing;
+pub use common::tracing;
 {% endif %} {# tracing #}
+
+{# Re-export each non-derived peripheral crate's public items behind its       #}
+{# feature flag. We re-export the peripheral module, its struct and its         #}
+{# instance constant explicitly (rather than glob importing)   #}
 {% for peri_mod_name, peri in ir.device.peripheral_mod -%}
-{%- if peri.derived_from is string %} {% continue %} {% endif %} {# module that are derived doesn't have a module #}
-{%- set module_name = peri.module_id -%}
+{%- if not (peri.derived_from is string) -%}
 {%- set feature_name = peri.name | lower -%}
 #[cfg(feature = "{{feature_name}}")]
-pub mod {{module_name}};
-{% endfor -%} {# for peri_mod_name, peri in ir.peripheral_mod #}
+pub use {{package_name}}_{{peri.module_id}}::{ {{peri.module_id}}, {{peri.struct_id}}, {{peri.name | upper}} };
+{% endif -%}
+{%- endfor %}
+
+{# Aurix CSFR (core special function registers). The CSFR modules are emitted #}
+{# inside the root crate (src/{module_id}.rs) just like single-package mode.   #}
 {% if ir_csfr %}
 {% for peri_mod_name, peri in ir_csfr.device.peripheral_mod -%}
 {%- set module_name = peri.module_id -%}
@@ -46,31 +55,29 @@ pub use {{module_name}} as csfr_cpu;
 {% endfor -%}
 {% endif %}
 
-{% for name,p in ir.device.peripheral_mod %}
-{%- set module_name = p.module_id -%}
-{% set peri_struct = p.struct_id -%}
-{%- set feature_name = p.name | lower -%}
-{%- if not (p.derived_from is string) -%}
-#[cfg(feature = "{{feature_name}}")] {# Peripheral definition #}
-#[derive(Copy, Clone, Eq, PartialEq)] 
-pub struct {{ peri_struct }}{ptr:*mut u8}
-{%- endif -%}
-{# Peripheral instances #}
-{%- set module_struct = p.struct_id -%}
-{%- set full_path_struct = "self::" ~ module_struct -%}
+{# Derived peripherals do not own a crate: emit their constants here using the #}
+{# base peripheral crate's `_new()` constructor. A derived peripheral inherits  #}
+{# the base `module_id`/`struct_id` but keeps its own `base_addr`.              #}
+{% for peri_mod_name, peri in ir.device.peripheral_mod -%}
+{%- if peri.derived_from is string -%}
+{%- set feature_name = peri.name | lower -%}
+{%- set crate_struct = package_name ~ "_" ~ peri.module_id ~ "::" ~ peri.struct_id -%}
 #[cfg(feature = "{{feature_name}}")]
-{%- if p.base_addr | length == 1 %}
-pub const {{name | upper}}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{p.base_addr[0] | to_hex }}u32 as _};
+{%- if peri.base_addr | length == 1 %}
+pub const {{ peri.name | upper }}: {{crate_struct}} = {{crate_struct}}::_new({{ peri.base_addr[0] | to_hex }}u32 as _);
 {% else %}
-pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}{ptr:{{addr | to_hex }}u32 as _}, {% endfor -%}];
-{%- endif -%}
-{%- endfor -%} {# for name,p in ir.device.peripheral_mod #}
+pub const {{ peri.name | upper }}:[{{crate_struct}};{{ peri.base_addr | length }}] = [{%- for addr in peri.base_addr %}  {{crate_struct}}::_new({{ addr | to_hex }}u32 as _), {% endfor -%}];
+{% endif -%}
+{% endif -%}
+{%- endfor %}
+
+{# Aurix CSFR peripheral struct + instance constant. `CsfrCpu` lives at the    #}
+{# crate root so `super::CsfrCpu` in the generated CSFR module resolves here.   #}
 {% if ir_csfr %}
 #[cfg(any(
 {%- set module_struct = "csfr_cpu" | to_struct_id -%}
 {%- set full_path_struct = "self::" ~ module_struct -%}
 {% for name,p in ir_csfr.device.peripheral_mod %}
-{%- set module_name = p.module_id -%}
 {%- set feature_name = p.name | lower -%}
 {% if not loop.last %}feature = "{{feature_name}}",{% else %}feature = "{{feature_name}}"))]
 #[derive(Copy, Clone, Eq, PartialEq)] 
@@ -81,7 +88,6 @@ pub struct {{ module_struct }}{ptr:*mut u8}
 {%- set module_struct = "csfr_cpu" | to_struct_id -%}
 {%- set full_path_struct = "self::" ~ module_struct -%}
 {% for name,p in ir_csfr.device.peripheral_mod %}
-{%- set module_name = p.module_id -%}
 {%- set feature_name = p.name | lower -%}
 {% if not loop.last %}feature = "{{feature_name}}",{% else %}feature = "{{feature_name}}"))]
 {%- if p.base_addr | length == 1 %}
@@ -91,12 +97,10 @@ pub const {{"csfr_cpu" | upper}}:[{{full_path_struct}};{{ p.base_addr | length }
 {% endif %}
 {% endif %}
 {%- endfor -%}
-
-
 {% endif %}
 
 {#- Block to support Cortex-m-rt #}
 {% if target=="CortexM" -%}
 {{ macros::cortex_m_interrupt_table(ir=ir) }}
-{{ macros::cortex_m_peripherals_struct(ir=ir, ir_csfr=ir_csfr | default(value=false)) }}
+{{ macros::cortex_m_peripherals_struct(ir=ir) }}
 {% endif -%}

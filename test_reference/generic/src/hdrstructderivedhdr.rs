@@ -2,15 +2,18 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.7.0 on Fri, 8 May 2026 12:35:10 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 14:25:24 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
 #![allow(clippy::derivable_impls)]
 #[allow(unused_imports)]
-use crate::common::sealed;
+use crate::common;
 #[allow(unused_imports)]
-use crate::common::*;
+use crate::common::{
+    AsPtr as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _, ResetValue as _,
+    Write as _,
+};
 #[doc = r"Peripheral with a headerStructName and derived from peripheral with headerStructName"]
 unsafe impl ::core::marker::Send for super::HdrStructDerivedHdr {}
 unsafe impl ::core::marker::Sync for super::HdrStructDerivedHdr {}
@@ -27,7 +30,7 @@ impl super::HdrStructDerivedHdr {
     }
 }
 
-#[doc = "Cluster that defines the base type"]
+#[doc(hidden)]
 #[non_exhaustive]
 pub struct _I2C2;
 
@@ -47,25 +50,17 @@ impl _I2C2 {
     }
 
     #[inline(always)]
-    pub const fn reg1(&self) -> &'static crate::common::Reg<i2c2::Reg1_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<i2c2::Reg1_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(0usize),
-            )
-        }
+    pub fn reg1(&self) -> &'static i2c2::Reg1T {
+        unsafe { i2c2::Reg1T::from_ptr(self._svd2pac_as_ptr().add(0usize)) }
     }
 
     #[inline(always)]
-    pub const fn reg2(&self) -> &'static crate::common::Reg<i2c2::Reg2_SPEC, crate::common::RW> {
-        unsafe {
-            crate::common::Reg::<i2c2::Reg2_SPEC, crate::common::RW>::from_ptr(
-                self._svd2pac_as_ptr().add(4usize),
-            )
-        }
+    pub fn reg2(&self) -> &'static i2c2::Reg2T {
+        unsafe { i2c2::Reg2T::from_ptr(self._svd2pac_as_ptr().add(4usize)) }
     }
 }
 
-unsafe impl AsPtr for _I2C2 {
+unsafe impl crate::common::AsPtr for _I2C2 {
     fn as_ptr(&self) -> *mut u8 {
         self._svd2pac_as_ptr()
     }
@@ -78,38 +73,86 @@ unsafe impl AsPtr for _I2C2 {
 
 pub mod i2c2 {
     #[allow(unused_imports)]
-    use crate::common::*;
-    #[doc(hidden)]
+    use crate::common;
+    #[allow(unused_imports)]
+    use crate::common::{
+        AsPtr as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _, ResetValue as _,
+        Write as _,
+    };
+
     #[derive(Copy, Clone, Eq, PartialEq)]
-    pub struct Reg1_SPEC;
-    impl crate::sealed::RegSpec for Reg1_SPEC {
-        type DataType = u32;
+    pub struct Reg1 {
+        pub(crate) data: u32,
+        pub(crate) mask: u32,
     }
 
-    pub type Reg1 = crate::RegValueT<Reg1_SPEC>;
+    impl crate::common::RegisterValue for Reg1 {
+        type DataType = u32;
 
-    impl NoBitfieldReg<Reg1_SPEC> for Reg1 {}
-    impl ::core::default::Default for Reg1 {
-        #[inline(always)]
-        fn default() -> Reg1 {
-            <crate::RegValueT<Reg1_SPEC> as RegisterValue<_>>::new(0)
+        fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+            (&mut self.data, &mut self.mask)
+        }
+
+        fn inner(&self) -> (Self::DataType, Self::DataType) {
+            (self.data, self.mask)
+        }
+
+        fn new(data: Self::DataType) -> Self {
+            Self { data, mask: 0x0 }
         }
     }
 
     #[doc(hidden)]
-    #[derive(Copy, Clone, Eq, PartialEq)]
-    pub struct Reg2_SPEC;
-    impl crate::sealed::RegSpec for Reg2_SPEC {
-        type DataType = u32;
+    pub struct Reg1T;
+    unsafe impl crate::common::AsPtr for Reg1T {}
+    impl crate::common::Reg<Reg1> for Reg1T {}
+
+    unsafe impl crate::common::Read<Reg1> for Reg1T {}
+    unsafe impl crate::common::Write<Reg1> for Reg1T {}
+
+    impl crate::common::NoBitfieldReg for Reg1 {}
+    impl crate::common::ResetValue<Reg1> for Reg1T {
+        #[inline(always)]
+        fn reset_value(&self) -> Reg1 {
+            Reg1::new(0)
+        }
     }
 
-    pub type Reg2 = crate::RegValueT<Reg2_SPEC>;
+    #[derive(Copy, Clone, Eq, PartialEq)]
+    pub struct Reg2 {
+        pub(crate) data: u32,
+        pub(crate) mask: u32,
+    }
 
-    impl NoBitfieldReg<Reg2_SPEC> for Reg2 {}
-    impl ::core::default::Default for Reg2 {
+    impl crate::common::RegisterValue for Reg2 {
+        type DataType = u32;
+
+        fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+            (&mut self.data, &mut self.mask)
+        }
+
+        fn inner(&self) -> (Self::DataType, Self::DataType) {
+            (self.data, self.mask)
+        }
+
+        fn new(data: Self::DataType) -> Self {
+            Self { data, mask: 0x0 }
+        }
+    }
+
+    #[doc(hidden)]
+    pub struct Reg2T;
+    unsafe impl crate::common::AsPtr for Reg2T {}
+    impl crate::common::Reg<Reg2> for Reg2T {}
+
+    unsafe impl crate::common::Read<Reg2> for Reg2T {}
+    unsafe impl crate::common::Write<Reg2> for Reg2T {}
+
+    impl crate::common::NoBitfieldReg for Reg2 {}
+    impl crate::common::ResetValue<Reg2> for Reg2T {
         #[inline(always)]
-        fn default() -> Reg2 {
-            <crate::RegValueT<Reg2_SPEC> as RegisterValue<_>>::new(0)
+        fn reset_value(&self) -> Reg2 {
+            Reg2::new(0)
         }
     }
 }

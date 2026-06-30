@@ -152,16 +152,58 @@ impl {{reg_struct_name}} {
 
 {% if reg.has_enumerated_fields -%}
 pub mod {{reg_mod_name}} {
+    #[allow(unused_imports)]
+    use crate::common;
+    #[allow(unused_imports)]
+    use crate::common::{
+        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
+        ResetValue as _, Write as _,
+    };
     {% for field_name,field in reg.fields -%}
     {%- for enum_type in field.enum_types -%}
     {%- set enum_name_type= enum_type.name | to_struct_id %}
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    pub struct {{enum_name_type}}_SPEC;
-    pub type  {{enum_name_type}} = crate::common::EnumBitfieldStruct<{{macros::reg_size2num_type(bit_size=enum_type.size)}},{{enum_name_type}}_SPEC>;
+    #[repr(transparent)]
+    pub struct {{enum_name_type}}({{macros::reg_size2num_type(bit_size=enum_type.size)}});
+    
+    impl {{enum_name_type}} {
+        pub fn new(value: {{macros::reg_size2num_type(bit_size=enum_type.size)}}) -> Self {
+            Self(value)
+        }
+    }
+
+    impl crate::common::EnumBitfieldStruct for {{enum_name_type}} {
+        type RegNumberT = {{macros::reg_size2num_type(bit_size=enum_type.size)}};
+
+        fn value(&self) -> Self::RegNumberT {
+            self.0
+        }
+    }
+
+    impl From<{{macros::reg_size2num_type(bit_size=enum_type.size)}}> for {{enum_name_type}} {
+        #[inline(always)]
+        fn from(value: {{macros::reg_size2num_type(bit_size=enum_type.size)}}) -> Self {
+            Self(value)
+        }
+    }
+
+    impl From<{{enum_name_type}}> for u64 {
+        #[inline(always)]
+        fn from(value: {{enum_name_type}}) -> Self {
+            value.value().into()
+        }
+    }
+
+    impl CastFrom<u64> for {{enum_name_type}} {
+        #[inline(always)]
+        fn cast_from(val: u64) -> Self {
+            Self({{macros::reg_size2num_type(bit_size=enum_type.size)}}::cast_from(val))
+        }
+    }
     impl {{enum_name_type}} {
         {%- for val in enum_type.values %}
         {{macros::doc_attribute(documentation=val.description)}}
-        pub const {{val.name | to_enumerated_const_id }}:Self =Self::new({{val.value}});
+        pub const {{val.name | to_enumerated_const_id }}:Self =Self({{val.value}});
         {%- endfor %}
     }
     {%- endfor -%}
