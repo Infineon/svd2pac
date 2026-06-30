@@ -2,11 +2,13 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 14:25:24 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:59:10 +0000
 #![no_std]
 #![allow(non_camel_case_types)]
 #![doc = "SVD Test for Rust PAC generator"]
+#[doc(hidden)]
 pub mod common;
+#[doc(hidden)]
 pub use crate::common::{
     AsPtr as _, Modify as _, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
     ResetValue as _, Write as _,
