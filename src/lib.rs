@@ -3,7 +3,7 @@
 #![warn(clippy::nursery)]
 mod rust_gen;
 mod svd_util;
-use crate::rust_gen::{GenPkgSettings, generate_rust_package};
+use crate::rust_gen::{GenPkgSettings, generate_rust_package, generate_rust_workspace};
 use clap::{Parser, ValueEnum};
 use env_logger::Env;
 use log::{error, info, warn};
@@ -109,21 +109,36 @@ pub fn main(args: Args) {
             exit(-1);
         }
     }
-
-    if let Err(err) = generate_rust_package(
-        &args.register_description_file_name,
-        &destination_folder,
-        &GenPkgSettings {
-            run_rustfmt: !args.disable_rust_fmt,
-            svd_validation_level: args.svd_validation_level,
-            target: args.target,
-            tracing: args.tracing,
-            package_name: args.package_name,
-            license_file: args.license_file,
-            svd2pac_version: VERSION.to_owned(),
-            workspace_generation: args.workspace_generation,
-        },
-    ) {
+    let result = if args.workspace_generation {
+        generate_rust_workspace(
+            &args.register_description_file_name,
+            &destination_folder,
+            &GenPkgSettings {
+                run_rustfmt: !args.disable_rust_fmt,
+                svd_validation_level: args.svd_validation_level,
+                target: args.target,
+                tracing: args.tracing,
+                package_name: args.package_name,
+                license_file: args.license_file,
+                svd2pac_version: VERSION.to_owned(),
+            },
+        )
+    } else {
+        generate_rust_package(
+            &args.register_description_file_name,
+            &destination_folder,
+            &GenPkgSettings {
+                run_rustfmt: !args.disable_rust_fmt,
+                svd_validation_level: args.svd_validation_level,
+                target: args.target,
+                tracing: args.tracing,
+                package_name: args.package_name,
+                license_file: args.license_file,
+                svd2pac_version: VERSION.to_owned(),
+            },
+        )
+    };
+    if let Err(err) = result {
         error!("Failed to generate code with err {err}");
         exit(-1);
     }
