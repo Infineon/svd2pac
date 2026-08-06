@@ -192,7 +192,7 @@ impl Visitor {
         svd_peripheral: &svd::Peripheral,
         peripheral: &mut PeripheralMod,
     ) -> Result<()> {
-        debug!("Parsing peripheral: {}", &svd_peripheral.name);
+        debug!("Parsing peripheral: {}", svd_peripheral.name);
         peripheral.name = svd_peripheral.name.to_internal_ident();
         peripheral.description = svd_peripheral.description.clone().unwrap_or_default();
 
@@ -311,7 +311,7 @@ impl Visitor {
                 if reg.derived_from.is_none() {
                     warn!(
                         "Access mode is not defined for register ({}) inferring from bitfield",
-                        &register.name
+                        register.name
                     );
                     let is_register_writable = fields.iter().any(|f| {
                         f.access == RegisterBitfieldAccess::W
@@ -328,7 +328,7 @@ impl Visitor {
                         (false, false) => {
                             error!(
                                 "No bitfield in register '{}' specifies an access mode. Not able to infer register access mode",
-                                &register.name
+                                register.name
                             );
                             RegisterAccess::R
                         }
