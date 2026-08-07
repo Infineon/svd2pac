@@ -1,8 +1,8 @@
 #![no_std]
 #![no_main]
 
-use test_pac::{timer::bitfield_reg, *};
 use tc162_rt::entry;
+use test_pac::{timer::bitfield_reg, *};
 entry!(main);
 fn main() -> ! {
     unsafe {
@@ -80,23 +80,20 @@ fn main() -> ! {
         });
 
         //Tests related to csfr registers
-        let register = CSFR_CPU.biv();
+        let register = CSFR_CPU0.biv();
         let register_value = register.read();
         let _biv_value = register_value.biv().get();
-        
+
         // Modify value of register using fluent api
         let new_register_value = register_value.biv().set(23).vss().set(true);
         register.write(new_register_value);
 
-         // Modify
-         CSFR_CPU.biv().modify(|f| {
-            f.vss()
-                .set(true)
-                .biv()
-                .set(3)
-        });
+        // Modify
+        CSFR_CPU0.biv().modify(|f| f.vss().set(true).biv().set(3));
         // Test 64Bit register
-        TIMER.register64bit().modify(|r| r.boolean().set(crate::timer::register64bit::Boolean::FALSE));
+        TIMER
+            .register64bit()
+            .modify(|r| r.boolean().set(crate::timer::register64bit::Boolean::FALSE));
 
         // Test cluster array
         TIMER.clusterdim()[0].cr().modify(|r| r.field1().set(0));

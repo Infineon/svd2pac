@@ -336,6 +336,7 @@ pub mod {{cluster_mod}} {
 {%- for peri_mod_name, peri in ir_csfr.device.peripheral_mod %}
 {%- set feature_name = peri.name | lower %}
 {{feature_name}} = []
+{% set_global all_peripheral_features = all_peripheral_features | concat(with=feature_name) %}
 {%- endfor %}
 {%- endif %}
 {# collect all module id and remove duplicated#}
@@ -423,7 +424,7 @@ unsafe impl cortex_m::interrupt::InterruptNumber for Interrupt {
 {# steal() helpers. Used by both lib.tera and workspace_lib.tera. In        #}
 {# workspace mode the per-peripheral structs and constants are resolved     #}
 {# through the root crate's glob re-exports.                                #}
-{%- macro cortex_m_peripherals_struct(ir, ir_csfr=false) -%}
+{%- macro cortex_m_peripherals_struct(ir) -%}
 #[allow(non_snake_case)]
 /// Required for compatibility with RTIC and other frameworks
 pub struct Peripherals {
@@ -439,21 +440,6 @@ pub struct Peripherals {
     pub {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}],
     {%- endif -%}
     {%- endfor -%}
-    {% if ir_csfr %}
-    {% for name,p in ir_csfr.device.peripheral_mod %}
-    {%- set module_name = p.module_id -%}
-    {%- set module_struct = p.struct_id -%}
-    {%- set full_path_struct = module_name ~ "::" ~ module_struct -%}
-    #[cfg(feature = "{{feature_name}}")]
-    {%- if p.base_addr | length == 1 %}
-    pub {{name | upper}}: {{full_path_struct}},
-    {% else %}
-    pub {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}],
-    {%- endif -%}
-    {%- endfor -%}
-    {%- endif -%}
-
-
 }
 
 impl Peripherals {

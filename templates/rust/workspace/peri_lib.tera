@@ -66,10 +66,4 @@ impl {{ peri_struct }} {
 
 pub mod {{ peri.module_id }};
 
-{# Peripheral instance constant(s). Only non-derived peripherals own a crate. #}
-{%- set full_path_struct = "self::" ~ peri_struct -%}
-{% if peri.base_addr | length == 1 %}
-pub const {{ peri.name | upper }}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{ peri.base_addr[0] | to_hex }}u32 as _};
-{% else %}
-pub const {{ peri.name | upper }}:[{{full_path_struct}};{{ peri.base_addr | length }}] = [{%- for addr in peri.base_addr %}  {{full_path_struct}}{ptr:{{ addr | to_hex }}u32 as _}, {% endfor -%}];
-{% endif %}
+
