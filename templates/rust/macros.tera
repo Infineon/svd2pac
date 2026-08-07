@@ -335,7 +335,13 @@ pub mod {{cluster_mod}} {
 {% if ir_csfr %}
 {%- for peri_mod_name, peri in ir_csfr.device.peripheral_mod %}
 {%- set feature_name = peri.name | lower %}
+{%- if peri.derived_from is string %}
+{{feature_name}} = ["{{peri.derived_from | lower}}"]
+{%- elif workspace_mode %}
+{{feature_name}} = ["dep:{{package_name}}_{{peri.module_id}}"]
+{%- else %}
 {{feature_name}} = []
+{%- endif %}
 {% set_global all_peripheral_features = all_peripheral_features | concat(with=feature_name) %}
 {%- endfor %}
 {%- endif %}

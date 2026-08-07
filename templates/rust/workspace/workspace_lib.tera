@@ -48,34 +48,32 @@ pub const {{ peri.name | upper }}:[{{crate_struct}};{{ peri.base_addr | length }
 {% endif -%}
 {%- endfor %}
 
-{# Aurix CSFR (core special function registers). The CSFR modules are emitted #}
-{# inside the root crate (src/{module_id}.rs) just like single-package mode.   #}
+{# Aurix CSFR (core special function registers). In workspace mode each CSFR   #}
+{# module is emitted as its own peripheral crate and re-exported here.          #}
 {% if ir_csfr %}
 {% for peri_mod_name, peri in ir_csfr.device.peripheral_mod -%}
 {%- set module_name = peri.module_id -%}
+{%- set module_struct = peri.struct_id | to_struct_id -%}
 {%- set feature_name = peri.name | lower -%}
 #[cfg(feature = "{{feature_name}}")]
-pub mod {{module_name}};
+pub use {{package_name}}_{{module_name}}::{ {{module_name}}, {{module_struct}} };
 {% endfor -%}
 {% endif %}
 
 
 
-{# Aurix CSFR peripheral struct + instance constant. `CsfrCpu` lives at the    #}
+{# Aurix CSFR instance constants (types are re-exported above).                 #}
 {% if ir_csfr %}
 {% for name,p in ir_csfr.device.peripheral_mod %}
 {%- set module_struct = p.struct_id | to_struct_id -%}
-{%- set full_path_struct = "self::" ~ module_struct -%}
+{%- set full_path_struct = package_name ~ "_" ~ p.module_id ~ "::" ~ module_struct -%}
 {%- set module_name = p.module_id -%}
 {%- set feature_name = p.name | lower -%}
 #[cfg(feature = "{{feature_name}}")]
-#[derive(Copy, Clone, Eq, PartialEq)] 
-pub struct {{ module_struct }}{ptr:*mut u8}
-#[cfg(feature = "{{feature_name}}")]
 {%- if p.base_addr | length == 1 %}
-pub const {{name | upper}}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{p.base_addr[0] | to_hex }}u32 as _};
+pub const {{name | upper}}: {{full_path_struct}} = {{full_path_struct}}::_new({{p.base_addr[0] | to_hex }}u32 as _);
 {% else %}
-pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}{ptr:{{addr | to_hex }}u32 as _}, {% endfor -%}];
+pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}::_new({{addr | to_hex }}u32 as _), {% endfor -%}];
 {% endif %}
 {%- endfor -%}
 {% endif %}
