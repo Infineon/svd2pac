@@ -64,7 +64,7 @@ fn collect_referenced_modules(
 /// Generate the per-peripheral crates for a Cargo workspace.
 ///
 /// For each non-derived peripheral a crate is created under
-/// `destination_folder/<module_id>/` containing `src/<module_id>.rs`,
+/// `destination_folder/peripherals/<module_id>/` containing `src/<module_id>.rs`,
 /// `src/lib.rs`, and `Cargo.toml`.
 ///
 /// Returns the paths of the generated Rust source files so the caller can
@@ -83,7 +83,7 @@ fn generate_workspace_peripheral_crates(
             continue;
         }
         let module_id = peri.borrow().module_id.clone();
-        let peri_dir = destination_folder.join(&module_id);
+        let peri_dir = destination_folder.join("peripherals").join(&module_id);
 
         // Collect cross-peripheral references so they can be added as path
         // dependencies of this peripheral crate.

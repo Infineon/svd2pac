@@ -9,7 +9,7 @@ members = [
     "common",
     {%- for peri_mod_name, peri in ir.device.peripheral_mod %}
     {%- if not (peri.derived_from is string) %}
-    "{{peri.module_id}}",
+    "peripherals/{{peri.module_id}}",
     {%- endif %}
     {%- endfor %}
 ]
@@ -34,7 +34,7 @@ bench = false
 common = { path = "./common" }
 {%- for peri_mod_name, peri in ir.device.peripheral_mod %}
 {%- if not (peri.derived_from is string) %}
-{{package_name}}_{{peri.module_id}} = { path = "./{{peri.module_id}}", optional = true }
+{{package_name}}_{{peri.module_id}} = { path = "./peripherals/{{peri.module_id}}", optional = true }
 {%- endif %}
 {%- endfor %}
 {%- if tracing %}

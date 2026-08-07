@@ -17,7 +17,7 @@ test = false
 bench = false
 
 [dependencies]
-common = { path = "../common" }
+common = { path = "../../common" }
 {%- for dep_mod in referenced_crates %}
-{{package_name}}_{{dep_mod}} = { path = "../{{dep_mod}}" }
+{{package_name}}_{{dep_mod}} = { path = "../../peripherals/{{dep_mod}}" }
 {%- endfor %}
