@@ -41,8 +41,6 @@ pub mod {{module_name}};
 {%- set feature_name = peri.name | lower -%}
 #[cfg(feature = "{{feature_name}}")]
 pub mod {{module_name}};
-#[cfg(feature = "{{feature_name}}")]
-pub use {{module_name}} as csfr_cpu;
 {% endfor -%}
 {% endif %}
 
@@ -51,13 +49,14 @@ pub use {{module_name}} as csfr_cpu;
 {% set peri_struct = p.struct_id -%}
 {%- set feature_name = p.name | lower -%}
 {%- if not (p.derived_from is string) -%}
-#[cfg(feature = "{{feature_name}}")] {# Peripheral definition #}
+{# Peripheral definition #}
+#[cfg(feature = "{{feature_name}}")] 
 #[derive(Copy, Clone, Eq, PartialEq)] 
 pub struct {{ peri_struct }}{ptr:*mut u8}
 {%- endif -%}
 {# Peripheral instances #}
 {%- set module_struct = p.struct_id -%}
-{%- set full_path_struct = "self::" ~ module_struct -%}
+{%- set full_path_struct = "self::" ~ module_struct %}
 #[cfg(feature = "{{feature_name}}")]
 {%- if p.base_addr | length == 1 %}
 pub const {{name | upper}}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{p.base_addr[0] | to_hex }}u32 as _};
@@ -66,37 +65,25 @@ pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [
 {%- endif -%}
 {%- endfor -%} {# for name,p in ir.device.peripheral_mod #}
 {% if ir_csfr %}
-#[cfg(any(
-{%- set module_struct = "csfr_cpu" | to_struct_id -%}
-{%- set full_path_struct = "self::" ~ module_struct -%}
 {% for name,p in ir_csfr.device.peripheral_mod %}
+{%- set module_struct = p.struct_id | to_struct_id -%}
+{%- set full_path_struct = "self::" ~ module_struct -%}
 {%- set module_name = p.module_id -%}
 {%- set feature_name = p.name | lower -%}
-{% if not loop.last %}feature = "{{feature_name}}",{% else %}feature = "{{feature_name}}"))]
+#[cfg(feature = "{{feature_name}}")]
 #[derive(Copy, Clone, Eq, PartialEq)] 
 pub struct {{ module_struct }}{ptr:*mut u8}
-{% endif %}
-{%- endfor -%}
-#[cfg(any(
-{%- set module_struct = "csfr_cpu" | to_struct_id -%}
-{%- set full_path_struct = "self::" ~ module_struct -%}
-{% for name,p in ir_csfr.device.peripheral_mod %}
-{%- set module_name = p.module_id -%}
-{%- set feature_name = p.name | lower -%}
-{% if not loop.last %}feature = "{{feature_name}}",{% else %}feature = "{{feature_name}}"))]
+#[cfg(feature = "{{feature_name}}")]
 {%- if p.base_addr | length == 1 %}
-pub const {{"csfr_cpu" | upper}}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{p.base_addr[0] | to_hex }}u32 as _};
+pub const {{name | upper}}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{p.base_addr[0] | to_hex }}u32 as _};
 {% else %}
-pub const {{"csfr_cpu" | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}{ptr:{{addr | to_hex }}u32 as _}, {% endfor -%}];
-{% endif %}
+pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}{ptr:{{addr | to_hex }}u32 as _}, {% endfor -%}];
 {% endif %}
 {%- endfor -%}
-
-
 {% endif %}
 
 {#- Block to support Cortex-m-rt #}
 {% if target=="CortexM" -%}
 {{ macros::cortex_m_interrupt_table(ir=ir) }}
-{{ macros::cortex_m_peripherals_struct(ir=ir, ir_csfr=ir_csfr | default(value=false)) }}
+{{ macros::cortex_m_peripherals_struct(ir=ir) }}
 {% endif -%}

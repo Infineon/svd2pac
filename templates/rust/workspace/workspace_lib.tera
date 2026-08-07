@@ -31,14 +31,20 @@ pub mod reg_name;
 pub use common::tracing;
 {% endif %} {# tracing #}
 
-{# Re-export each non-derived peripheral crate's public items behind its       #}
-{# feature flag. We re-export the peripheral module, its struct and its         #}
-{# instance constant explicitly (rather than glob importing)   #}
+{# Re-export each peripheral crate's public items behind its       #}
+{# feature flag. We re-export the peripheral module, its struct  (rather than glob importing)   #}
 {% for peri_mod_name, peri in ir.device.peripheral_mod -%}
 {%- if not (peri.derived_from is string) -%}
 {%- set feature_name = peri.name | lower -%}
 #[cfg(feature = "{{feature_name}}")]
-pub use {{package_name}}_{{peri.module_id}}::{ {{peri.module_id}}, {{peri.struct_id}}, {{peri.name | upper}} };
+pub use {{package_name}}_{{peri.module_id}}::{ {{peri.module_id}}, {{peri.struct_id}} };
+{%- set crate_struct = package_name ~ "_" ~ peri.module_id ~ "::" ~ peri.struct_id -%}
+#[cfg(feature = "{{feature_name}}")]
+{%- if peri.base_addr | length == 1 %}
+pub const {{ peri.name | upper }}: {{crate_struct}} = {{crate_struct}}::_new({{ peri.base_addr[0] | to_hex }}u32 as _);
+{% else %}
+pub const {{ peri.name | upper }}:[{{crate_struct}};{{ peri.base_addr | length }}] = [{%- for addr in peri.base_addr %}  {{crate_struct}}::_new({{ addr | to_hex }}u32 as _), {% endfor -%}];
+{% endif -%}
 {% endif -%}
 {%- endfor %}
 
@@ -50,51 +56,26 @@ pub use {{package_name}}_{{peri.module_id}}::{ {{peri.module_id}}, {{peri.struct
 {%- set feature_name = peri.name | lower -%}
 #[cfg(feature = "{{feature_name}}")]
 pub mod {{module_name}};
-#[cfg(feature = "{{feature_name}}")]
-pub use {{module_name}} as csfr_cpu;
 {% endfor -%}
 {% endif %}
 
-{# Derived peripherals do not own a crate: emit their constants here using the #}
-{# base peripheral crate's `_new()` constructor. A derived peripheral inherits  #}
-{# the base `module_id`/`struct_id` but keeps its own `base_addr`.              #}
-{% for peri_mod_name, peri in ir.device.peripheral_mod -%}
-{%- if peri.derived_from is string -%}
-{%- set feature_name = peri.name | lower -%}
-{%- set crate_struct = package_name ~ "_" ~ peri.module_id ~ "::" ~ peri.struct_id -%}
-#[cfg(feature = "{{feature_name}}")]
-{%- if peri.base_addr | length == 1 %}
-pub const {{ peri.name | upper }}: {{crate_struct}} = {{crate_struct}}::_new({{ peri.base_addr[0] | to_hex }}u32 as _);
-{% else %}
-pub const {{ peri.name | upper }}:[{{crate_struct}};{{ peri.base_addr | length }}] = [{%- for addr in peri.base_addr %}  {{crate_struct}}::_new({{ addr | to_hex }}u32 as _), {% endfor -%}];
-{% endif -%}
-{% endif -%}
-{%- endfor %}
+
 
 {# Aurix CSFR peripheral struct + instance constant. `CsfrCpu` lives at the    #}
-{# crate root so `super::CsfrCpu` in the generated CSFR module resolves here.   #}
 {% if ir_csfr %}
-#[cfg(any(
-{%- set module_struct = "csfr_cpu" | to_struct_id -%}
-{%- set full_path_struct = "self::" ~ module_struct -%}
 {% for name,p in ir_csfr.device.peripheral_mod %}
+{%- set module_struct = p.struct_id | to_struct_id -%}
+{%- set full_path_struct = "self::" ~ module_struct -%}
+{%- set module_name = p.module_id -%}
 {%- set feature_name = p.name | lower -%}
-{% if not loop.last %}feature = "{{feature_name}}",{% else %}feature = "{{feature_name}}"))]
+#[cfg(feature = "{{feature_name}}")]
 #[derive(Copy, Clone, Eq, PartialEq)] 
 pub struct {{ module_struct }}{ptr:*mut u8}
-{% endif %}
-{%- endfor -%}
-#[cfg(any(
-{%- set module_struct = "csfr_cpu" | to_struct_id -%}
-{%- set full_path_struct = "self::" ~ module_struct -%}
-{% for name,p in ir_csfr.device.peripheral_mod %}
-{%- set feature_name = p.name | lower -%}
-{% if not loop.last %}feature = "{{feature_name}}",{% else %}feature = "{{feature_name}}"))]
+#[cfg(feature = "{{feature_name}}")]
 {%- if p.base_addr | length == 1 %}
-pub const {{"csfr_cpu" | upper}}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{p.base_addr[0] | to_hex }}u32 as _};
+pub const {{name | upper}}: {{full_path_struct}} = {{full_path_struct}}{ptr:{{p.base_addr[0] | to_hex }}u32 as _};
 {% else %}
-pub const {{"csfr_cpu" | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}{ptr:{{addr | to_hex }}u32 as _}, {% endfor -%}];
-{% endif %}
+pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [{%- for addr in p.base_addr %}  {{full_path_struct}}{ptr:{{addr | to_hex }}u32 as _}, {% endfor -%}];
 {% endif %}
 {%- endfor -%}
 {% endif %}

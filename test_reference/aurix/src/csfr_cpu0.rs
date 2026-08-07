@@ -15,9 +15,9 @@ use crate::common::{
     ResetValue as _, WriteCore as _,
 };
 #[doc = r"CPU"]
-unsafe impl ::core::marker::Send for super::CsfrCpu  {}
-unsafe impl ::core::marker::Sync for super::CsfrCpu  {}
-impl super::CsfrCpu {
+unsafe impl ::core::marker::Send for super::CsfrCpu0  {}
+unsafe impl ::core::marker::Sync for super::CsfrCpu0  {}
+impl super::CsfrCpu0 {
 #[doc = r"CPUx SIST Mode Access Control Register\n resetvalue={Application Reset:0x0}"]
 #[inline(always)]
 pub const fn smacon(&self) -> crate::common::RegCore<self::Smacon, 0x900c,0> {

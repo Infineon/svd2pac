@@ -229,11 +229,11 @@ use crate::common::{
     ResetValue as _, WriteCore as _,
 };
 #[doc = r"{{peri.description | svd_description_to_doc}}"]
-{% set peri_struct = "CsfrCpu" | to_struct_id -%}
+{% set peri_struct = peri.struct_id | to_struct_id -%}
 {% set peri_base_addr = peri.base_addr[0]  -%}
-unsafe impl ::core::marker::Send for super::CsfrCpu  {}
-unsafe impl ::core::marker::Sync for super::CsfrCpu  {}
-impl super::CsfrCpu {
+unsafe impl ::core::marker::Send for super::{{peri_struct}}  {}
+unsafe impl ::core::marker::Sync for super::{{peri_struct}}  {}
+impl super::{{peri_struct}} {
 {%- for register_name,reg in peri.registers %}
 {{self::register_core_func(types_mod="self",reg=reg, base_addr=peri_base_addr)}}
 {% endfor -%}

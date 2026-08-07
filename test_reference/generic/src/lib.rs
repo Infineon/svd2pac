@@ -44,6 +44,7 @@ pub struct Timer {
 pub const TIMER: self::Timer = self::Timer {
     ptr: 0x40010000u32 as _,
 };
+
 #[cfg(feature = "uart")]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Uart {
@@ -70,6 +71,7 @@ pub struct Foo {
 pub const FOO: self::Foo = self::Foo {
     ptr: 0x60000000u32 as _,
 };
+
 #[cfg(feature = "escapetest")]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct EscapeTest {
@@ -79,6 +81,7 @@ pub struct EscapeTest {
 pub const ESCAPETEST: self::EscapeTest = self::EscapeTest {
     ptr: 0x70000000u32 as _,
 };
+
 #[cfg(feature = "derivedtest")]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct DerivedTest {
@@ -88,6 +91,7 @@ pub struct DerivedTest {
 pub const DERIVEDTEST: self::DerivedTest = self::DerivedTest {
     ptr: 0xa0000u32 as _,
 };
+
 #[cfg(feature = "p33")]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct P33 {
@@ -97,10 +101,12 @@ pub struct P33 {
 pub const P33: self::P33 = self::P33 {
     ptr: 0x70100000u32 as _,
 };
+
 #[cfg(feature = "derivedperipheral")]
 pub const DERIVEDPERIPHERAL: self::P33 = self::P33 {
     ptr: 0x70200000u32 as _,
 };
+
 #[cfg(feature = "hasheaderstruct")]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct HeaderStruct {
@@ -110,6 +116,7 @@ pub struct HeaderStruct {
 pub const HASHEADERSTRUCT: self::HeaderStruct = self::HeaderStruct {
     ptr: 0x70300000u32 as _,
 };
+
 #[cfg(feature = "hdrstrder")]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct HdrStructDerivedP33 {
@@ -119,6 +126,7 @@ pub struct HdrStructDerivedP33 {
 pub const HDRSTRDER: self::HdrStructDerivedP33 = self::HdrStructDerivedP33 {
     ptr: 0x70400000u32 as _,
 };
+
 #[cfg(feature = "hdrstrderhdrstruct")]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct HdrStructDerivedHdr {
@@ -128,6 +136,7 @@ pub struct HdrStructDerivedHdr {
 pub const HDRSTRDERHDRSTRUCT: self::HdrStructDerivedHdr = self::HdrStructDerivedHdr {
     ptr: 0x70500000u32 as _,
 };
+
 #[cfg(feature = "dimindexperi")]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct DimIndexPeri {

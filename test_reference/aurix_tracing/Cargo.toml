@@ -39,8 +39,10 @@ hdrstrderhdrstruct = []
 dimindexperi = []
 
 csfr_cpu0 = []
+
 csfr_cpu1 = []
-all = ["timer" ,"uart" ,"foo" ,"escapetest" ,"derivedtest" ,"p33" ,"derivedperipheral" ,"hasheaderstruct" ,"hdrstrder" ,"hdrstrderhdrstruct" ,"dimindexperi"]
+
+all = ["timer" ,"uart" ,"foo" ,"escapetest" ,"derivedtest" ,"p33" ,"derivedperipheral" ,"hasheaderstruct" ,"hdrstrder" ,"hdrstrderhdrstruct" ,"dimindexperi" ,"csfr_cpu0" ,"csfr_cpu1"]
 tracing = ["dep:phf"]
 tracing_dummy = []
 default = ["all", "csfr_cpu0"]
