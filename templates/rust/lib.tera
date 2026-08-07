@@ -8,10 +8,7 @@
 #![cfg_attr(not(feature = "tracing"), no_std)]
 {%- else %}
 #![no_std]
-{%- endif %} {# tracing #}
-{% if target=="Aurix" %}
-#![cfg_attr(target_arch = "tricore", feature(stdsimd))]
-{% endif %}
+{%- endif %}{# tracing #}
 #![allow(non_camel_case_types)]
 #![doc = "{{ir.device.description | svd_description_to_doc}}"]
 #[doc(hidden)]

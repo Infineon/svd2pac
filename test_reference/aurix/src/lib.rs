@@ -3,10 +3,7 @@ Test license
 
 */
 // Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:56:11 +0000
-#![no_std] 
-
-#![cfg_attr(target_arch = "tricore", feature(stdsimd))]
-
+#![no_std]
 #![allow(non_camel_case_types)]
 #![doc = "SVD Test for Rust PAC generator"]
 #[doc(hidden)]

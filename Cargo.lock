@@ -987,7 +987,6 @@ dependencies = [
  "indexmap",
  "lazy-regex",
  "log",
- "regex",
  "rustc_version",
  "serde",
  "serde_json",

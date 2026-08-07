@@ -8,9 +8,6 @@
 {%- else %}
 #![no_std]
 {%- endif %}
-{%- if target=="Aurix" %}
-#![cfg_attr(target_arch = "tricore", feature(stdsimd))]
-{%- endif %}
 {% endif %}
 use ::core::convert::From;
 use ::core::marker::PhantomData;

@@ -34,7 +34,6 @@ toml_edit = "0.19"
 
 [build-dependencies]
 rustc_version = "0.4.1"
-regex = "1.10"
 
 [profile.dev.package."*"]
 codegen-units = 1 # better optimizations

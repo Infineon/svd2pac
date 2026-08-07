@@ -9,7 +9,11 @@ name = "{{package_name}}"
 version = "0.0.1"
 authors = ["Infineon developers"]
 edition = "2021"
+{% if target=="Aurix" -%}
+rust-version = "1.94"
+{% else -%}
 rust-version = "1.70"
+{% endif -%}
 description = "{{description}}"
 keywords = ["no_std", "infineon"{%- if target=="Aurix" -%}, "aurix"{%- endif -%}]
 categories = ["embedded","hardware-support","no-std","no-std::no-alloc"]
