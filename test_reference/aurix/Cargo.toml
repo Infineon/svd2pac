@@ -8,7 +8,7 @@ name = "test_pac"
 version = "0.0.1"
 authors = ["Infineon developers"]
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.94"
 description = "Description tests"
 keywords = ["no_std", "infineon", "aurix"]
 categories = ["embedded","hardware-support","no-std","no-std::no-alloc"]
@@ -41,7 +41,7 @@ csfr_cpu0 = []
 csfr_cpu1 = []
 
 all = ["timer" ,"uart" ,"foo" ,"escapetest" ,"derivedtest" ,"p33" ,"derivedperipheral" ,"hasheaderstruct" ,"hdrstrder" ,"hdrstrderhdrstruct" ,"dimindexperi" ,"csfr_cpu0" ,"csfr_cpu1"]
-default = ["all", "csfr_cpu0"]
+default = ["all"]
 
 [[bin]]
 name = "main"

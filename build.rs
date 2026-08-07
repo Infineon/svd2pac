@@ -1,16 +1,14 @@
-use regex::Regex;
 use rustc_version::version;
 use std::process::Command;
-
-fn detect_aurix_toolchain() -> Result<Option<String>, ()> {
+const AURIX_TEST_TOOLCHAIN: &str = "tricore-htc-none-v11.0.0";
+fn detect_aurix_toolchain(toolchain: &str) -> Result<bool, ()> {
     Command::new("rustup")
         .args(["toolchain", "list"])
         .output()
         .map_or(Err(()), |result| {
-            let re = Regex::new(r"tricore-htc-none.+").unwrap();
             let result =
                 String::from_utf8(result.stdout).expect("Unable to convert to utf8 string");
-            Ok(re.find(&result).map(|m| m.as_str().to_string()))
+            Ok(result.contains(toolchain))
         })
 }
 
@@ -22,14 +20,20 @@ fn main() {
         println!("cargo:rustc-check-cfg=cfg(aurix_tests)");
     }
     // In case of Aurix toolchain enable test of code generated for Aurix microcontroller
-    match detect_aurix_toolchain() {
-        Err(_) => println!(
-            "cargo::warning=rustup not available unable to detect presence of Aurix toolchain"
-        ),
-        Ok(Some(aurix_toolchain)) => {
-            println!("cargo:rustc-cfg=aurix_tests");
-            println!("cargo:rustc-env=AURIX_TOOLCHAIN={aurix_toolchain}");
+
+    // Check if AURIX_TOOLCHAIN environment variable exists
+    if std::env::var("AURIX_TOOLCHAIN").is_ok() {
+        println!("cargo:rustc-cfg=aurix_tests");
+    } else {
+        match detect_aurix_toolchain(AURIX_TEST_TOOLCHAIN) {
+            Err(_) => println!(
+                "cargo::warning=rustup not available unable to detect presence of Aurix toolchain"
+            ),
+            Ok(true) => {
+                println!("cargo:rustc-cfg=aurix_tests");
+                println!("cargo:rustc-env=AURIX_TOOLCHAIN={}", AURIX_TEST_TOOLCHAIN);
+            }
+            Ok(false) => (),
         }
-        Ok(None) => (),
     }
 }

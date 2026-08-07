@@ -30,7 +30,6 @@ fn compile_generated_aurix() {
         .expect("Unable to parse toml file");
     let mut default_table = Array::new();
     default_table.push("all");
-    default_table.push("csfr_cpu0");
     parsed_toml["features"]["default"] = value(default_table);
     parsed_toml["dependencies"]["tc162-rt"]["path"] = value("tc162-rt");
     parsed_toml["bin"] = array();
@@ -95,7 +94,6 @@ fn compile_generated_aurix_tracing() {
         .expect("Unable to parse toml file");
     let mut default_table = Array::new();
     default_table.push("all");
-    default_table.push("csfr_cpu0");
     parsed_toml["features"]["default"] = value(default_table);
     parsed_toml["dependencies"]["tc162-rt"]["path"] = value("tc162-rt");
     parsed_toml["bin"] = array();
