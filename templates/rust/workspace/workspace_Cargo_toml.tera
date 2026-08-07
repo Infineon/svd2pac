@@ -12,6 +12,13 @@ members = [
     "peripherals/{{peri.module_id}}",
     {%- endif %}
     {%- endfor %}
+    {%- if ir_csfr %}
+    {%- for peri_mod_name, peri in ir_csfr.device.peripheral_mod %}
+    {%- if not (peri.derived_from is string) %}
+    "peripherals/{{peri.module_id}}",
+    {%- endif %}
+    {%- endfor %}
+    {%- endif %}
 ]
 resolver = "2"
 
@@ -37,6 +44,13 @@ common = { path = "./common" }
 {{package_name}}_{{peri.module_id}} = { path = "./peripherals/{{peri.module_id}}", optional = true }
 {%- endif %}
 {%- endfor %}
+{%- if ir_csfr %}
+{%- for peri_mod_name, peri in ir_csfr.device.peripheral_mod %}
+{%- if not (peri.derived_from is string) %}
+{{package_name}}_{{peri.module_id}} = { path = "./peripherals/{{peri.module_id}}", optional = true }
+{%- endif %}
+{%- endfor %}
+{%- endif %}
 {%- if tracing %}
 phf = { version = "0.11", features = ["macros"], optional = true }
 {%- endif %}

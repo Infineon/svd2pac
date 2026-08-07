@@ -1,7 +1,7 @@
 use super::{
     Context, GenPkgSettings, Path, PathBuf, Target, Tera, execute_template, format_with_rustfmt,
-    fs, generate_aurix_core_ir, generate_cortex_m_extra_files, generate_peripheral_module,
-    get_tera_instance, info, ir, load_ir, read_license_file,
+    fs, generate_aurix_core_ir, generate_cortex_m_extra_files, get_tera_instance, info, ir,
+    load_ir, read_license_file,
 };
 /// Collect the set of *other* peripheral module ids whose types are referenced
 /// by the registers/clusters of a peripheral.
@@ -118,6 +118,56 @@ fn generate_workspace_peripheral_crates(
     Ok(rust_files)
 }
 
+/// Generate per-CSFR peripheral crates for Aurix workspace mode.
+///
+/// Each non-derived CSFR peripheral is emitted as an independent crate under
+/// `destination_folder/peripherals/<module_id>/` using the existing workspace
+/// crate templates (`peri_lib.tera` and `peri_Cargo_toml.tera`).
+fn generate_workspace_csfr_crates(
+    tera: &Tera,
+    ir_csfr: &ir::IR,
+    context: &tera::Context,
+    destination_folder: &Path,
+) -> anyhow::Result<Vec<PathBuf>> {
+    let mut rust_files: Vec<PathBuf> = Vec::new();
+    for (_, peri) in &ir_csfr.device.peripheral_mod {
+        if peri.borrow().derived_from.is_some() {
+            continue;
+        }
+        let module_id = peri.borrow().module_id.clone();
+        let peri_dir = destination_folder.join("peripherals").join(&module_id);
+
+        let referenced = collect_referenced_modules(&peri.borrow(), &module_id);
+        let referenced_crates: Vec<String> = referenced.into_iter().collect();
+
+        let mut peri_context = context.clone();
+        peri_context.insert("peri", peri);
+        peri_context.insert("referenced_crates", &referenced_crates);
+
+        // CSFR register module.
+        let peri_mod_path = peri_dir.join(format!("src/{module_id}.rs"));
+        execute_template(tera, "aurix_core.tera", &peri_context, &peri_mod_path)
+            .context("Failed generation of CSFR peripheral module")?;
+        rust_files.push(peri_mod_path);
+
+        // CSFR peripheral crate lib.rs.
+        let peri_lib_path = peri_dir.join("src/lib.rs");
+        execute_template(tera, "peri_lib.tera", &peri_context, &peri_lib_path)
+            .context("Failed generation of CSFR peripheral lib.rs")?;
+        rust_files.push(peri_lib_path);
+
+        // CSFR peripheral crate Cargo.toml.
+        execute_template(
+            tera,
+            "peri_Cargo_toml.tera",
+            &peri_context,
+            &peri_dir.join("Cargo.toml"),
+        )
+        .context("Failed generation of CSFR peripheral Cargo.toml")?;
+    }
+    Ok(rust_files)
+}
+
 /// Generate a Cargo workspace instead of a single package.
 ///
 /// Each non-derived peripheral becomes its own crate, with a shared `common`
@@ -198,28 +248,17 @@ pub fn generate_rust_workspace(
     )?);
 
     // --- root crate ---
-    // Aurix CSFR: generate the core register modules inside the root crate,
-    // mirroring single-package mode where they live next to lib.rs. Returns
-    // `None` when the SVD has no vendor extensions, so the plain-aurix path is
-    // unaffected.
+    // Aurix CSFR: in workspace mode each CSFR peripheral is generated as its
+    // own crate in `peripherals/<module_id>/` and then re-exported by the root
+    // crate behind feature flags.
     if target == Target::Aurix {
         if let Some(ir_csfr) = generate_aurix_core_ir(xml_path, settings)? {
-            generate_peripheral_module(
+            rust_files.extend(generate_workspace_csfr_crates(
                 &tera,
                 &ir_csfr,
-                "aurix_core.tera",
+                &context,
                 destination_folder,
-                svd2pac_version,
-                &now,
-            )?;
-            for (_, peri) in &ir_csfr.device.peripheral_mod {
-                let borrowed_peri = peri.borrow();
-                if borrowed_peri.derived_from.is_some() {
-                    continue;
-                }
-                rust_files
-                    .push(destination_folder.join(format!("src/{}.rs", borrowed_peri.module_id)));
-            }
+            )?);
             context.insert("ir_csfr", &ir_csfr);
         }
     }
