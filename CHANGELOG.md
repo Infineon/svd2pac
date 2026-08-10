@@ -4,15 +4,21 @@
 
 ### Added
 
-- New `--workspace-generation` mode to generate a Cargo workspace with a shared `common` crate and one crate per peripheral.
+- New `--workspace-generation` experimental mode to generate a Cargo workspace with a shared `common` crate and one crate per peripheral.
 
 ### Changed
 
 - Updated generated PAC register abstractions and type paths.
+- Refactored register abstractions from phantom-type structs to trait-based APIs (`Reg`, `DataTypeT`) and added `ReadCore`/`WriteCore` support for Aurix CSFR access.
+- Register value types are now generated within peripheral modules/crates instead of the shared `common` module.
+- Refactored workspace generation internals into a dedicated module.
+- Updated `anyhow` to address a soundness issue and refreshed regression test references.
+- For generated Aurix PACs, the minimum supported Rust version is now 1.94 and the unstable `feature(stdsimd)` usage was removed.
 
 ### Breaking
 
 - Register initialization: `SomeReg::default()` no longer works; use `peripheral.register().reset_value()` instead.
+- Register value type paths changed: code importing value types from `common` must be updated to the corresponding peripheral module paths.
 
 ## [0.7.0]
 
