@@ -117,6 +117,13 @@ Extra feature compared to `generic` target
 Enable with the `--tracing` cli flag.
 Generate the PAC with a non-default feature flag to allow for tracing reads/writes, [see below](#tracing-feature)
 
+---
+
+#### [EXPERIMENTAL] Generate a Cargo workspace: `--workspace-generation` option
+
+Enable with the `--workspace-generation` cli flag.
+Instead of a single package, generates a Cargo workspace with a shared `common` crate and one crate per peripheral under `peripherals/`. Each peripheral is still gated by its own feature, matching the single-package layout.
+
 ### Environment variables
 
 - `SVD2PAC_LOG_LEVEL` sets the log level (see [log](https://docs.rs/log/0.4.21/log/enum.LevelFilter.html))
@@ -124,7 +131,7 @@ Generate the PAC with a non-default feature flag to allow for tracing reads/writ
 
 ## How to use the generated code
 
-The generator outputs a complete crate into the provided folder.
+The generator outputs a complete crate into the provided folder (or a Cargo workspace with [`--workspace-generation`](#experimental-generate-a-cargo-workspace---workspace-generation-option)).
 In the generated PACs all peripherals modules are gated by a feature and therefore by default no peripheral modules is compiled.
 This is speed-up the compilation process. The `features=["all"]` enable the compilations of all modules.
 
