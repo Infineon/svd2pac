@@ -43,7 +43,7 @@ This tool has a very different approach compared to `svd2rust` because our requi
 ## How to install & prerequisite
 
 ```bash
-cargo install svd2pac
+cargo install --locked svd2pac
 ```
 
 if automatic code formatting is desired install `rustfmt`.
