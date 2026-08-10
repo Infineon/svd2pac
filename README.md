@@ -119,7 +119,7 @@ Generate the PAC with a non-default feature flag to allow for tracing reads/writ
 
 ---
 
-#### [EXPERIMENTAL] Generate a Cargo workspace: `--workspace-generation` option
+#### \[EXPERIMENTAL\] Generate a Cargo workspace: `--workspace-generation` option
 
 Enable with the `--workspace-generation` cli flag.
 Instead of a single package, generates a Cargo workspace with a shared `common` crate and one crate per peripheral under `peripherals/`. Each peripheral is still gated by its own feature, matching the single-package layout.
