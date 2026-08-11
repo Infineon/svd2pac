@@ -25,7 +25,7 @@ impl super::HdrStructDerivedHdr {
     } 
 #[doc = "Cluster that defines the base type"]
 #[inline(always)]
-pub const fn i2c2(self) -> crate::headerstruct::I2C2{
+pub const fn i2c2(&self) -> crate::headerstruct::I2C2{
     unsafe {   crate::headerstruct::_I2C2::_svd2pac_from_ptr(self._svd2pac_as_ptr().add(0usize)) }
 }
 

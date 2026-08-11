@@ -70,7 +70,7 @@ impl super::Uart {
 
     #[doc = "Cluster to test when peripheral has same name as register"]
     #[inline(always)]
-    pub const fn uart(self) -> crate::uart::Uart {
+    pub const fn uart(&self) -> crate::uart::Uart {
         unsafe { crate::uart::_Uart::_svd2pac_from_ptr(self._svd2pac_as_ptr().add(4096usize)) }
     }
 }

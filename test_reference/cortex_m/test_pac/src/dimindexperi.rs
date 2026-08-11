@@ -26,26 +26,26 @@ impl super::DimIndexPeri {
     #[doc = "Array cluster index"]
     #[inline(always)]
     pub fn clust(
-        self,
+        &self,
     ) -> &'static crate::common::ClusterRegisterArray<crate::dimindexperi::_Clust, 3, 0x30> {
         unsafe {
             crate::common::ClusterRegisterArray::from_ptr(self._svd2pac_as_ptr().add(0x0usize))
         }
     }
     #[inline(always)]
-    pub fn clu3st(self) -> crate::dimindexperi::Clust {
+    pub fn clu3st(&self) -> crate::dimindexperi::Clust {
         unsafe {
             crate::dimindexperi::_Clust::_svd2pac_from_ptr(self._svd2pac_as_ptr().add(0x0usize))
         }
     }
     #[inline(always)]
-    pub fn clu4st(self) -> crate::dimindexperi::Clust {
+    pub fn clu4st(&self) -> crate::dimindexperi::Clust {
         unsafe {
             crate::dimindexperi::_Clust::_svd2pac_from_ptr(self._svd2pac_as_ptr().add(0x30usize))
         }
     }
     #[inline(always)]
-    pub fn clu5st(self) -> crate::dimindexperi::Clust {
+    pub fn clu5st(&self) -> crate::dimindexperi::Clust {
         unsafe {
             crate::dimindexperi::_Clust::_svd2pac_from_ptr(self._svd2pac_as_ptr().add(0x60usize))
         }
