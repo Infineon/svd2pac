@@ -25,7 +25,7 @@ impl super::HdrStructDerivedP33 {
     } 
 #[doc = "Cluster that defines the base type"]
 #[inline(always)]
-pub const fn i2c2(self) -> crate::p33::I2C2{
+pub const fn i2c2(&self) -> crate::p33::I2C2{
     unsafe {   crate::p33::_I2C2::_svd2pac_from_ptr(self._svd2pac_as_ptr().add(0usize)) }
 }
 

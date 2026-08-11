@@ -102,6 +102,11 @@ fn main() -> ! {
             elem.cr().modify(|r| r.field1().set(1));
         }
 
+        // Test nested cluster arrays
+        let reg_hsslxcoky = TIMER.cluster1().hssl().ch()[0].hsslxcoky();
+        let a = reg_hsslxcoky.read();
+        reg_hsslxcoky.write(a.set(0x3));
+
         // Demonstrating the usage of enumerated values with read-only, write-only, and read-write usage
         let reg_value = UART[1].regenumvalue().read();
         let _bitfield_value: uart::regenumvalue::OnlyReadEnumRead =

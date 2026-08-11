@@ -8,6 +8,7 @@
 
 ### Changed
 
+- Cluster accessor methods now take `&self` instead of consuming `self`, allowing chaining without moving the peripheral instance (e.g. `TIMER.cluster1().hssl().ch()[0].reg().read()`).
 - Updated generated PAC register abstractions and type paths.
 - Refactored register abstractions from phantom-type structs to trait-based APIs (`Reg`, `DataTypeT`) and added `ReadCore`/`WriteCore` support for Aurix CSFR access.
 - Register value types are now generated within peripheral modules/crates instead of the shared `common` module.

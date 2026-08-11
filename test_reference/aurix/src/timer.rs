@@ -102,13 +102,13 @@ pub fn timer(&self) -> &'static self::TimerT {
  
 #[doc = "Test Cluster"]
 #[inline(always)]
-pub const fn cluster1(self) -> crate::timer::Cluster1{
+pub const fn cluster1(&self) -> crate::timer::Cluster1{
     unsafe {   crate::timer::_Cluster1::_svd2pac_from_ptr(self._svd2pac_as_ptr().add(256usize)) }
 }
  
 #[doc = "Test Cluster array"]
 #[inline(always)]
-pub fn clusterdim(self) -> &'static crate::common::ClusterRegisterArray<crate::timer::_ClusterDim, 4, 0x100> {
+pub fn clusterdim(&self) -> &'static crate::common::ClusterRegisterArray<crate::timer::_ClusterDim, 4, 0x100> {
     unsafe { crate::common::ClusterRegisterArray::from_ptr(self._svd2pac_as_ptr().add(0x1000usize)) }
 }
 
@@ -1345,13 +1345,13 @@ pub fn cr(&self) -> &'static cluster1::CrT {
      
 #[doc = "A cluster inside another cluster"]
 #[inline(always)]
-pub const fn cluster1(self) -> crate::timer::cluster1::Cluster1{
+pub const fn cluster1(&self) -> crate::timer::cluster1::Cluster1{
     unsafe {   crate::timer::cluster1::_Cluster1::_svd2pac_from_ptr(self._svd2pac_as_ptr().add(256usize)) }
 }
      
 #[doc = "HSSL"]
 #[inline(always)]
-pub const fn hssl(self) -> crate::timer::cluster1::HsslHssl{
+pub const fn hssl(&self) -> crate::timer::cluster1::HsslHssl{
     unsafe {   crate::timer::cluster1::_HsslHssl::_svd2pac_from_ptr(self._svd2pac_as_ptr().add(512usize)) }
 }
     }
@@ -1595,7 +1595,7 @@ impl _HsslHssl {
      
 #[doc = "CH"]
 #[inline(always)]
-pub fn ch(self) -> &'static crate::common::ClusterRegisterArray<crate::timer::cluster1::hssl_hssl::_HsslHsslCh, 2, 0x4> {
+pub fn ch(&self) -> &'static crate::common::ClusterRegisterArray<crate::timer::cluster1::hssl_hssl::_HsslHsslCh, 2, 0x4> {
     unsafe { crate::common::ClusterRegisterArray::from_ptr(self._svd2pac_as_ptr().add(0x0usize)) }
 }
     }

@@ -42,7 +42,7 @@ impl super::DerivedTest {
 
     #[doc = "Cluster that defines the base type"]
     #[inline(always)]
-    pub const fn basecluster(self) -> crate::derivedtest::BaseClusterType {
+    pub const fn basecluster(&self) -> crate::derivedtest::BaseClusterType {
         unsafe {
             crate::derivedtest::_BaseClusterType::_svd2pac_from_ptr(
                 self._svd2pac_as_ptr().add(0usize),
@@ -53,7 +53,7 @@ impl super::DerivedTest {
     #[doc = "ArrayCluster"]
     #[inline(always)]
     pub fn arraycluster(
-        self,
+        &self,
     ) -> &'static crate::common::ClusterRegisterArray<crate::derivedtest::_BaseClusterType, 4, 0x8>
     {
         unsafe {
@@ -62,7 +62,7 @@ impl super::DerivedTest {
     }
 
     #[inline(always)]
-    pub const fn derivedderivedcluster(self) -> crate::derivedtest::BaseClusterType {
+    pub const fn derivedderivedcluster(&self) -> crate::derivedtest::BaseClusterType {
         unsafe {
             crate::derivedtest::_BaseClusterType::_svd2pac_from_ptr(
                 self._svd2pac_as_ptr().add(256usize),
@@ -71,7 +71,7 @@ impl super::DerivedTest {
     }
 
     #[inline(always)]
-    pub const fn derivedfromfarawaycluster(self) -> crate::timer::cluster1::Cluster1 {
+    pub const fn derivedfromfarawaycluster(&self) -> crate::timer::cluster1::Cluster1 {
         unsafe {
             crate::timer::cluster1::_Cluster1::_svd2pac_from_ptr(
                 self._svd2pac_as_ptr().add(512usize),
