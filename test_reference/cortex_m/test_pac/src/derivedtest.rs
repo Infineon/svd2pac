@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:58:05 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 14 Aug 2026 14:08:43 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -112,91 +112,17 @@ unsafe impl crate::common::Read<BaseRegister> for BaseRegisterT {}
 unsafe impl crate::common::Write<BaseRegister> for BaseRegisterT {}
 impl BaseRegister {
     #[doc = "Shows if Timer is running or not"]
+    #[doc = "0 = Stopped: Timer is not running"]
+    #[doc = "1 = Running: Timer is running"]
     #[inline(always)]
-    pub fn run(
-        self,
-    ) -> crate::common::RegisterField<
-        0,
-        0x1,
-        1,
-        0,
-        baseregister::Run,
-        baseregister::Run,
-        BaseRegister,
-        common::R,
-    > {
-        crate::common::RegisterField::<
-            0,
-            0x1,
-            1,
-            0,
-            baseregister::Run,
-            baseregister::Run,
-            BaseRegister,
-            common::R,
-        >::from_register(self, 0)
+    pub fn run(self) -> crate::common::RegisterFieldBool<0, 1, 0, BaseRegister, common::R> {
+        crate::common::RegisterFieldBool::<0, 1, 0, BaseRegister, common::R>::from_register(self, 0)
     }
 }
 impl crate::common::ResetValue<BaseRegister> for BaseRegisterT {
     #[inline(always)]
     fn reset_value(&self) -> BaseRegister {
         BaseRegister::new(0)
-    }
-}
-pub mod baseregister {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _, CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _,
-        RegisterValue as _, ResetValue as _, Write as _,
-    };
-
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Run(u8);
-
-    impl Run {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Run {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Run {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Run> for u64 {
-        #[inline(always)]
-        fn from(value: Run) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Run {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Run {
-        #[doc = "Timer is not running"]
-        pub const STOPPED: Self = Self(0);
-
-        #[doc = "Timer is running"]
-        pub const RUNNING: Self = Self(1);
     }
 }
 

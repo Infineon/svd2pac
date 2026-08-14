@@ -127,7 +127,7 @@ impl crate::common::NoBitfieldReg for {{reg_struct_name}} {}
 {% else -%}
 impl {{reg_struct_name}} {
     {%- for field_name,field in reg.fields %}
-    {{macros::doc_attribute(documentation=field.description)}}
+    {{macros::field_doc(field=field)}}
     #[inline(always)]
     {%- if field.dim > 1 -%}
     pub fn {{field.name | to_func_id }}(self,index:u8) -> {{macros::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
@@ -251,8 +251,4 @@ impl super::{{peri_struct}} {
 {{macros::register_struct(reg=reg,reg_name=cluster_reg_name,is_memory_mapped=false)}}
 {% endfor %}
 {% endfor %}
-
-
-
-
 

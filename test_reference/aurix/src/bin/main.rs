@@ -93,7 +93,8 @@ fn main() -> ! {
         // Test 64Bit register
         TIMER
             .register64bit()
-            .modify(|r| r.boolean().set(crate::timer::register64bit::Boolean::FALSE));
+            .modify(|r| r.boolean().set(true));
+        let _: bool = TIMER.register64bit().read().boolean().get();
 
         // Test cluster array
         TIMER.clusterdim()[0].cr().modify(|r| r.field1().set(0));

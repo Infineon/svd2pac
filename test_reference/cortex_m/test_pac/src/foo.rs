@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:58:05 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 14 Aug 2026 14:08:43 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -63,72 +63,16 @@ unsafe impl crate::common::Read<In> for InT {}
 unsafe impl crate::common::Write<In> for InT {}
 impl In {
     #[doc = "SELF element of FOO"]
+    #[doc = "0 = 0_VALUE: Input is on low level."]
+    #[doc = "1 = 1_VALUE: Input is on high level."]
     #[inline(always)]
-    pub fn _self(
-        self,
-    ) -> crate::common::RegisterField<1, 0x1, 1, 0, r#in::_Self, r#in::_Self, In, common::RW> {
-        crate::common::RegisterField::<1,0x1,1,0,r#in::_Self,r#in::_Self,In,common::RW>::from_register(self,0)
+    pub fn _self(self) -> crate::common::RegisterFieldBool<1, 1, 0, In, common::RW> {
+        crate::common::RegisterFieldBool::<1, 1, 0, In, common::RW>::from_register(self, 0)
     }
 }
 impl crate::common::ResetValue<In> for InT {
     #[inline(always)]
     fn reset_value(&self) -> In {
         In::new(0)
-    }
-}
-pub mod r#in {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _, CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _,
-        RegisterValue as _, ResetValue as _, Write as _,
-    };
-
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct _Self(u8);
-
-    impl _Self {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for _Self {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for _Self {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<_Self> for u64 {
-        #[inline(always)]
-        fn from(value: _Self) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for _Self {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl _Self {
-        #[doc = "Input is on low level."]
-        pub const _0_VALUE: Self = Self(0);
-
-        #[doc = "Input is on high level."]
-        pub const _1_VALUE: Self = Self(1);
     }
 }

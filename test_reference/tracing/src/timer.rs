@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 16:00:55 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 14 Aug 2026 14:16:57 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -429,45 +429,43 @@ impl crate::common::Reg<Sr> for SrT {}
 unsafe impl crate::common::Read<Sr> for SrT {}
 impl Sr {
     #[doc = "Shows if Timer is running or not"]
+    #[doc = "0 = Stopped: Timer is not running"]
+    #[doc = "1 = Running: Timer is running"]
     #[inline(always)]
-    pub fn run(
-        self,
-    ) -> crate::common::RegisterField<0, 0x1, 1, 0, sr::Run, sr::Run, Sr, common::R> {
-        crate::common::RegisterField::<0, 0x1, 1, 0, sr::Run, sr::Run, Sr, common::R>::from_register(
-            self, 0,
-        )
+    pub fn run(self) -> crate::common::RegisterFieldBool<0, 1, 0, Sr, common::R> {
+        crate::common::RegisterFieldBool::<0, 1, 0, Sr, common::R>::from_register(self, 0)
     }
 
     #[doc = "Shows if the MATCH was hit"]
+    #[doc = "0 = No_Match: The MATCH condition was not hit"]
+    #[doc = "1 = Match_Hit: The MATCH condition was hit"]
     #[inline(always)]
-    pub fn r#match(
-        self,
-    ) -> crate::common::RegisterField<8, 0x1, 1, 0, sr::Match, sr::Match, Sr, common::RW> {
-        crate::common::RegisterField::<8,0x1,1,0,sr::Match,sr::Match,Sr,common::RW>::from_register(self,0)
+    pub fn r#match(self) -> crate::common::RegisterFieldBool<8, 1, 0, Sr, common::RW> {
+        crate::common::RegisterFieldBool::<8, 1, 0, Sr, common::RW>::from_register(self, 0)
     }
 
     #[doc = "Shows if an underflow occured. This flag is sticky"]
+    #[doc = "0 = No_Underflow: No underflow occured since last clear"]
+    #[doc = "1 = Underflow: A minimum of one underflow occured since last clear"]
     #[inline(always)]
-    pub fn un(self) -> crate::common::RegisterField<9, 0x1, 1, 0, sr::Un, sr::Un, Sr, common::RW> {
-        crate::common::RegisterField::<9, 0x1, 1, 0, sr::Un, sr::Un, Sr, common::RW>::from_register(
-            self, 0,
-        )
+    pub fn un(self) -> crate::common::RegisterFieldBool<9, 1, 0, Sr, common::RW> {
+        crate::common::RegisterFieldBool::<9, 1, 0, Sr, common::RW>::from_register(self, 0)
     }
 
     #[doc = "Shows if an overflow occured. This flag is sticky"]
+    #[doc = "0 = No_Overflow: No overflow occured since last clear"]
+    #[doc = "1 = Overflow_occured: A minimum of one overflow occured since last clear"]
     #[inline(always)]
-    pub fn ov(self) -> crate::common::RegisterField<10, 0x1, 1, 0, sr::Ov, sr::Ov, Sr, common::RW> {
-        crate::common::RegisterField::<10, 0x1, 1, 0, sr::Ov, sr::Ov, Sr, common::RW>::from_register(
-            self, 0,
-        )
+    pub fn ov(self) -> crate::common::RegisterFieldBool<10, 1, 0, Sr, common::RW> {
+        crate::common::RegisterFieldBool::<10, 1, 0, Sr, common::RW>::from_register(self, 0)
     }
 
     #[doc = "Shows if Timer is in RESET state"]
+    #[doc = "0 = Ready: Timer is not in RESET state and can operate"]
+    #[doc = "1 = In_Reset: Timer is in RESET state and can not operate"]
     #[inline(always)]
-    pub fn rst(
-        self,
-    ) -> crate::common::RegisterField<12, 0x1, 1, 0, sr::Rst, sr::Rst, Sr, common::R> {
-        crate::common::RegisterField::<12,0x1,1,0,sr::Rst,sr::Rst,Sr,common::R>::from_register(self,0)
+    pub fn rst(self) -> crate::common::RegisterFieldBool<12, 1, 0, Sr, common::R> {
+        crate::common::RegisterFieldBool::<12, 1, 0, Sr, common::R>::from_register(self, 0)
     }
 
     #[doc = "Shows the currently active RELOAD Register"]
@@ -493,236 +491,6 @@ pub mod sr {
         RegisterValue as _, ResetValue as _, Write as _,
     };
 
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Run(u8);
-
-    impl Run {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Run {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Run {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Run> for u64 {
-        #[inline(always)]
-        fn from(value: Run) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Run {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Run {
-        #[doc = "Timer is not running"]
-        pub const STOPPED: Self = Self(0);
-
-        #[doc = "Timer is running"]
-        pub const RUNNING: Self = Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Match(u8);
-
-    impl Match {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Match {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Match {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Match> for u64 {
-        #[inline(always)]
-        fn from(value: Match) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Match {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Match {
-        #[doc = "The MATCH condition was not hit"]
-        pub const NO_MATCH: Self = Self(0);
-
-        #[doc = "The MATCH condition was hit"]
-        pub const MATCH_HIT: Self = Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Un(u8);
-
-    impl Un {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Un {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Un {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Un> for u64 {
-        #[inline(always)]
-        fn from(value: Un) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Un {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Un {
-        #[doc = "No underflow occured since last clear"]
-        pub const NO_UNDERFLOW: Self = Self(0);
-
-        #[doc = "A minimum of one underflow occured since last clear"]
-        pub const UNDERFLOW: Self = Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Ov(u8);
-
-    impl Ov {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Ov {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Ov {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Ov> for u64 {
-        #[inline(always)]
-        fn from(value: Ov) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Ov {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Ov {
-        #[doc = "No overflow occured since last clear"]
-        pub const NO_OVERFLOW: Self = Self(0);
-
-        #[doc = "A minimum of one overflow occured since last clear"]
-        pub const OVERFLOW_OCCURED: Self = Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Rst(u8);
-
-    impl Rst {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Rst {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Rst {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Rst> for u64 {
-        #[inline(always)]
-        fn from(value: Rst) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Rst {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Rst {
-        #[doc = "Timer is not in RESET state and can operate"]
-        pub const READY: Self = Self(0);
-
-        #[doc = "Timer is in RESET state and can not operate"]
-        pub const IN_RESET: Self = Self(1);
-    }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     #[repr(transparent)]
     pub struct Reload(u8);
@@ -808,11 +576,11 @@ impl crate::common::Reg<Int> for IntT {}
 unsafe impl crate::common::Write<Int> for IntT {}
 impl Int {
     #[doc = "Interrupt Enable"]
+    #[doc = "0 = Disabled: Timer does not generate Interrupts"]
+    #[doc = "1 = Enable: Timer triggers the TIMERn Interrupt"]
     #[inline(always)]
-    pub fn en(
-        self,
-    ) -> crate::common::RegisterField<0, 0x1, 1, 0, int::En, int::En, Int, common::RW> {
-        crate::common::RegisterField::<0,0x1,1,0,int::En,int::En,Int,common::RW>::from_register(self,0)
+    pub fn en(self) -> crate::common::RegisterFieldBool<0, 1, 0, Int, common::RW> {
+        crate::common::RegisterFieldBool::<0, 1, 0, Int, common::RW>::from_register(self, 0)
     }
 
     #[doc = "Interrupt Mode, selects on which condition the Timer should generate an Interrupt"]
@@ -838,52 +606,6 @@ pub mod int {
         RegisterValue as _, ResetValue as _, Write as _,
     };
 
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct En(u8);
-
-    impl En {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for En {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for En {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<En> for u64 {
-        #[inline(always)]
-        fn from(value: En) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for En {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl En {
-        #[doc = "Timer does not generate Interrupts"]
-        pub const DISABLED: Self = Self(0);
-
-        #[doc = "Timer triggers the TIMERn Interrupt"]
-        pub const ENABLE: Self = Self(1);
-    }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     #[repr(transparent)]
     pub struct Mode(u8);
@@ -1198,89 +920,19 @@ impl crate::common::Reg<Register64Bit> for Register64BitT {}
 unsafe impl crate::common::Read<Register64Bit> for Register64BitT {}
 unsafe impl crate::common::Write<Register64Bit> for Register64BitT {}
 impl Register64Bit {
+    #[doc = "1 = True"]
+    #[doc = "0 = False"]
     #[inline(always)]
-    pub fn boolean(
-        self,
-    ) -> crate::common::RegisterField<
-        0,
-        0x1,
-        1,
-        0,
-        register64bit::Boolean,
-        register64bit::Boolean,
-        Register64Bit,
-        common::RW,
-    > {
-        crate::common::RegisterField::<
-            0,
-            0x1,
-            1,
-            0,
-            register64bit::Boolean,
-            register64bit::Boolean,
-            Register64Bit,
-            common::RW,
-        >::from_register(self, 0)
+    pub fn boolean(self) -> crate::common::RegisterFieldBool<0, 1, 0, Register64Bit, common::RW> {
+        crate::common::RegisterFieldBool::<0, 1, 0, Register64Bit, common::RW>::from_register(
+            self, 0,
+        )
     }
 }
 impl crate::common::ResetValue<Register64Bit> for Register64BitT {
     #[inline(always)]
     fn reset_value(&self) -> Register64Bit {
         Register64Bit::new(18446744073709551615)
-    }
-}
-pub mod register64bit {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _, CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _,
-        RegisterValue as _, ResetValue as _, Write as _,
-    };
-
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Boolean(u8);
-
-    impl Boolean {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Boolean {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Boolean {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Boolean> for u64 {
-        #[inline(always)]
-        fn from(value: Boolean) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Boolean {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Boolean {
-        pub const TRUE: Self = Self(1);
-
-        pub const FALSE: Self = Self(0);
     }
 }
 

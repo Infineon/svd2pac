@@ -19,6 +19,26 @@ Unsupported register size
 {%- endif -%}
 {%- endmacro -%}
 
+{%- macro field_enum_doc(documentation) -%}
+{%- set doc_string = documentation | svd_description_to_doc -%}
+{%- if doc_string != "" %}
+#[doc = "{{doc_string}}"]
+{%- endif -%}
+{%- endmacro -%}
+
+{%- macro field_doc(field) -%}
+{{self::doc_attribute(documentation=field.description)}}
+{%- for enum_type in field.boolean_enum_types -%}
+{%- for val in enum_type.values -%}
+{%- set value_doc = val.value ~ " = " ~ val.name -%}
+{%- if val.description != "" -%}
+{%- set value_doc = value_doc ~ ": " ~ val.description -%}
+{%- endif -%}
+{{self::field_enum_doc(documentation=value_doc)}}
+{%- endfor -%}
+{%- endfor -%}
+{%- endmacro -%}
+
 {# Generated register function #}
 {%- macro register_func(types_mod,reg) -%}
 {%- set reg_struct = reg.name | to_struct_id -%}
@@ -45,7 +65,7 @@ pub fn {{func_name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
  
 {%- macro bitfield_type(field,reg_struct_name,reg_mod_name,turbofish) -%}
 {%-if turbofish %}{%set separator = "::"%}{%else%}{%set separator = ""%}{%endif-%}
-{%- if  field.mask == 1 and 0 == field.enum_types | length %}
+{%- if field.mask == 1 %}
     crate::common::RegisterFieldBool{{separator}}<{{field.offset}},{{field.dim}},{{field.dim_increment}},{{reg_struct_name}},common::{{field.access}}>
 {%- else -%}
     {%- if field.enum_type_read -%}
@@ -122,7 +142,7 @@ impl crate::common::NoBitfieldReg for {{reg_struct_name}} {}
 {% else -%}
 impl {{reg_struct_name}} {
     {%- for field_name,field in reg.fields %}
-    {{self::doc_attribute(documentation=field.description)}}
+    {{self::field_doc(field=field)}}
     #[inline(always)]
     {%- if field.dim > 1 -%}
     pub fn {{field.name | to_func_id }}(self,index:u8) -> {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
@@ -476,5 +496,3 @@ impl Peripherals {
     }
 }
 {%- endmacro cortex_m_peripherals_struct -%}
-
-

@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 16:00:55 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 14 Aug 2026 14:16:57 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -63,87 +63,15 @@ unsafe impl crate::common::Read<Register> for RegisterT {}
 unsafe impl crate::common::Write<Register> for RegisterT {}
 impl Register {
     #[doc = "\\[\\]\\\"😀\"\\n\\a\\r\'𒀀𒀽"]
+    #[doc = "0 = enum_value: \\[\\]\\\"😀\"\\n\\a\\r\'𒀀𒀽"]
     #[inline(always)]
-    pub fn field(
-        self,
-    ) -> crate::common::RegisterField<
-        1,
-        0x1,
-        1,
-        0,
-        register::Field,
-        register::Field,
-        Register,
-        common::RW,
-    > {
-        crate::common::RegisterField::<
-            1,
-            0x1,
-            1,
-            0,
-            register::Field,
-            register::Field,
-            Register,
-            common::RW,
-        >::from_register(self, 0)
+    pub fn field(self) -> crate::common::RegisterFieldBool<1, 1, 0, Register, common::RW> {
+        crate::common::RegisterFieldBool::<1, 1, 0, Register, common::RW>::from_register(self, 0)
     }
 }
 impl crate::common::ResetValue<Register> for RegisterT {
     #[inline(always)]
     fn reset_value(&self) -> Register {
         Register::new(0)
-    }
-}
-pub mod register {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _, CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _,
-        RegisterValue as _, ResetValue as _, Write as _,
-    };
-
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Field(u8);
-
-    impl Field {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Field {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Field {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Field> for u64 {
-        #[inline(always)]
-        fn from(value: Field) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Field {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Field {
-        #[doc = "\\[\\]\\\"😀\"\\n\\a\\r\'𒀀𒀽"]
-        pub const ENUM_VALUE: Self = Self(0);
     }
 }

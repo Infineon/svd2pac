@@ -79,6 +79,8 @@ pub struct FieldGetterSetter {
     pub size: BitSize,
     /// Contains up to 2 enum types that are used to generate read and write functions
     pub enum_types: Vec<EnumeratedValueType>,
+    /// Enumerated values for one-bit fields, which are rendered in accessor documentation.
+    pub boolean_enum_types: Vec<EnumeratedValueType>,
     /// if None then the field is not enumerated and api accept raw value
     /// if Some then the field is enumerated and api accept a type defined in the option
     /// String shall match a name of `EnumeratedValueType`

@@ -563,19 +563,24 @@ fn get_all_register_field(
         };
 
         let (dim, dim_increment, dim_index) = get_dim_dim_increment(field);
-        let enum_types = get_values_types(field)?;
-        let enum_type_write = enum_types
+        let parsed_enum_types = get_values_types(field)?;
+        let enum_type_write = parsed_enum_types
             .iter()
             .find(|x| {
                 x.usage == EnumeratedValueUsage::Write || x.usage == EnumeratedValueUsage::ReadWrite
             })
             .map(|x| x.name.clone());
-        let enum_type_read = enum_types
+        let enum_type_read = parsed_enum_types
             .iter()
             .find(|x| {
                 x.usage == EnumeratedValueUsage::Read || x.usage == EnumeratedValueUsage::ReadWrite
             })
             .map(|x| x.name.clone());
+        let (enum_types, boolean_enum_types) = if mask == 1 {
+            (Vec::new(), parsed_enum_types)
+        } else {
+            (parsed_enum_types, Vec::new())
+        };
 
         fields.push(FieldGetterSetter {
             name,
@@ -583,6 +588,7 @@ fn get_all_register_field(
             offset,
             mask,
             enum_types,
+            boolean_enum_types,
             enum_type_write,
             enum_type_read,
             access,

@@ -88,13 +88,13 @@ fn main() -> ! {
         // Test correct handling of SVD names starting with non XID_Start
         // characters or collide with Rust keywords.
         let value = FOO.r#in().read();
-        FOO.r#in()
-            .write(value._self().set(foo::r#in::_Self::_1_VALUE));
+        FOO.r#in().write(value._self().set(true));
 
         // Test 64Bit register
         TIMER
             .register64bit()
-            .modify(|r| r.boolean().set(crate::timer::register64bit::Boolean::FALSE));
+            .modify(|r| r.boolean().set(true));
+        let _: bool = TIMER.register64bit().read().boolean().get();
 
         // Test cluster array
         TIMER.clusterdim()[0].cr().modify(|r| r.field1().set(0));
@@ -116,13 +116,9 @@ fn main() -> ! {
             .only_write_enum()
             .set(uart::regenumvalue::OnlyWriteEnumWrite::VALUE_1);
         let _: u8 = reg_value.only_write_enum().get();
-        let _: uart::regenumvalue::ReadWriteEnumSplitBinaryRead =
-            reg_value.read_write_enum_split_binary().get();
-        let _ = reg_value
-            .read_write_enum_split_binary()
-            .set(uart::regenumvalue::ReadWriteEnumSplitBinaryWrite::VALUE_0);
-        let _: uart::regenumvalue::ReadWriteEnumSplitBinaryRead =
-            reg_value.read_write_enum_split_binary().get();
+        let _: bool = reg_value.read_write_enum_split_binary().get();
+        let _ = reg_value.read_write_enum_split_binary().set(true);
+        let _: bool = reg_value.read_write_enum_split_binary().get();
 
         // Demonstrating usage of register array with dimIndex tag.
         DIMINDEXPERI

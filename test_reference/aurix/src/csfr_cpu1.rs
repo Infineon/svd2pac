@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:56:11 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 14 Aug 2026 13:58:44 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -997,67 +997,16 @@ unsafe impl crate::common::WriteCore for Smacon {}
 impl Smacon {
      
 #[doc = "In Order Data Transactions   IODT"]
+#[doc = "0 = Const_00: 0 Normal operation  Non dependent loads bypass stores."]
+#[doc = "1 = Const_11: 1 In order operation  Loads always flush preceding stores  processor store buffer disabled."]
     #[inline(always)]
-    pub fn iodt(self) -> crate::common::RegisterField<24,0x1,1,0,smacon::Iodt,smacon::Iodt,Smacon,common::RW> {
-        crate::common::RegisterField::<24,0x1,1,0,smacon::Iodt,smacon::Iodt,Smacon,common::RW>::from_register(self,0)
+    pub fn iodt(self) -> 
+    crate::common::RegisterFieldBool<24,1,0,Smacon,common::RW> {
+        
+    crate::common::RegisterFieldBool::<24,1,0,Smacon,common::RW>::from_register(self,0)
     }
 }
-pub mod smacon {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
-        ResetValue as _, Write as _,
-    };
-    
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Iodt(u8);
-    
-    impl Iodt {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
 
-    impl crate::common::EnumBitfieldStruct for Iodt {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Iodt {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Iodt> for u64 {
-        #[inline(always)]
-        fn from(value: Iodt) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Iodt {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Iodt {
-         
-#[doc = "0 Normal operation  Non dependent loads bypass stores."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 In order operation  Loads always flush preceding stores  processor store buffer disabled."]
-        pub const CONST_11:Self =Self(1);
-    }
-}
  
 #[doc = "CPUx Data Integrity Error Address Register\n resetvalue={Application Reset:0x0}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -1134,9 +1083,13 @@ unsafe impl crate::common::WriteCore for Dietr {}
 impl Dietr {
      
 #[doc = "Integrity Error Detected   IED"]
+#[doc = "0 = Const_00: 0 Write  Clear IED bit  re enable DIETR and DIEAR update. Read   No data integrity error condition occurred"]
+#[doc = "1 = Const_11: 1 Write   No Effect. Read  Data integrity error condition detected. DIETR and DIEAR contents valid  further DIETR and DIEAR updates disabled.."]
     #[inline(always)]
-    pub fn ied(self) -> crate::common::RegisterField<0,0x1,1,0,dietr::Ied,dietr::Ied,Dietr,common::RW> {
-        crate::common::RegisterField::<0,0x1,1,0,dietr::Ied,dietr::Ied,Dietr,common::RW>::from_register(self,0)
+    pub fn ied(self) -> 
+    crate::common::RegisterFieldBool<0,1,0,Dietr,common::RW> {
+        
+    crate::common::RegisterFieldBool::<0,1,0,Dietr,common::RW>::from_register(self,0)
     }
      
 #[doc = "Integrity Error   Tag Memory   IE T"]
@@ -1225,62 +1178,7 @@ impl Dietr {
     crate::common::RegisterFieldBool::<16,1,0,Dietr,common::R>::from_register(self,0)
     }
 }
-pub mod dietr {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
-        ResetValue as _, Write as _,
-    };
-    
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Ied(u8);
-    
-    impl Ied {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
 
-    impl crate::common::EnumBitfieldStruct for Ied {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Ied {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Ied> for u64 {
-        #[inline(always)]
-        fn from(value: Ied) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Ied {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Ied {
-         
-#[doc = "0 Write  Clear IED bit  re enable DIETR and DIEAR update. Read   No data integrity error condition occurred"]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Write   No Effect. Read  Data integrity error condition detected. DIETR and DIEAR contents valid  further DIETR and DIEAR updates disabled.."]
-        pub const CONST_11:Self =Self(1);
-    }
-}
  
 #[doc = "CPUx Program Integrity Error Address Register\n resetvalue={Application Reset:0x0}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -1357,9 +1255,13 @@ unsafe impl crate::common::WriteCore for Pietr {}
 impl Pietr {
      
 #[doc = "Integrity Error Detected   IED"]
+#[doc = "0 = Const_00: 0 Write  Clear IED bit  re enable PIETR and PIEAR update. Read   No data integrity error condition occurred"]
+#[doc = "1 = Const_11: 1 Write   No Effect. Read  Data integrity error condition detected. PIETR and PIEAR contents valid  further PIETR and PIEAR updates disabled.."]
     #[inline(always)]
-    pub fn ied(self) -> crate::common::RegisterField<0,0x1,1,0,pietr::Ied,pietr::Ied,Pietr,common::RW> {
-        crate::common::RegisterField::<0,0x1,1,0,pietr::Ied,pietr::Ied,Pietr,common::RW>::from_register(self,0)
+    pub fn ied(self) -> 
+    crate::common::RegisterFieldBool<0,1,0,Pietr,common::RW> {
+        
+    crate::common::RegisterFieldBool::<0,1,0,Pietr,common::RW>::from_register(self,0)
     }
      
 #[doc = "Integrity Error   TAG Memory   IE T"]
@@ -1448,62 +1350,7 @@ impl Pietr {
     crate::common::RegisterFieldBool::<16,1,0,Pietr,common::R>::from_register(self,0)
     }
 }
-pub mod pietr {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
-        ResetValue as _, Write as _,
-    };
-    
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Ied(u8);
-    
-    impl Ied {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
 
-    impl crate::common::EnumBitfieldStruct for Ied {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Ied {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Ied> for u64 {
-        #[inline(always)]
-        fn from(value: Ied) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Ied {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Ied {
-         
-#[doc = "0 Write  Clear IED bit  re enable PIETR and PIEAR update. Read   No data integrity error condition occurred"]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Write   No Effect. Read  Data integrity error condition detected. PIETR and PIEAR contents valid  further PIETR and PIEAR updates disabled.."]
-        pub const CONST_11:Self =Self(1);
-    }
-}
  
 #[doc = "CPUx Task Address Space Identifier Register\n resetvalue={Application Reset:0x1F}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -1703,119 +1550,26 @@ unsafe impl crate::common::WriteCore for Compat {}
 impl Compat {
      
 #[doc = "Rounding Mode Compatibility   RM"]
+#[doc = "0 = Const_00: 0 PSW.RM not restored by RET."]
+#[doc = "1 = Const_11: 1 PSW.RM restored by RET  TC1.3 behavior ."]
     #[inline(always)]
-    pub fn rm(self) -> crate::common::RegisterField<3,0x1,1,0,compat::Rm,compat::Rm,Compat,common::RW> {
-        crate::common::RegisterField::<3,0x1,1,0,compat::Rm,compat::Rm,Compat,common::RW>::from_register(self,0)
+    pub fn rm(self) -> 
+    crate::common::RegisterFieldBool<3,1,0,Compat,common::RW> {
+        
+    crate::common::RegisterFieldBool::<3,1,0,Compat,common::RW>::from_register(self,0)
     }
      
 #[doc = "SYSCON Safety Protection Mode Compatibility   SP"]
+#[doc = "0 = Const_00: 0 SYSCON 31 1  safety endinit protected."]
+#[doc = "1 = Const_11: 1 SYSCON 31 1  not safety endinit protected  TC1.3 behavior ."]
     #[inline(always)]
-    pub fn sp(self) -> crate::common::RegisterField<4,0x1,1,0,compat::Sp,compat::Sp,Compat,common::RW> {
-        crate::common::RegisterField::<4,0x1,1,0,compat::Sp,compat::Sp,Compat,common::RW>::from_register(self,0)
+    pub fn sp(self) -> 
+    crate::common::RegisterFieldBool<4,1,0,Compat,common::RW> {
+        
+    crate::common::RegisterFieldBool::<4,1,0,Compat,common::RW>::from_register(self,0)
     }
 }
-pub mod compat {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
-        ResetValue as _, Write as _,
-    };
-    
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Rm(u8);
-    
-    impl Rm {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
 
-    impl crate::common::EnumBitfieldStruct for Rm {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Rm {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Rm> for u64 {
-        #[inline(always)]
-        fn from(value: Rm) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Rm {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Rm {
-         
-#[doc = "0 PSW.RM not restored by RET."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 PSW.RM restored by RET  TC1.3 behavior ."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Sp(u8);
-    
-    impl Sp {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Sp {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Sp {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Sp> for u64 {
-        #[inline(always)]
-        fn from(value: Sp) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Sp {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Sp {
-         
-#[doc = "0 SYSCON 31 1  safety endinit protected."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 SYSCON 31 1  not safety endinit protected  TC1.3 behavior ."]
-        pub const CONST_11:Self =Self(1);
-    }
-}
  
 #[doc = "CPUx Previous Context Information Register\n resetvalue={Application Reset:0x0}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -1863,9 +1617,13 @@ impl Pcxi {
     }
      
 #[doc = "Upper or Lower Context Tag   UL. Identifies the type of context saved. If the type does not match the type expected when a context restore operation is performed  a trap is generated."]
+#[doc = "0 = Const_00: 0 Lower Context"]
+#[doc = "1 = Const_11: 1 Upper Context"]
     #[inline(always)]
-    pub fn ul(self) -> crate::common::RegisterField<20,0x1,1,0,pcxi::Ul,pcxi::Ul,Pcxi,common::RW> {
-        crate::common::RegisterField::<20,0x1,1,0,pcxi::Ul,pcxi::Ul,Pcxi,common::RW>::from_register(self,0)
+    pub fn ul(self) -> 
+    crate::common::RegisterFieldBool<20,1,0,Pcxi,common::RW> {
+        
+    crate::common::RegisterFieldBool::<20,1,0,Pcxi,common::RW>::from_register(self,0)
     }
      
 #[doc = "Previous Interrupt Enable   PIE. Indicates the state of the interrupt enable bit  ICR.IE  for the interrupted task."]
@@ -1882,62 +1640,7 @@ impl Pcxi {
         crate::common::RegisterField::<22,0xff,1,0,u8,u8,Pcxi,common::RW>::from_register(self,0)
     }
 }
-pub mod pcxi {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
-        ResetValue as _, Write as _,
-    };
-    
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Ul(u8);
-    
-    impl Ul {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
 
-    impl crate::common::EnumBitfieldStruct for Ul {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Ul {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Ul> for u64 {
-        #[inline(always)]
-        fn from(value: Ul) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Ul {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Ul {
-         
-#[doc = "0 Lower Context"]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Upper Context"]
-        pub const CONST_11:Self =Self(1);
-    }
-}
  
 #[doc = "CPUx Program Status Word\n resetvalue={Application Reset:0x0B80}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -1979,15 +1682,23 @@ impl Psw {
     }
      
 #[doc = "Call Depth Count Enable   CDE. Enables call depth counting  provided that the PSW.CDC mask field is not all set to 1. If PSW.CDC   1111111 B   call depth counting is disabled regardless of the setting on the PSW.CDE bit."]
+#[doc = "0 = Const_00: 0 Call depth counting is temporarily disabled. It is automatically re enabled after execution of the next Call instruction."]
+#[doc = "1 = Const_11: 1 Call depth counting is enabled."]
     #[inline(always)]
-    pub fn cde(self) -> crate::common::RegisterField<7,0x1,1,0,psw::Cde,psw::Cde,Psw,common::RW> {
-        crate::common::RegisterField::<7,0x1,1,0,psw::Cde,psw::Cde,Psw,common::RW>::from_register(self,0)
+    pub fn cde(self) -> 
+    crate::common::RegisterFieldBool<7,1,0,Psw,common::RW> {
+        
+    crate::common::RegisterFieldBool::<7,1,0,Psw,common::RW>::from_register(self,0)
     }
      
 #[doc = "Interrupt Stack Control   IS. Determines if the current execution thread is using the shared global  interrupt  stack or a user stack."]
+#[doc = "0 = Const_00: 0 User Stack.  If an interrupt is taken when the IS bit is 0  then the stack pointer register is loaded from the ISP register before execution starts at the first instruction of the Interrupt Service Routine  ISR ."]
+#[doc = "1 = Const_11: 1 Shared Global Stack.  If an interrupt is taken when the PSW.IS bit is 1  then the current value of the stack pointer is used by the Interrupt Service Routine  ISR ."]
     #[inline(always)]
-    pub fn is(self) -> crate::common::RegisterField<9,0x1,1,0,psw::Is,psw::Is,Psw,common::RW> {
-        crate::common::RegisterField::<9,0x1,1,0,psw::Is,psw::Is,Psw,common::RW>::from_register(self,0)
+    pub fn is(self) -> 
+    crate::common::RegisterFieldBool<9,1,0,Psw,common::RW> {
+        
+    crate::common::RegisterFieldBool::<9,1,0,Psw,common::RW>::from_register(self,0)
     }
      
 #[doc = "Access Privilege Level Control  I O Privilege    IO. Determines the access level to special function registers and peripheral devices."]
@@ -2019,98 +1730,6 @@ pub mod psw {
         ResetValue as _, Write as _,
     };
     
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Cde(u8);
-    
-    impl Cde {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Cde {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Cde {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Cde> for u64 {
-        #[inline(always)]
-        fn from(value: Cde) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Cde {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Cde {
-         
-#[doc = "0 Call depth counting is temporarily disabled. It is automatically re enabled after execution of the next Call instruction."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Call depth counting is enabled."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Is(u8);
-    
-    impl Is {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Is {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Is {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Is> for u64 {
-        #[inline(always)]
-        fn from(value: Is) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Is {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Is {
-         
-#[doc = "0 User Stack.  If an interrupt is taken when the IS bit is 0  then the stack pointer register is loaded from the ISP register before execution starts at the first instruction of the Interrupt Service Routine  ISR ."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Shared Global Stack.  If an interrupt is taken when the PSW.IS bit is 1  then the current value of the stack pointer is used by the Interrupt Service Routine  ISR ."]
-        pub const CONST_11:Self =Self(1);
-    }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     #[repr(transparent)]
     pub struct Io(u8);
@@ -2237,21 +1856,33 @@ unsafe impl crate::common::WriteCore for Syscon {}
 impl Syscon {
      
 #[doc = "Free Context List Depleted Sticky Flag   FCDSF. This sticky bit indicates that a FCD  Free Context List Depleted  trap occurred since the bit was last cleared by software."]
+#[doc = "0 = Const_00: 0 No FCD trap occurred since the last clear."]
+#[doc = "1 = Const_11: 1 An FCD trap occurred since the last clear."]
     #[inline(always)]
-    pub fn fcdsf(self) -> crate::common::RegisterField<0,0x1,1,0,syscon::Fcdsf,syscon::Fcdsf,Syscon,common::RW> {
-        crate::common::RegisterField::<0,0x1,1,0,syscon::Fcdsf,syscon::Fcdsf,Syscon,common::RW>::from_register(self,0)
+    pub fn fcdsf(self) -> 
+    crate::common::RegisterFieldBool<0,1,0,Syscon,common::RW> {
+        
+    crate::common::RegisterFieldBool::<0,1,0,Syscon,common::RW>::from_register(self,0)
     }
      
 #[doc = "Memory Protection Enable   PROTEN. Enables the memory protection system. Memory protection is controlled through the memory protection register        sets. Note  Initialize the protection register sets prior to setting        PROTEN to one."]
+#[doc = "0 = Const_00: 0 Memory Protection is disabled."]
+#[doc = "1 = Const_11: 1 Memory Protection is enabled."]
     #[inline(always)]
-    pub fn proten(self) -> crate::common::RegisterField<1,0x1,1,0,syscon::Proten,syscon::Proten,Syscon,common::RW> {
-        crate::common::RegisterField::<1,0x1,1,0,syscon::Proten,syscon::Proten,Syscon,common::RW>::from_register(self,0)
+    pub fn proten(self) -> 
+    crate::common::RegisterFieldBool<1,1,0,Syscon,common::RW> {
+        
+    crate::common::RegisterFieldBool::<1,1,0,Syscon,common::RW>::from_register(self,0)
     }
      
 #[doc = "Temporal Protection Enable   TPROTEN. Enable the Temporal Protection system."]
+#[doc = "0 = Const_00: 0 Temporal Protection is disabled."]
+#[doc = "1 = Const_11: 1 Temporal Protection is enabled."]
     #[inline(always)]
-    pub fn tproten(self) -> crate::common::RegisterField<2,0x1,1,0,syscon::Tproten,syscon::Tproten,Syscon,common::RW> {
-        crate::common::RegisterField::<2,0x1,1,0,syscon::Tproten,syscon::Tproten,Syscon,common::RW>::from_register(self,0)
+    pub fn tproten(self) -> 
+    crate::common::RegisterFieldBool<2,1,0,Syscon,common::RW> {
+        
+    crate::common::RegisterFieldBool::<2,1,0,Syscon,common::RW>::from_register(self,0)
     }
      
 #[doc = "Initial State Interrupt   IS. of PSW.S bit in interrupt handle"]
@@ -2295,205 +1926,16 @@ impl Syscon {
     }
      
 #[doc = "Boot Halt   BHALT"]
+#[doc = "0 = Const_00: 0 Core is not in boot halt."]
+#[doc = "1 = Const_11: 1 Core is in boot halt  write to 0 will exit"]
     #[inline(always)]
-    pub fn bhalt(self) -> crate::common::RegisterField<24,0x1,1,0,syscon::Bhalt,syscon::Bhalt,Syscon,common::RW> {
-        crate::common::RegisterField::<24,0x1,1,0,syscon::Bhalt,syscon::Bhalt,Syscon,common::RW>::from_register(self,0)
+    pub fn bhalt(self) -> 
+    crate::common::RegisterFieldBool<24,1,0,Syscon,common::RW> {
+        
+    crate::common::RegisterFieldBool::<24,1,0,Syscon,common::RW>::from_register(self,0)
     }
 }
-pub mod syscon {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
-        ResetValue as _, Write as _,
-    };
-    
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Fcdsf(u8);
-    
-    impl Fcdsf {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
 
-    impl crate::common::EnumBitfieldStruct for Fcdsf {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Fcdsf {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Fcdsf> for u64 {
-        #[inline(always)]
-        fn from(value: Fcdsf) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Fcdsf {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Fcdsf {
-         
-#[doc = "0 No FCD trap occurred since the last clear."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 An FCD trap occurred since the last clear."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Proten(u8);
-    
-    impl Proten {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Proten {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Proten {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Proten> for u64 {
-        #[inline(always)]
-        fn from(value: Proten) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Proten {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Proten {
-         
-#[doc = "0 Memory Protection is disabled."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Memory Protection is enabled."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Tproten(u8);
-    
-    impl Tproten {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Tproten {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Tproten {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Tproten> for u64 {
-        #[inline(always)]
-        fn from(value: Tproten) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Tproten {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Tproten {
-         
-#[doc = "0 Temporal Protection is disabled."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Temporal Protection is enabled."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Bhalt(u8);
-    
-    impl Bhalt {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Bhalt {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Bhalt {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Bhalt> for u64 {
-        #[inline(always)]
-        fn from(value: Bhalt) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Bhalt {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Bhalt {
-         
-#[doc = "0 Core is not in boot halt."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Core is in boot halt  write to 0 will exit"]
-        pub const CONST_11:Self =Self(1);
-    }
-}
  
 #[doc = "CPUx Identification Register TC1.6.2P\n resetvalue={Application Reset:0x0C0C021}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -2898,9 +2340,13 @@ impl Icr {
     }
      
 #[doc = "Global Interrupt Enable Bit   IE. The interrupt enable bit globally enables the CPU service request system. Whether a service request is delivered to the CPU depends on the individual Service Request Enable Bits  SRE  in the SRNs  and the current state of the CPU. ICR.IE is automatically updated by hardware on entry and exit of an Interrupt Service Routine  ISR . ICR.IE is cleared to 0 when an interrupt is taken  and is restored to the previous value when the ISR executes an RFE instruction to terminate itself. ICR.IE can also be updated through the execution of the ENABLE  DISABLE  MTCR  and BISR instructions."]
+#[doc = "0 = Const_00: 0 Interrupt system is globally disabled"]
+#[doc = "1 = Const_11: 1 Interrupt system is globally enabled"]
     #[inline(always)]
-    pub fn ie(self) -> crate::common::RegisterField<15,0x1,1,0,icr::Ie,icr::Ie,Icr,common::RW> {
-        crate::common::RegisterField::<15,0x1,1,0,icr::Ie,icr::Ie,Icr,common::RW>::from_register(self,0)
+    pub fn ie(self) -> 
+    crate::common::RegisterFieldBool<15,1,0,Icr,common::RW> {
+        
+    crate::common::RegisterFieldBool::<15,1,0,Icr,common::RW>::from_register(self,0)
     }
      
 #[doc = "Pending Interrupt Priority Number   PIPN. A read only bit field that is updated by the ICU at the end of each interrupt arbitration process. It indicates the priority number of the pending service request. ICR.PIPN is set to 0 when no request is pending  and at the beginning of each new arbitration process. ..."]
@@ -2918,52 +2364,6 @@ pub mod icr {
         ResetValue as _, Write as _,
     };
     
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Ie(u8);
-    
-    impl Ie {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Ie {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Ie {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Ie> for u64 {
-        #[inline(always)]
-        fn from(value: Ie) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Ie {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Ie {
-         
-#[doc = "0 Interrupt system is globally disabled"]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Interrupt system is globally enabled"]
-        pub const CONST_11:Self =Self(1);
-    }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     #[repr(transparent)]
     pub struct Pipn(u8);
@@ -4994,15 +4394,23 @@ unsafe impl crate::common::WriteCore for Cctrl {}
 impl Cctrl {
      
 #[doc = "Counter Mode   CM"]
+#[doc = "0 = Const_00: 0 Normal Mode."]
+#[doc = "1 = Const_11: 1 Task Mode."]
     #[inline(always)]
-    pub fn cm(self) -> crate::common::RegisterField<0,0x1,1,0,cctrl::Cm,cctrl::Cm,Cctrl,common::RW> {
-        crate::common::RegisterField::<0,0x1,1,0,cctrl::Cm,cctrl::Cm,Cctrl,common::RW>::from_register(self,0)
+    pub fn cm(self) -> 
+    crate::common::RegisterFieldBool<0,1,0,Cctrl,common::RW> {
+        
+    crate::common::RegisterFieldBool::<0,1,0,Cctrl,common::RW>::from_register(self,0)
     }
      
 #[doc = "Count Enable   CE"]
+#[doc = "0 = Const_00: 0 Disable the counters  CCNT  ICNT  M1CNT  M2CNT  M3CNT."]
+#[doc = "1 = Const_11: 1 Enable the counters  CCNT  ICNT  M1CNT  M2CNT  M3CNT."]
     #[inline(always)]
-    pub fn ce(self) -> crate::common::RegisterField<1,0x1,1,0,cctrl::Ce,cctrl::Ce,Cctrl,common::RW> {
-        crate::common::RegisterField::<1,0x1,1,0,cctrl::Ce,cctrl::Ce,Cctrl,common::RW>::from_register(self,0)
+    pub fn ce(self) -> 
+    crate::common::RegisterFieldBool<1,1,0,Cctrl,common::RW> {
+        
+    crate::common::RegisterFieldBool::<1,1,0,Cctrl,common::RW>::from_register(self,0)
     }
      
 #[doc = "M1CNT Configuration   M1"]
@@ -5023,108 +4431,7 @@ impl Cctrl {
         crate::common::RegisterField::<8,0x7,1,0,u8,u8,Cctrl,common::RW>::from_register(self,0)
     }
 }
-pub mod cctrl {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
-        ResetValue as _, Write as _,
-    };
-    
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Cm(u8);
-    
-    impl Cm {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
 
-    impl crate::common::EnumBitfieldStruct for Cm {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Cm {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Cm> for u64 {
-        #[inline(always)]
-        fn from(value: Cm) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Cm {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Cm {
-         
-#[doc = "0 Normal Mode."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Task Mode."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Ce(u8);
-    
-    impl Ce {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Ce {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Ce {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Ce> for u64 {
-        #[inline(always)]
-        fn from(value: Ce) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Ce {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Ce {
-         
-#[doc = "0 Disable the counters  CCNT  ICNT  M1CNT  M2CNT  M3CNT."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Enable the counters  CCNT  ICNT  M1CNT  M2CNT  M3CNT."]
-        pub const CONST_11:Self =Self(1);
-    }
-}
  
 #[doc = "CPUx CPU Clock Cycle Count\n resetvalue={Debug Reset:0x0}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -5405,9 +4712,13 @@ unsafe impl crate::common::WriteCore for Dbgsr {}
 impl Dbgsr {
      
 #[doc = "Debug Enable   DE. Determines whether the CDC is enabled or not."]
+#[doc = "0 = Const_00: 0 The CDC is disabled."]
+#[doc = "1 = Const_11: 1 The CDC is enabled."]
     #[inline(always)]
-    pub fn de(self) -> crate::common::RegisterField<0,0x1,1,0,dbgsr::De,dbgsr::De,Dbgsr,common::R> {
-        crate::common::RegisterField::<0,0x1,1,0,dbgsr::De,dbgsr::De,Dbgsr,common::R>::from_register(self,0)
+    pub fn de(self) -> 
+    crate::common::RegisterFieldBool<0,1,0,Dbgsr,common::R> {
+        
+    crate::common::RegisterFieldBool::<0,1,0,Dbgsr,common::R>::from_register(self,0)
     }
      
 #[doc = "CPU Halt Request   Status Field   HALT. HALT can be set or cleared by software. HALT 0  is the actual Halt bit. HALT 1  is a mask bit to specify whether or not HALT 0  is to be updated on a software write. HALT 1  is always read as 0. HALT 1  must be set to 1 in order to update HALT 0  by software  R  read  W  write ."]
@@ -5417,27 +4728,43 @@ impl Dbgsr {
     }
      
 #[doc = "Suspend in Halt   SIH. State of the Suspend In signal."]
+#[doc = "0 = Const_00: 0 The Suspend In signal is negated. The CPU is not in Halt Mode   except when the Halt mechanism is set following a Debug Event or a write to DBGSR.HALT ."]
+#[doc = "1 = Const_11: 1 The Suspend In signal is asserted. The CPU is in Halt Mode."]
     #[inline(always)]
-    pub fn sih(self) -> crate::common::RegisterField<3,0x1,1,0,dbgsr::Sih,dbgsr::Sih,Dbgsr,common::R> {
-        crate::common::RegisterField::<3,0x1,1,0,dbgsr::Sih,dbgsr::Sih,Dbgsr,common::R>::from_register(self,0)
+    pub fn sih(self) -> 
+    crate::common::RegisterFieldBool<3,1,0,Dbgsr,common::R> {
+        
+    crate::common::RegisterFieldBool::<3,1,0,Dbgsr,common::R>::from_register(self,0)
     }
      
 #[doc = "Current State of the Core Suspend Out Signal   SUSP"]
+#[doc = "0 = Const_00: 0 Core suspend out inactive."]
+#[doc = "1 = Const_11: 1 Core suspend out active."]
     #[inline(always)]
-    pub fn susp(self) -> crate::common::RegisterField<4,0x1,1,0,dbgsr::Susp,dbgsr::Susp,Dbgsr,common::RW> {
-        crate::common::RegisterField::<4,0x1,1,0,dbgsr::Susp,dbgsr::Susp,Dbgsr,common::RW>::from_register(self,0)
+    pub fn susp(self) -> 
+    crate::common::RegisterFieldBool<4,1,0,Dbgsr,common::RW> {
+        
+    crate::common::RegisterFieldBool::<4,1,0,Dbgsr,common::RW>::from_register(self,0)
     }
      
 #[doc = "Previous State of Core Suspend Out Signal   PREVSUSP. Updated when a Debug Event causes a hardware update of DBGSR.SUSP. This field is not updated for writes to DBGSR.SUSP."]
+#[doc = "0 = Const_00: 0 Previous core suspend out inactive."]
+#[doc = "1 = Const_11: 1 Previous core suspend out active."]
     #[inline(always)]
-    pub fn prevsusp(self) -> crate::common::RegisterField<6,0x1,1,0,dbgsr::Prevsusp,dbgsr::Prevsusp,Dbgsr,common::R> {
-        crate::common::RegisterField::<6,0x1,1,0,dbgsr::Prevsusp,dbgsr::Prevsusp,Dbgsr,common::R>::from_register(self,0)
+    pub fn prevsusp(self) -> 
+    crate::common::RegisterFieldBool<6,1,0,Dbgsr,common::R> {
+        
+    crate::common::RegisterFieldBool::<6,1,0,Dbgsr,common::R>::from_register(self,0)
     }
      
 #[doc = "Posted Event   PEVT"]
+#[doc = "0 = Const_00: 0 No posted event."]
+#[doc = "1 = Const_11: 1 Posted event."]
     #[inline(always)]
-    pub fn pevt(self) -> crate::common::RegisterField<7,0x1,1,0,dbgsr::Pevt,dbgsr::Pevt,Dbgsr,common::RW> {
-        crate::common::RegisterField::<7,0x1,1,0,dbgsr::Pevt,dbgsr::Pevt,Dbgsr,common::RW>::from_register(self,0)
+    pub fn pevt(self) -> 
+    crate::common::RegisterFieldBool<7,1,0,Dbgsr,common::RW> {
+        
+    crate::common::RegisterFieldBool::<7,1,0,Dbgsr,common::RW>::from_register(self,0)
     }
 }
 pub mod dbgsr {
@@ -5449,52 +4776,6 @@ pub mod dbgsr {
         ResetValue as _, Write as _,
     };
     
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct De(u8);
-    
-    impl De {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for De {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for De {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<De> for u64 {
-        #[inline(always)]
-        fn from(value: De) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for De {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl De {
-         
-#[doc = "0 The CDC is disabled."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 The CDC is enabled."]
-        pub const CONST_11:Self =Self(1);
-    }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     #[repr(transparent)]
     pub struct Halt(u8);
@@ -5547,190 +4828,6 @@ pub mod dbgsr {
 #[doc = "11 R  Not Applicable. W  If DBGSR.DE    1  The CDC is enabled   set HALT 0 . If DBGSR.DE    0  The CDC is not enabled   HALT 0  is left unchanged."]
         pub const CONST_33:Self =Self(3);
     }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Sih(u8);
-    
-    impl Sih {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Sih {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Sih {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Sih> for u64 {
-        #[inline(always)]
-        fn from(value: Sih) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Sih {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Sih {
-         
-#[doc = "0 The Suspend In signal is negated. The CPU is not in Halt Mode   except when the Halt mechanism is set following a Debug Event or a write to DBGSR.HALT ."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 The Suspend In signal is asserted. The CPU is in Halt Mode."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Susp(u8);
-    
-    impl Susp {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Susp {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Susp {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Susp> for u64 {
-        #[inline(always)]
-        fn from(value: Susp) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Susp {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Susp {
-         
-#[doc = "0 Core suspend out inactive."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Core suspend out active."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Prevsusp(u8);
-    
-    impl Prevsusp {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Prevsusp {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Prevsusp {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Prevsusp> for u64 {
-        #[inline(always)]
-        fn from(value: Prevsusp) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Prevsusp {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Prevsusp {
-         
-#[doc = "0 Previous core suspend out inactive."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Previous core suspend out active."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Pevt(u8);
-    
-    impl Pevt {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Pevt {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Pevt {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Pevt> for u64 {
-        #[inline(always)]
-        fn from(value: Pevt) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Pevt {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Pevt {
-         
-#[doc = "0 No posted event."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Posted event."]
-        pub const CONST_11:Self =Self(1);
-    }
 }
  
 #[doc = "CPUx External Event Register\n resetvalue={Debug Reset:0x0}"]
@@ -5773,15 +4870,23 @@ impl Exevt {
     }
      
 #[doc = "Break Before Make  BBM  or Break After Make  BAM  Selection   BBM"]
+#[doc = "0 = Const_00: 0 Break after make  BAM ."]
+#[doc = "1 = Const_11: 1 Break before make  BBM ."]
     #[inline(always)]
-    pub fn bbm(self) -> crate::common::RegisterField<3,0x1,1,0,exevt::Bbm,exevt::Bbm,Exevt,common::RW> {
-        crate::common::RegisterField::<3,0x1,1,0,exevt::Bbm,exevt::Bbm,Exevt,common::RW>::from_register(self,0)
+    pub fn bbm(self) -> 
+    crate::common::RegisterFieldBool<3,1,0,Exevt,common::RW> {
+        
+    crate::common::RegisterFieldBool::<3,1,0,Exevt,common::RW>::from_register(self,0)
     }
      
 #[doc = "Breakout Disable   BOD"]
+#[doc = "0 = Const_00: 0 BRKOUT signal asserted according to the Debug Action specified in the EVTA field."]
+#[doc = "1 = Const_11: 1 BRKOUT signal not asserted. This takes priority over any assertion generated by the EVTA field."]
     #[inline(always)]
-    pub fn bod(self) -> crate::common::RegisterField<4,0x1,1,0,exevt::Bod,exevt::Bod,Exevt,common::RW> {
-        crate::common::RegisterField::<4,0x1,1,0,exevt::Bod,exevt::Bod,Exevt,common::RW>::from_register(self,0)
+    pub fn bod(self) -> 
+    crate::common::RegisterFieldBool<4,1,0,Exevt,common::RW> {
+        
+    crate::common::RegisterFieldBool::<4,1,0,Exevt,common::RW>::from_register(self,0)
     }
      
 #[doc = "CDC Suspend Out Signal State   SUSP. Value to be assigned to the CDC suspend out signal when the Debug Event is raised."]
@@ -5870,98 +4975,6 @@ pub mod exevt {
          
 #[doc = "111 BOD 0  If implemented  breakpoint interrupt 3 and pulse BRKOUT Signal. BOD 1  If implemented  breakpoint interrupt 3. If not implemented  None."]
         pub const CONST_77:Self =Self(7);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Bbm(u8);
-    
-    impl Bbm {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Bbm {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Bbm {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Bbm> for u64 {
-        #[inline(always)]
-        fn from(value: Bbm) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Bbm {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Bbm {
-         
-#[doc = "0 Break after make  BAM ."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Break before make  BBM ."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Bod(u8);
-    
-    impl Bod {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Bod {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Bod {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Bod> for u64 {
-        #[inline(always)]
-        fn from(value: Bod) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Bod {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Bod {
-         
-#[doc = "0 BRKOUT signal asserted according to the Debug Action specified in the EVTA field."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 BRKOUT signal not asserted. This takes priority over any assertion generated by the EVTA field."]
-        pub const CONST_11:Self =Self(1);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     #[repr(transparent)]
@@ -6057,15 +5070,23 @@ impl Crevt {
     }
      
 #[doc = "Break Before Make  BBM  or Break After Make  BAM  Selection   BBM"]
+#[doc = "0 = Const_00: 0 Break after make  BAM ."]
+#[doc = "1 = Const_11: 1 Break before make  BBM ."]
     #[inline(always)]
-    pub fn bbm(self) -> crate::common::RegisterField<3,0x1,1,0,crevt::Bbm,crevt::Bbm,Crevt,common::RW> {
-        crate::common::RegisterField::<3,0x1,1,0,crevt::Bbm,crevt::Bbm,Crevt,common::RW>::from_register(self,0)
+    pub fn bbm(self) -> 
+    crate::common::RegisterFieldBool<3,1,0,Crevt,common::RW> {
+        
+    crate::common::RegisterFieldBool::<3,1,0,Crevt,common::RW>::from_register(self,0)
     }
      
 #[doc = "Breakout Disable   BOD"]
+#[doc = "0 = Const_00: 0 BRKOUT signal asserted according to the action specified in the EVTA field."]
+#[doc = "1 = Const_11: 1 BRKOUT signal not asserted. This takes priority over any assertion generated by the EVTA field."]
     #[inline(always)]
-    pub fn bod(self) -> crate::common::RegisterField<4,0x1,1,0,crevt::Bod,crevt::Bod,Crevt,common::RW> {
-        crate::common::RegisterField::<4,0x1,1,0,crevt::Bod,crevt::Bod,Crevt,common::RW>::from_register(self,0)
+    pub fn bod(self) -> 
+    crate::common::RegisterFieldBool<4,1,0,Crevt,common::RW> {
+        
+    crate::common::RegisterFieldBool::<4,1,0,Crevt,common::RW>::from_register(self,0)
     }
      
 #[doc = "CDC Suspend Out Signal State   SUSP. Value to be assigned to the CDC suspend out signal when the Debug Event is raised."]
@@ -6154,98 +5175,6 @@ pub mod crevt {
          
 #[doc = "111 BOD 0  If implemented  breakpoint interrupt 3 and pulse BRKOUT Signal. BOD 1  If implemented  breakpoint interrupt 3. If not implemented  None."]
         pub const CONST_77:Self =Self(7);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Bbm(u8);
-    
-    impl Bbm {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Bbm {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Bbm {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Bbm> for u64 {
-        #[inline(always)]
-        fn from(value: Bbm) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Bbm {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Bbm {
-         
-#[doc = "0 Break after make  BAM ."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Break before make  BBM ."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Bod(u8);
-    
-    impl Bod {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Bod {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Bod {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Bod> for u64 {
-        #[inline(always)]
-        fn from(value: Bod) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Bod {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Bod {
-         
-#[doc = "0 BRKOUT signal asserted according to the action specified in the EVTA field."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 BRKOUT signal not asserted. This takes priority over any assertion generated by the EVTA field."]
-        pub const CONST_11:Self =Self(1);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     #[repr(transparent)]
@@ -6341,15 +5270,23 @@ impl Swevt {
     }
      
 #[doc = "Break Before Make  BBM  or Break After Make  BAM  Selection   BBM"]
+#[doc = "0 = Const_00: 0 Break after make  BAM ."]
+#[doc = "1 = Const_11: 1 Break before make  BBM ."]
     #[inline(always)]
-    pub fn bbm(self) -> crate::common::RegisterField<3,0x1,1,0,swevt::Bbm,swevt::Bbm,Swevt,common::RW> {
-        crate::common::RegisterField::<3,0x1,1,0,swevt::Bbm,swevt::Bbm,Swevt,common::RW>::from_register(self,0)
+    pub fn bbm(self) -> 
+    crate::common::RegisterFieldBool<3,1,0,Swevt,common::RW> {
+        
+    crate::common::RegisterFieldBool::<3,1,0,Swevt,common::RW>::from_register(self,0)
     }
      
 #[doc = "Breakout Disable   BOD"]
+#[doc = "0 = Const_00: 0 BRKOUT signal asserted according to the action specified in the EVTA field."]
+#[doc = "1 = Const_11: 1 BRKOUT signal not asserted. This takes priority over any assertion generated by the EVTA field."]
     #[inline(always)]
-    pub fn bod(self) -> crate::common::RegisterField<4,0x1,1,0,swevt::Bod,swevt::Bod,Swevt,common::RW> {
-        crate::common::RegisterField::<4,0x1,1,0,swevt::Bod,swevt::Bod,Swevt,common::RW>::from_register(self,0)
+    pub fn bod(self) -> 
+    crate::common::RegisterFieldBool<4,1,0,Swevt,common::RW> {
+        
+    crate::common::RegisterFieldBool::<4,1,0,Swevt,common::RW>::from_register(self,0)
     }
      
 #[doc = "CDC Suspend Out Signal State   SUSP. Value to be assigned to the CDC suspend out signal when the event is raised."]
@@ -6438,98 +5375,6 @@ pub mod swevt {
          
 #[doc = "111 BOD 0  If implemented  breakpoint interrupt 3 and pulse BRKOUT Signal. BOD 1  If implemented  breakpoint interrupt 3. If not implemented  None."]
         pub const CONST_77:Self =Self(7);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Bbm(u8);
-    
-    impl Bbm {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Bbm {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Bbm {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Bbm> for u64 {
-        #[inline(always)]
-        fn from(value: Bbm) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Bbm {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Bbm {
-         
-#[doc = "0 Break after make  BAM ."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Break before make  BBM ."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Bod(u8);
-    
-    impl Bod {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Bod {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Bod {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Bod> for u64 {
-        #[inline(always)]
-        fn from(value: Bod) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Bod {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Bod {
-         
-#[doc = "0 BRKOUT signal asserted according to the action specified in the EVTA field."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 BRKOUT signal not asserted. This takes priority over any assertion generated by the EVTA field."]
-        pub const CONST_11:Self =Self(1);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     #[repr(transparent)]
@@ -6800,67 +5645,16 @@ unsafe impl crate::common::WriteCore for Dbgtcr {}
 impl Dbgtcr {
      
 #[doc = "Debug Trap Active Bit   DTA. A breakpoint trap may only be taken in the condition DTA    0. Taking a breakpoint trap sets the DTA bit to one. Further breakpoint traps are therefore disabled until such time as the breakpoint trap handler clears the DTA bit or until the breakpoint trap handler terminates with a RFM."]
+#[doc = "0 = Const_00: 0 No breakpoint trap is active."]
+#[doc = "1 = Const_11: 1 A breakpoint Trap is active"]
     #[inline(always)]
-    pub fn dta(self) -> crate::common::RegisterField<0,0x1,1,0,dbgtcr::Dta,dbgtcr::Dta,Dbgtcr,common::RW> {
-        crate::common::RegisterField::<0,0x1,1,0,dbgtcr::Dta,dbgtcr::Dta,Dbgtcr,common::RW>::from_register(self,0)
+    pub fn dta(self) -> 
+    crate::common::RegisterFieldBool<0,1,0,Dbgtcr,common::RW> {
+        
+    crate::common::RegisterFieldBool::<0,1,0,Dbgtcr,common::RW>::from_register(self,0)
     }
 }
-pub mod dbgtcr {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
-        ResetValue as _, Write as _,
-    };
-    
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Dta(u8);
-    
-    impl Dta {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
 
-    impl crate::common::EnumBitfieldStruct for Dta {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Dta {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Dta> for u64 {
-        #[inline(always)]
-        fn from(value: Dta) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Dta {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Dta {
-         
-#[doc = "0 No breakpoint trap is active."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 A breakpoint Trap is active"]
-        pub const CONST_11:Self =Self(1);
-    }
-}
  
 #[doc = "CPUx SRI Error Generation Register\n resetvalue={Application Reset:0x0}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -6908,9 +5702,13 @@ impl Segen {
     }
      
 #[doc = "Activate Error Enable   AE. Enabled the selective inverting of SRI ECC packet bits defined by ADFLIP. This bit will be cleared by hardware after the next SRI read or write transaction from the DMI."]
+#[doc = "0 = Const_00: 0 Not Enabled"]
+#[doc = "1 = Const_11: 1 Enabled"]
     #[inline(always)]
-    pub fn ae(self) -> crate::common::RegisterField<31,0x1,1,0,segen::Ae,segen::Ae,Segen,common::RW> {
-        crate::common::RegisterField::<31,0x1,1,0,segen::Ae,segen::Ae,Segen,common::RW>::from_register(self,0)
+    pub fn ae(self) -> 
+    crate::common::RegisterFieldBool<31,1,0,Segen,common::RW> {
+        
+    crate::common::RegisterFieldBool::<31,1,0,Segen,common::RW>::from_register(self,0)
     }
 }
 pub mod segen {
@@ -7016,52 +5814,6 @@ pub mod segen {
          
 #[doc = "10 Data Slave Read Data"]
         pub const CONST_22:Self =Self(2);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Ae(u8);
-    
-    impl Ae {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Ae {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Ae {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Ae> for u64 {
-        #[inline(always)]
-        fn from(value: Ae) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Ae {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Ae {
-         
-#[doc = "0 Not Enabled"]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Enabled"]
-        pub const CONST_11:Self =Self(1);
     }
 }
  
@@ -7393,67 +6145,16 @@ unsafe impl crate::common::WriteCore for Dcon0 {}
 impl Dcon0 {
      
 #[doc = "Data Cache Bypass   DCBYP"]
+#[doc = "0 = Const_00: 0 DCache   DRB enabled"]
+#[doc = "1 = Const_11: 1 DCache   DRB Bypass  disabled"]
     #[inline(always)]
-    pub fn dcbyp(self) -> crate::common::RegisterField<1,0x1,1,0,dcon0::Dcbyp,dcon0::Dcbyp,Dcon0,common::RW> {
-        crate::common::RegisterField::<1,0x1,1,0,dcon0::Dcbyp,dcon0::Dcbyp,Dcon0,common::RW>::from_register(self,0)
+    pub fn dcbyp(self) -> 
+    crate::common::RegisterFieldBool<1,1,0,Dcon0,common::RW> {
+        
+    crate::common::RegisterFieldBool::<1,1,0,Dcon0,common::RW>::from_register(self,0)
     }
 }
-pub mod dcon0 {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
-        ResetValue as _, Write as _,
-    };
-    
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Dcbyp(u8);
-    
-    impl Dcbyp {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
 
-    impl crate::common::EnumBitfieldStruct for Dcbyp {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Dcbyp {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Dcbyp> for u64 {
-        #[inline(always)]
-        fn from(value: Dcbyp) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Dcbyp {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Dcbyp {
-         
-#[doc = "0 DCache   DRB enabled"]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 DCache   DRB Bypass  disabled"]
-        pub const CONST_11:Self =Self(1);
-    }
-}
  
 #[doc = "CPUx Program Synchronous Trap Register\n resetvalue={Application Reset:0x0}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -7556,119 +6257,26 @@ unsafe impl crate::common::WriteCore for Pcon1 {}
 impl Pcon1 {
      
 #[doc = "Program Cache Invalidate   PCINV"]
+#[doc = "0 = Const_00: 0 Write  No effect  normal instruction cache operation. Read   Normal operation  instruction cache available"]
+#[doc = "1 = Const_11: 1 Write   Initiate invalidation of entire instruction cache. Read  Instruction cache invalidation in progress. Instruction cache unavailable."]
     #[inline(always)]
-    pub fn pcinv(self) -> crate::common::RegisterField<0,0x1,1,0,pcon1::Pcinv,pcon1::Pcinv,Pcon1,common::RW> {
-        crate::common::RegisterField::<0,0x1,1,0,pcon1::Pcinv,pcon1::Pcinv,Pcon1,common::RW>::from_register(self,0)
+    pub fn pcinv(self) -> 
+    crate::common::RegisterFieldBool<0,1,0,Pcon1,common::RW> {
+        
+    crate::common::RegisterFieldBool::<0,1,0,Pcon1,common::RW>::from_register(self,0)
     }
      
 #[doc = "Program Buffer Invalidate   PBINV. Write Operation  This field returns 0 when read."]
+#[doc = "0 = Const_00: 0 Write  No effect. Normal program line buffer operation."]
+#[doc = "1 = Const_11: 1 Write  Invalidate the program line buffer."]
     #[inline(always)]
-    pub fn pbinv(self) -> crate::common::RegisterField<1,0x1,1,0,pcon1::Pbinv,pcon1::Pbinv,Pcon1,common::RW> {
-        crate::common::RegisterField::<1,0x1,1,0,pcon1::Pbinv,pcon1::Pbinv,Pcon1,common::RW>::from_register(self,0)
+    pub fn pbinv(self) -> 
+    crate::common::RegisterFieldBool<1,1,0,Pcon1,common::RW> {
+        
+    crate::common::RegisterFieldBool::<1,1,0,Pcon1,common::RW>::from_register(self,0)
     }
 }
-pub mod pcon1 {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
-        ResetValue as _, Write as _,
-    };
-    
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Pcinv(u8);
-    
-    impl Pcinv {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
 
-    impl crate::common::EnumBitfieldStruct for Pcinv {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Pcinv {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Pcinv> for u64 {
-        #[inline(always)]
-        fn from(value: Pcinv) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Pcinv {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Pcinv {
-         
-#[doc = "0 Write  No effect  normal instruction cache operation. Read   Normal operation  instruction cache available"]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Write   Initiate invalidation of entire instruction cache. Read  Instruction cache invalidation in progress. Instruction cache unavailable."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Pbinv(u8);
-    
-    impl Pbinv {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Pbinv {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Pbinv {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Pbinv> for u64 {
-        #[inline(always)]
-        fn from(value: Pbinv) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Pbinv {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Pbinv {
-         
-#[doc = "0 Write  No effect. Normal program line buffer operation."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Write  Invalidate the program line buffer."]
-        pub const CONST_11:Self =Self(1);
-    }
-}
  
 #[doc = "CPUx Program Control 2\n resetvalue={Application Reset:0x0}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -7751,67 +6359,16 @@ unsafe impl crate::common::WriteCore for Pcon0 {}
 impl Pcon0 {
      
 #[doc = "Program Cache Bypass   PCBYP"]
+#[doc = "0 = Const_00: 0 Cache enabled"]
+#[doc = "1 = Const_11: 1 Cache bypass  disabled"]
     #[inline(always)]
-    pub fn pcbyp(self) -> crate::common::RegisterField<1,0x1,1,0,pcon0::Pcbyp,pcon0::Pcbyp,Pcon0,common::RW> {
-        crate::common::RegisterField::<1,0x1,1,0,pcon0::Pcbyp,pcon0::Pcbyp,Pcon0,common::RW>::from_register(self,0)
+    pub fn pcbyp(self) -> 
+    crate::common::RegisterFieldBool<1,1,0,Pcon0,common::RW> {
+        
+    crate::common::RegisterFieldBool::<1,1,0,Pcon0,common::RW>::from_register(self,0)
     }
 }
-pub mod pcon0 {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
-        ResetValue as _, Write as _,
-    };
-    
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Pcbyp(u8);
-    
-    impl Pcbyp {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
 
-    impl crate::common::EnumBitfieldStruct for Pcbyp {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Pcbyp {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Pcbyp> for u64 {
-        #[inline(always)]
-        fn from(value: Pcbyp) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Pcbyp {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-    impl Pcbyp {
-         
-#[doc = "0 Cache enabled"]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Cache bypass  disabled"]
-        pub const CONST_11:Self =Self(1);
-    }
-}
 
  
 #[doc = "CPUx Data Protection Range 0  Lower Bound Register\n resetvalue={Application Reset:0x0}"]
@@ -8579,15 +7136,23 @@ unsafe impl crate::common::Write<FpuTrapCon> for FpuTrapConT {}
 impl FpuTrapCon {
      
 #[doc = "Trap Status   TST"]
+#[doc = "0 = Const_00: 0 No instruction captured.  The next enabled exception will cause the exceptional instruction to be captured."]
+#[doc = "1 = Const_11: 1 Instruction captured. No further enabled exceptions will be captured until TST is cleared."]
     #[inline(always)]
-    pub fn tst(self) -> crate::common::RegisterField<0,0x1,1,0,fpu_trap_con::Tst,fpu_trap_con::Tst,FpuTrapCon,common::R> {
-        crate::common::RegisterField::<0,0x1,1,0,fpu_trap_con::Tst,fpu_trap_con::Tst,FpuTrapCon,common::R>::from_register(self,0)
+    pub fn tst(self) -> 
+    crate::common::RegisterFieldBool<0,1,0,FpuTrapCon,common::R> {
+        
+    crate::common::RegisterFieldBool::<0,1,0,FpuTrapCon,common::R>::from_register(self,0)
     }
      
 #[doc = "Trap Clear   TCL. Read  always reads as 0."]
+#[doc = "0 = Const_00: 0 No effect."]
+#[doc = "1 = Const_11: 1 Clears the trapped instruction  TST will be negated ."]
     #[inline(always)]
-    pub fn tcl(self) -> crate::common::RegisterField<1,0x1,1,0,fpu_trap_con::Tcl,fpu_trap_con::Tcl,FpuTrapCon,common::W> {
-        crate::common::RegisterField::<1,0x1,1,0,fpu_trap_con::Tcl,fpu_trap_con::Tcl,FpuTrapCon,common::W>::from_register(self,0)
+    pub fn tcl(self) -> 
+    crate::common::RegisterFieldBool<1,1,0,FpuTrapCon,common::W> {
+        
+    crate::common::RegisterFieldBool::<1,1,0,FpuTrapCon,common::W>::from_register(self,0)
     }
      
 #[doc = "Captured Rounding Mode   RM. The rounding mode of the captured instruction. Only valid when TST is asserted. Note that this is the rounding mode supplied to the FPU for the exceptional instruction. UPDFL instructions may cause a trap and change the rounding mode. In this case the RM bits capture the input rounding mode"]
@@ -8682,110 +7247,7 @@ impl crate::common::ResetValue<FpuTrapCon> for FpuTrapConT {
         FpuTrapCon::new(0)
     }
 }
-pub mod fpu_trap_con {
-    #[allow(unused_imports)]
-    use crate::common;
-    #[allow(unused_imports)]
-    use crate::common::{
-        AsPtr as _,  CastFrom, EnumBitfieldStruct, NoBitfieldReg as _, Read as _, Reg as _, RegisterValue as _,
-        ResetValue as _, Write as _,
-    };
-    
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Tst(u8);
-    
-    impl Tst {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
 
-    impl crate::common::EnumBitfieldStruct for Tst {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Tst {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Tst> for u64 {
-        #[inline(always)]
-        fn from(value: Tst) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Tst {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Tst {
-         
-#[doc = "0 No instruction captured.  The next enabled exception will cause the exceptional instruction to be captured."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Instruction captured. No further enabled exceptions will be captured until TST is cleared."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Tcl(u8);
-    
-    impl Tcl {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Tcl {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Tcl {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Tcl> for u64 {
-        #[inline(always)]
-        fn from(value: Tcl) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Tcl {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Tcl {
-         
-#[doc = "0 No effect."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Clears the trapped instruction  TST will be negated ."]
-        pub const CONST_11:Self =Self(1);
-    }
-}
  
 #[doc = "CPUx Trapping Instruction Program Counter Register\n resetvalue={Application Reset:0x0}"]
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -8882,9 +7344,13 @@ impl FpuTrapOpc {
     }
      
 #[doc = "Captured Instruction Format   FMT. The format of the captured instruction s opcode. Only valid when FPU TRAP CON.TST is asserted."]
+#[doc = "0 = Const_00: 0 RRR"]
+#[doc = "1 = Const_11: 1 RR"]
     #[inline(always)]
-    pub fn fmt(self) -> crate::common::RegisterField<8,0x1,1,0,fpu_trap_opc::Fmt,fpu_trap_opc::Fmt,FpuTrapOpc,common::R> {
-        crate::common::RegisterField::<8,0x1,1,0,fpu_trap_opc::Fmt,fpu_trap_opc::Fmt,FpuTrapOpc,common::R>::from_register(self,0)
+    pub fn fmt(self) -> 
+    crate::common::RegisterFieldBool<8,1,0,FpuTrapOpc,common::R> {
+        
+    crate::common::RegisterFieldBool::<8,1,0,FpuTrapOpc,common::R>::from_register(self,0)
     }
      
 #[doc = "Captured Destination Register   DREG. The destination register of the captured instruction. ... Only valid when FPU TRAP CON.TST is asserted."]
@@ -8908,53 +7374,6 @@ pub mod fpu_trap_opc {
         ResetValue as _, Write as _,
     };
     
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Fmt(u8);
-    
-    impl Fmt {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Fmt {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Fmt {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Fmt> for u64 {
-        #[inline(always)]
-        fn from(value: Fmt) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Fmt {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Fmt {
-         
-#[doc = "0 RRR"]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 RR"]
-        pub const CONST_11:Self =Self(1);
-    }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     #[repr(transparent)]
     pub struct Dreg(u8);
@@ -9202,15 +7621,23 @@ impl TrTRiEvt {
     }
      
 #[doc = "Break Before Make  BBM  or Break After Make  BAM  Selection   BBM. Code triggers BBM or BAM selection. Data access and data code combination access triggers can only create BAM Debug Events. When these triggers occur  TRnEVT.BBM is ignored."]
+#[doc = "0 = Const_00: 0 Code only triggers Break After Make  BAM ."]
+#[doc = "1 = Const_11: 1 Code only triggers Break Before Make  BBM ."]
     #[inline(always)]
-    pub fn bbm(self) -> crate::common::RegisterField<3,0x1,1,0,tr_trievt::Bbm,tr_trievt::Bbm,TrTRiEvt,common::RW> {
-        crate::common::RegisterField::<3,0x1,1,0,tr_trievt::Bbm,tr_trievt::Bbm,TrTRiEvt,common::RW>::from_register(self,0)
+    pub fn bbm(self) -> 
+    crate::common::RegisterFieldBool<3,1,0,TrTRiEvt,common::RW> {
+        
+    crate::common::RegisterFieldBool::<3,1,0,TrTRiEvt,common::RW>::from_register(self,0)
     }
      
 #[doc = "Breakout Disable   BOD"]
+#[doc = "0 = Const_00: 0 BRKOUT signal asserted according to the action specified in the EVTA field."]
+#[doc = "1 = Const_11: 1 BRKOUT signal not asserted. This takes priority over any assertion generated by the EVTA field."]
     #[inline(always)]
-    pub fn bod(self) -> crate::common::RegisterField<4,0x1,1,0,tr_trievt::Bod,tr_trievt::Bod,TrTRiEvt,common::RW> {
-        crate::common::RegisterField::<4,0x1,1,0,tr_trievt::Bod,tr_trievt::Bod,TrTRiEvt,common::RW>::from_register(self,0)
+    pub fn bod(self) -> 
+    crate::common::RegisterFieldBool<4,1,0,TrTRiEvt,common::RW> {
+        
+    crate::common::RegisterFieldBool::<4,1,0,TrTRiEvt,common::RW>::from_register(self,0)
     }
      
 #[doc = "CDC Suspend Out Signal State   SUSP. Value to be assigned to the CDC suspend out signal when the Debug Event is raised."]
@@ -9228,21 +7655,33 @@ impl TrTRiEvt {
     }
      
 #[doc = "Input Selection   TYP"]
+#[doc = "0 = Const_00: 0 Address"]
+#[doc = "1 = Const_11: 1 PC"]
     #[inline(always)]
-    pub fn typ(self) -> crate::common::RegisterField<12,0x1,1,0,tr_trievt::Typ,tr_trievt::Typ,TrTRiEvt,common::RW> {
-        crate::common::RegisterField::<12,0x1,1,0,tr_trievt::Typ,tr_trievt::Typ,TrTRiEvt,common::RW>::from_register(self,0)
+    pub fn typ(self) -> 
+    crate::common::RegisterFieldBool<12,1,0,TrTRiEvt,common::RW> {
+        
+    crate::common::RegisterFieldBool::<12,1,0,TrTRiEvt,common::RW>::from_register(self,0)
     }
      
 #[doc = "Compare Type   RNG. Once an even numbered comparator has been set to range  the EVTR settings of its associated upper neighbour will be ignored."]
+#[doc = "1 = Const_11: 1 Range"]
+#[doc = "0 = Const_00: 0 Equality"]
     #[inline(always)]
-    pub fn rng(self) -> crate::common::RegisterField<13,0x1,1,0,tr_trievt::Rng,tr_trievt::Rng,TrTRiEvt,common::RW> {
-        crate::common::RegisterField::<13,0x1,1,0,tr_trievt::Rng,tr_trievt::Rng,TrTRiEvt,common::RW>::from_register(self,0)
+    pub fn rng(self) -> 
+    crate::common::RegisterFieldBool<13,1,0,TrTRiEvt,common::RW> {
+        
+    crate::common::RegisterFieldBool::<13,1,0,TrTRiEvt,common::RW>::from_register(self,0)
     }
      
 #[doc = "Enable ASI Comparison   ASI EN"]
+#[doc = "0 = Const_00: 0 No ASI comparison performed. Debug Trigger is valid for all processes."]
+#[doc = "1 = Const_11: 1 Enable ASI comparison. Debug Events are only triggered when the current process ASI matches TRnEVT.ASI."]
     #[inline(always)]
-    pub fn asi_en(self) -> crate::common::RegisterField<15,0x1,1,0,tr_trievt::AsiEn,tr_trievt::AsiEn,TrTRiEvt,common::RW> {
-        crate::common::RegisterField::<15,0x1,1,0,tr_trievt::AsiEn,tr_trievt::AsiEn,TrTRiEvt,common::RW>::from_register(self,0)
+    pub fn asi_en(self) -> 
+    crate::common::RegisterFieldBool<15,1,0,TrTRiEvt,common::RW> {
+        
+    crate::common::RegisterFieldBool::<15,1,0,TrTRiEvt,common::RW>::from_register(self,0)
     }
      
 #[doc = "Address Space Identifier   ASI. The ASI of the Debug Trigger process."]
@@ -9349,100 +7788,6 @@ pub mod tr_trievt {
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     #[repr(transparent)]
-    pub struct Bbm(u8);
-    
-    impl Bbm {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Bbm {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Bbm {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Bbm> for u64 {
-        #[inline(always)]
-        fn from(value: Bbm) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Bbm {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Bbm {
-         
-#[doc = "0 Code only triggers Break After Make  BAM ."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Code only triggers Break Before Make  BBM ."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Bod(u8);
-    
-    impl Bod {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Bod {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Bod {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Bod> for u64 {
-        #[inline(always)]
-        fn from(value: Bod) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Bod {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Bod {
-         
-#[doc = "0 BRKOUT signal asserted according to the action specified in the EVTA field."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 BRKOUT signal not asserted. This takes priority over any assertion generated by the EVTA field."]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
     pub struct Cnt(u8);
     
     impl Cnt {
@@ -9493,147 +7838,6 @@ pub mod tr_trievt {
          
 #[doc = "11 Toggle the performance counter control  i.e. start it if it is currently stopped  stop it if it is currently running ."]
         pub const CONST_33:Self =Self(3);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Typ(u8);
-    
-    impl Typ {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Typ {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Typ {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Typ> for u64 {
-        #[inline(always)]
-        fn from(value: Typ) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Typ {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Typ {
-         
-#[doc = "0 Address"]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 PC"]
-        pub const CONST_11:Self =Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct Rng(u8);
-    
-    impl Rng {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for Rng {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for Rng {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<Rng> for u64 {
-        #[inline(always)]
-        fn from(value: Rng) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for Rng {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl Rng {
-         
-#[doc = "1 Range"]
-        pub const CONST_11:Self =Self(1);
-         
-#[doc = "0 Equality"]
-        pub const CONST_00:Self =Self(0);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct AsiEn(u8);
-    
-    impl AsiEn {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for AsiEn {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for AsiEn {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<AsiEn> for u64 {
-        #[inline(always)]
-        fn from(value: AsiEn) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for AsiEn {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl AsiEn {
-         
-#[doc = "0 No ASI comparison performed. Debug Trigger is valid for all processes."]
-        pub const CONST_00:Self =Self(0);
-         
-#[doc = "1 Enable ASI comparison. Debug Events are only triggered when the current process ASI matches TRnEVT.ASI."]
-        pub const CONST_11:Self =Self(1);
     }
 }
  
@@ -9686,10 +7890,6 @@ impl crate::common::ResetValue<TrTRiAdr> for TrTRiAdrT {
         TrTRiAdr::new(0)
     }
 }
-
-
-
-
 
 
 

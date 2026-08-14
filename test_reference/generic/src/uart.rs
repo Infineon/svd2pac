@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:59:10 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 14 Aug 2026 14:11:04 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -609,29 +609,17 @@ impl RegEnumValue {
         >::from_register(self, 0)
     }
 
+    #[doc = "1 = value1"]
+    #[doc = "0 = value0"]
+    #[doc = "0 = value2"]
+    #[doc = "1 = value0"]
     #[inline(always)]
     pub fn read_write_enum_split_binary(
         self,
-    ) -> crate::common::RegisterField<
-        10,
-        0x1,
-        1,
-        0,
-        regenumvalue::ReadWriteEnumSplitBinaryRead,
-        regenumvalue::ReadWriteEnumSplitBinaryWrite,
-        RegEnumValue,
-        common::RW,
-    > {
-        crate::common::RegisterField::<
-            10,
-            0x1,
-            1,
-            0,
-            regenumvalue::ReadWriteEnumSplitBinaryRead,
-            regenumvalue::ReadWriteEnumSplitBinaryWrite,
-            RegEnumValue,
-            common::RW,
-        >::from_register(self, 0)
+    ) -> crate::common::RegisterFieldBool<10, 1, 0, RegEnumValue, common::RW> {
+        crate::common::RegisterFieldBool::<10, 1, 0, RegEnumValue, common::RW>::from_register(
+            self, 0,
+        )
     }
 }
 impl crate::common::ResetValue<RegEnumValue> for RegEnumValueT {
@@ -876,94 +864,6 @@ pub mod regenumvalue {
         pub const VALUE_2: Self = Self(0);
 
         pub const VALUE_1: Self = Self(2);
-
-        pub const VALUE_0: Self = Self(1);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct ReadWriteEnumSplitBinaryRead(u8);
-
-    impl ReadWriteEnumSplitBinaryRead {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for ReadWriteEnumSplitBinaryRead {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for ReadWriteEnumSplitBinaryRead {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<ReadWriteEnumSplitBinaryRead> for u64 {
-        #[inline(always)]
-        fn from(value: ReadWriteEnumSplitBinaryRead) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for ReadWriteEnumSplitBinaryRead {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl ReadWriteEnumSplitBinaryRead {
-        pub const VALUE_1: Self = Self(1);
-
-        pub const VALUE_0: Self = Self(0);
-    }
-    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-    #[repr(transparent)]
-    pub struct ReadWriteEnumSplitBinaryWrite(u8);
-
-    impl ReadWriteEnumSplitBinaryWrite {
-        pub fn new(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl crate::common::EnumBitfieldStruct for ReadWriteEnumSplitBinaryWrite {
-        type RegNumberT = u8;
-
-        fn value(&self) -> Self::RegNumberT {
-            self.0
-        }
-    }
-
-    impl From<u8> for ReadWriteEnumSplitBinaryWrite {
-        #[inline(always)]
-        fn from(value: u8) -> Self {
-            Self(value)
-        }
-    }
-
-    impl From<ReadWriteEnumSplitBinaryWrite> for u64 {
-        #[inline(always)]
-        fn from(value: ReadWriteEnumSplitBinaryWrite) -> Self {
-            value.value().into()
-        }
-    }
-
-    impl CastFrom<u64> for ReadWriteEnumSplitBinaryWrite {
-        #[inline(always)]
-        fn cast_from(val: u64) -> Self {
-            Self(u8::cast_from(val))
-        }
-    }
-
-    impl ReadWriteEnumSplitBinaryWrite {
-        pub const VALUE_2: Self = Self(0);
 
         pub const VALUE_0: Self = Self(1);
     }
