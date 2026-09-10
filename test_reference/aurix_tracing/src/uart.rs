@@ -539,6 +539,11 @@ impl RegEnumValue {
     pub fn read_write_enum_split_binary(self) -> crate::common::RegisterField<10,0x1,1,0,regenumvalue::ReadWriteEnumSplitBinaryRead,regenumvalue::ReadWriteEnumSplitBinaryWrite,RegEnumValue,common::RW> {
         crate::common::RegisterField::<10,0x1,1,0,regenumvalue::ReadWriteEnumSplitBinaryRead,regenumvalue::ReadWriteEnumSplitBinaryWrite,RegEnumValue,common::RW>::from_register(self,0)
     }
+    
+    #[inline(always)]
+    pub fn inherited_access_enum(self) -> crate::common::RegisterField<11,0x1,1,0,regenumvalue::InheritedAccessEnumRead,regenumvalue::InheritedAccessEnumWrite,RegEnumValue,common::RW> {
+        crate::common::RegisterField::<11,0x1,1,0,regenumvalue::InheritedAccessEnumRead,regenumvalue::InheritedAccessEnumWrite,RegEnumValue,common::RW>::from_register(self,0)
+    }
 }
 impl crate::common::ResetValue<RegEnumValue> for RegEnumValueT {
     #[inline(always)]
@@ -875,6 +880,96 @@ pub mod regenumvalue {
     }
 
     impl ReadWriteEnumSplitBinaryWrite {
+        
+        pub const VALUE_2:Self =Self(0);
+        
+        pub const VALUE_0:Self =Self(1);
+    }
+    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+    #[repr(transparent)]
+    pub struct InheritedAccessEnumRead(u8);
+    
+    impl InheritedAccessEnumRead {
+        pub fn new(value: u8) -> Self {
+            Self(value)
+        }
+    }
+
+    impl crate::common::EnumBitfieldStruct for InheritedAccessEnumRead {
+        type RegNumberT = u8;
+
+        fn value(&self) -> Self::RegNumberT {
+            self.0
+        }
+    }
+
+    impl From<u8> for InheritedAccessEnumRead {
+        #[inline(always)]
+        fn from(value: u8) -> Self {
+            Self(value)
+        }
+    }
+
+    impl From<InheritedAccessEnumRead> for u64 {
+        #[inline(always)]
+        fn from(value: InheritedAccessEnumRead) -> Self {
+            value.value().into()
+        }
+    }
+
+    impl CastFrom<u64> for InheritedAccessEnumRead {
+        #[inline(always)]
+        fn cast_from(val: u64) -> Self {
+            Self(u8::cast_from(val))
+        }
+    }
+
+    impl InheritedAccessEnumRead {
+        
+        pub const VALUE_1:Self =Self(1);
+        
+        pub const VALUE_0:Self =Self(0);
+    }
+    #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+    #[repr(transparent)]
+    pub struct InheritedAccessEnumWrite(u8);
+    
+    impl InheritedAccessEnumWrite {
+        pub fn new(value: u8) -> Self {
+            Self(value)
+        }
+    }
+
+    impl crate::common::EnumBitfieldStruct for InheritedAccessEnumWrite {
+        type RegNumberT = u8;
+
+        fn value(&self) -> Self::RegNumberT {
+            self.0
+        }
+    }
+
+    impl From<u8> for InheritedAccessEnumWrite {
+        #[inline(always)]
+        fn from(value: u8) -> Self {
+            Self(value)
+        }
+    }
+
+    impl From<InheritedAccessEnumWrite> for u64 {
+        #[inline(always)]
+        fn from(value: InheritedAccessEnumWrite) -> Self {
+            value.value().into()
+        }
+    }
+
+    impl CastFrom<u64> for InheritedAccessEnumWrite {
+        #[inline(always)]
+        fn cast_from(val: u64) -> Self {
+            Self(u8::cast_from(val))
+        }
+    }
+
+    impl InheritedAccessEnumWrite {
         
         pub const VALUE_2:Self =Self(0);
         

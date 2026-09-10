@@ -880,6 +880,33 @@
 								</enumeratedValue>
 							</enumeratedValues>
 						</field>
+						<field>
+							<name>inherited_access_enum</name>
+							<lsb>11</lsb>
+							<msb>11</msb>
+							<enumeratedValues>
+								<usage>read</usage>
+								<enumeratedValue>
+									<name>value1</name>
+									<value>1</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>value0</name>
+									<value>0</value>
+								</enumeratedValue>
+							</enumeratedValues>
+							<enumeratedValues>
+								<usage>write</usage>
+								<enumeratedValue>
+									<name>value2</name>
+									<value>0</value>
+								</enumeratedValue>
+								<enumeratedValue>
+									<name>value0</name>
+									<value>1</value>
+								</enumeratedValue>
+							</enumeratedValues>
+						</field>
 					</fields>
 				</register>
 				<cluster>

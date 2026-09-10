@@ -523,8 +523,9 @@ impl Visitor {
 /// Collect all SVD fields defined for a register and convert them into IR bitfield entries.
 ///
 /// Fields using `derived_from` are rejected because field inheritance is not supported.
-/// Fields with no explicit access mode are logged and skipped because access inheritance is
-/// also unsupported in this conversion step.
+/// Fields with no explicit access mode inherit the access mode of their parent register
+/// (`reg.properties.access`). Fields for which neither the field nor the register specify
+/// an access mode are logged and skipped.
 ///
 /// # Arguments
 ///
@@ -549,9 +550,10 @@ fn get_all_register_field(
         let offset = field.bit_range.offset;
         let mask = (0..field.bit_range.width - 1).fold(0x1u32, |acc, _| (acc << 1) | 0x1);
         let name = field.name.to_internal_ident();
-        let Some(svd_field_access) = field.access else {
+        // Field access is inherited from the register when not explicitly specified.
+        let Some(svd_field_access) = field.access.or(reg.properties.access) else {
             error!(
-                "Inheritance of access is not supported. Bitfield: {name} access shall be specified. Bitfield skipped"
+                "Access is not specified for bitfield {name} nor inherited from register. Bitfield skipped"
             );
             continue;
         };
