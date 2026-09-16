@@ -628,7 +628,16 @@ fn get_values_types(field: &svd::Field) -> Result<Vec<EnumeratedValueType>> {
             );
 
             let Some(value) = val_entry.value else {
-                return Err(ParseError::Unsupported("Default value is unsupported, all value in enumeration shall have a value defined".to_string()).into());
+                // If the value is not specified and it's not the default, return an error.
+                // default enumerated value is used by GUI debuggers but it is useless for code generation
+                if !val_entry.is_default() {
+                    return Err(ParseError::Unsupported(format!(
+                        "Enum value {} does not have an explicit value",
+                        val_entry.name
+                    ))
+                    .into());
+                }
+                continue;
             };
 
             values.push(EnumeratedSingleValue {
