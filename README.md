@@ -37,7 +37,7 @@ This tool has a very different approach compared to `svd2rust` because our requi
 - `modifiedWriteValues` tag is ignored
 - `readAction` tag is ignored
 - `headerEnumName` tag is ignored
-- in `enumeratedValue` only `value` tag is supported. No support for _don't care bits_ and `isDefault` tag
+- in `enumeratedValue` only `value` tag is supported. No support for _don't care bits_.
 - `alternateGroup` is ignored therefore it is not possible to have two registers with same name.
 
 ## How to install & prerequisite
