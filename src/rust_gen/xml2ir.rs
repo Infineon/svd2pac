@@ -10,8 +10,8 @@ use super::ir::{
     RegisterBitfieldAccess,
 };
 use super::util::ToSanitizedSymbol;
-use crate::SvdValidationLevel;
 use crate::svd_util::{ExpandedName, HeaderStructName, ParseError};
+use crate::{SvdValidationLevel, Target};
 use anyhow::Ok;
 use anyhow::Result;
 use indexmap::IndexMap;
@@ -706,10 +706,16 @@ fn get_values_types(field: &svd::Field) -> Result<Vec<EnumeratedValueType>> {
 pub(super) fn parse_xml(
     xml: &str,
     svd_validation_level: SvdValidationLevel,
+    target: Target,
 ) -> Result<svd::Device> {
     let mut parser_config = svd_parser::Config::default();
     parser_config.expand_properties = true;
     parser_config.ignore_enums = false;
+    match target {
+        Target::Aurix => parser_config.target = svd_parser::Target::None,
+        Target::CortexM => parser_config.target = svd_parser::Target::CortexM,
+        Target::Generic => parser_config.target = svd_parser::Target::None,
+    }
     parser_config.validate_level = match svd_validation_level {
         SvdValidationLevel::Disabled => svd::ValidateLevel::Disabled,
         SvdValidationLevel::Weak => svd::ValidateLevel::Weak,

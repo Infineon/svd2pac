@@ -514,10 +514,11 @@ fn load_ir(
     xml_path: &Path,
     svd_validation_level: SvdValidationLevel,
     custom_license_text: Option<&String>,
+    target: Target,
 ) -> anyhow::Result<ir::IR> {
     let xml = &mut String::new();
     get_xml_string(xml_path, xml)?;
-    let svd_device = xml2ir::parse_xml(xml, svd_validation_level)?;
+    let svd_device = xml2ir::parse_xml(xml, svd_validation_level, target)?;
     xml2ir::svd_device2ir(&svd_device, custom_license_text)
 }
 
@@ -612,7 +613,7 @@ fn generate_aurix_core_ir(
     if result {
         let svd_csfr_xml = &mut String::with_capacity(500);
         get_aurix_csfr_svd(xml_path, svd_csfr_xml)?;
-        let mut svd_device = xml2ir::parse_xml(svd_csfr_xml, *svd_validation_level)?;
+        let mut svd_device = xml2ir::parse_xml(svd_csfr_xml, *svd_validation_level, Target::Aurix)?;
         // Rename peripherals
         for peri in &mut svd_device.peripherals {
             peri.name = "csfr_".to_string() + &peri.name;
@@ -642,7 +643,12 @@ pub fn generate_rust_package(
     info!("Start generating rust code");
     // Read license file if specified
     let custom_license_text = read_license_file(license_file.as_ref())?;
-    let ir = load_ir(xml_path, svd_validation_level, custom_license_text.as_ref())?;
+    let ir = load_ir(
+        xml_path,
+        svd_validation_level,
+        custom_license_text.as_ref(),
+        target,
+    )?;
     //Precompile templates
     let tera = get_tera_instance()?;
 

@@ -14,7 +14,7 @@ description = "Tool to generate peripheral access crates from SVD files"
 anyhow = "1.0.70"
 lazy-regex = "3.0"
 thiserror = "2.0"
-svd-parser = { version = "0.14", features = ["derive-from", "expand"] }
+svd-parser = { version = "0.14.10", features = ["derive-from", "expand"] }
 tera = "1.19.0"
 clap = { version = "4.4", features = ["derive", "cargo"] }
 log = { version = "0.4.17", features = ["std"] }

@@ -1,10 +1,11 @@
 # Changelog
 
-## [Unreleased]
+## [0.8.0]
 
 ### Added
 
 - New `--workspace-generation` experimental mode to generate a Cargo workspace with a shared `common` crate and one crate per peripheral.
+- Fields inherits access right from register they belong to when not declared.
 
 ### Changed
 
@@ -15,6 +16,7 @@
 - Refactored workspace generation internals into a dedicated module.
 - Updated `anyhow` to address a soundness issue and refreshed regression test references.
 - For generated Aurix PACs, the minimum supported Rust version is now 1.94 and the unstable `feature(stdsimd)` usage was removed.
+- <vendorSystickConfig> is mandatory only for CortexM target.
 
 ### Breaking
 
