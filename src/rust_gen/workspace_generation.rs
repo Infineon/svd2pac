@@ -193,7 +193,12 @@ pub fn generate_rust_workspace(
 
     // Read license file if specified
     let custom_license_text = read_license_file(license_file.as_ref())?;
-    let ir = load_ir(xml_path, svd_validation_level, custom_license_text.as_ref())?;
+    let ir = load_ir(
+        xml_path,
+        svd_validation_level,
+        custom_license_text.as_ref(),
+        target,
+    )?;
 
     // Precompile templates
     let tera = get_tera_instance()?;
