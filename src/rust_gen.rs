@@ -521,11 +521,7 @@ fn load_ir(
     let xml = &mut String::new();
     get_xml_string(xml_path, xml)?;
     let svd_device = xml2ir::parse_xml(xml, svd_validation_level, target)?;
-    xml2ir::svd_device2ir(
-        &svd_device,
-        custom_license_text,
-        all_one_bit_field_are_bool,
-    )
+    xml2ir::svd_device2ir(&svd_device, custom_license_text, all_one_bit_field_are_bool)
 }
 
 /// Generates extra files for Cortex-M projects.
