@@ -111,6 +111,7 @@ enum DeviceItem {
 #[derive(Default)]
 struct Visitor {
     device: Device,
+    all_one_bit_field_are_bool: bool,
     svd_ref_to_ir_item: HashMap<String, DeviceItem>,
     // Current item svd path that is used to build
     // the key of svd_ref_to_ir_item. In case of array only the first item will be considered
@@ -255,7 +256,7 @@ impl Visitor {
             register.struct_id = register.name.to_sanitized_struct_ident();
         }
         // Get fields
-        let fields = get_all_register_field(reg)?;
+        let fields = get_all_register_field(reg, self.all_one_bit_field_are_bool)?;
         match reg.properties.size {
             Some(value) => {
                 register.size = match value {
@@ -537,6 +538,7 @@ impl Visitor {
 /// in the IR.
 fn get_all_register_field(
     reg: &svd::MaybeArray<svd::RegisterInfo>,
+    all_one_bit_field_are_bool: bool,
 ) -> Result<Vec<FieldGetterSetter>, anyhow::Error> {
     let mut fields = Vec::new();
     for field in reg.fields() {
@@ -546,7 +548,7 @@ fn get_all_register_field(
             )
             .into());
         }
-        let description = field.description.clone().unwrap_or_default();
+        let mut description = field.description.clone().unwrap_or_default();
         let offset = field.bit_range.offset;
         let mask = (0..field.bit_range.width - 1).fold(0x1u32, |acc, _| (acc << 1) | 0x1);
         let name = field.name.to_internal_ident();
@@ -565,7 +567,18 @@ fn get_all_register_field(
         };
 
         let (dim, dim_increment, dim_index) = get_dim_dim_increment(field);
-        let enum_types = get_values_types(field)?;
+        let mut enum_types = get_values_types(field)?;
+        if all_one_bit_field_are_bool && field.bit_range.width == 1 {
+            let enum_documentation = format_enum_documentation(&enum_types);
+            if !enum_documentation.is_empty() {
+                if !description.is_empty() {
+                    description.push_str("\n\n");
+                }
+                description.push_str(&enum_documentation);
+            }
+            // Clears the enumerated values for this field as it is a single-bit boolean.
+            enum_types.clear();
+        }
         let enum_type_write = enum_types
             .iter()
             .find(|x| {
@@ -595,6 +608,36 @@ fn get_all_register_field(
         });
     }
     Ok(fields)
+}
+
+fn format_enum_documentation(enum_types: &[EnumeratedValueType]) -> String {
+    [
+        (EnumeratedValueUsage::Write, "Write"),
+        (EnumeratedValueUsage::ReadWrite, "Read/Write"),
+        (EnumeratedValueUsage::Read, "Read"),
+    ]
+    .into_iter()
+    .filter_map(|(usage, title)| {
+        let values = enum_types
+            .iter()
+            .filter(|enum_type| enum_type.usage == usage)
+            .flat_map(|enum_type| enum_type.values.iter())
+            .map(|value| {
+                let value_string = if value.value == 0 { "false" } else { "true" };
+                if value.description.is_empty() {
+                    format!("- **{}**: {}", value.name, value_string)
+                } else {
+                    format!(
+                        "- **{}**: {}: {}",
+                        value.name, value.description, value_string
+                    )
+                }
+            })
+            .collect::<Vec<_>>();
+        (!values.is_empty()).then(|| format!("### {title}\n{}", values.join("\n")))
+    })
+    .collect::<Vec<_>>()
+    .join("\n\n")
 }
 
 fn get_values_types(field: &svd::Field) -> Result<Vec<EnumeratedValueType>> {
@@ -712,9 +755,8 @@ pub(super) fn parse_xml(
     parser_config.expand_properties = true;
     parser_config.ignore_enums = false;
     match target {
-        Target::Aurix => parser_config.target = svd_parser::Target::None,
+        Target::Aurix | Target::Generic => parser_config.target = svd_parser::Target::None,
         Target::CortexM => parser_config.target = svd_parser::Target::CortexM,
-        Target::Generic => parser_config.target = svd_parser::Target::None,
     }
     parser_config.validate_level = match svd_validation_level {
         SvdValidationLevel::Disabled => svd::ValidateLevel::Disabled,
@@ -767,6 +809,7 @@ fn get_interrupt_table(
 pub(super) fn svd_device2ir(
     svd_device: &svd::Device,
     custom_license_text: Option<&String>,
+    all_one_bit_field_are_bool: bool,
 ) -> Result<IR> {
     let entity_db = get_entity_db(svd_device);
     // Use custom license if available otherwise use license in svd and if it not present use empty string.
@@ -782,7 +825,10 @@ pub(super) fn svd_device2ir(
         },
         std::clone::Clone::clone,
     );
-    let mut visitor = Visitor::default();
+    let mut visitor = Visitor {
+        all_one_bit_field_are_bool,
+        ..Visitor::default()
+    };
     visitor.visit_device(svd_device)?;
     let device = visitor.device;
     let interrupt_table = get_interrupt_table(&device.peripheral_mod);

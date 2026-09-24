@@ -67,6 +67,24 @@ fn compile_generated_generic() {
 }
 
 #[test]
+fn generate_generic_all_one_bit_fields_as_bool() {
+    let xml_path = concat!(env!("CARGO_MANIFEST_DIR"), "/test_svd/simple.xml");
+    let generated_code_folder = tempfile::tempdir_in(env::current_dir().unwrap()).unwrap();
+    let args = [
+        "",
+        xml_path,
+        generated_code_folder.path().to_str().unwrap(),
+        "--all-one-bit-field-are-bool",
+    ];
+    main_parse_arguments(args);
+
+    assert_folders_eq(
+        "./test_reference/generic_all_one_bit_field_are_bool",
+        &generated_code_folder,
+    );
+}
+
+#[test]
 fn test_license_text_option() {
     let xml_path = concat!(env!("CARGO_MANIFEST_DIR"), "/test_svd/simple.xml");
 
