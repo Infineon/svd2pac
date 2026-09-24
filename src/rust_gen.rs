@@ -347,6 +347,7 @@ pub struct GenPkgSettings {
     pub svd_validation_level: SvdValidationLevel,
     pub target: Target,
     pub tracing: bool,
+    pub all_one_bit_field_are_bool: bool,
     pub package_name: Option<String>,
     pub license_file: Option<PathBuf>,
     pub svd2pac_version: String,
@@ -515,11 +516,12 @@ fn load_ir(
     svd_validation_level: SvdValidationLevel,
     custom_license_text: Option<&String>,
     target: Target,
+    all_one_bit_field_are_bool: bool,
 ) -> anyhow::Result<ir::IR> {
     let xml = &mut String::new();
     get_xml_string(xml_path, xml)?;
     let svd_device = xml2ir::parse_xml(xml, svd_validation_level, target)?;
-    xml2ir::svd_device2ir(&svd_device, custom_license_text)
+    xml2ir::svd_device2ir(&svd_device, custom_license_text, all_one_bit_field_are_bool)
 }
 
 /// Generates extra files for Cortex-M projects.
@@ -600,6 +602,7 @@ fn generate_aurix_core_ir(
         svd_validation_level,
         target: _,
         tracing: _,
+        all_one_bit_field_are_bool,
         package_name: _,
         license_file,
         svd2pac_version: _,
@@ -618,7 +621,11 @@ fn generate_aurix_core_ir(
         for peri in &mut svd_device.peripherals {
             peri.name = "csfr_".to_string() + &peri.name;
         }
-        let ir_csfr = xml2ir::svd_device2ir(&svd_device, custom_license_text.as_ref())?;
+        let ir_csfr = xml2ir::svd_device2ir(
+            &svd_device,
+            custom_license_text.as_ref(),
+            *all_one_bit_field_are_bool,
+        )?;
         Ok(Some(ir_csfr))
     } else {
         Ok(None)
@@ -635,6 +642,7 @@ pub fn generate_rust_package(
         svd_validation_level,
         target,
         tracing,
+        all_one_bit_field_are_bool,
         ref package_name,
         ref license_file,
         ref svd2pac_version,
@@ -648,6 +656,7 @@ pub fn generate_rust_package(
         svd_validation_level,
         custom_license_text.as_ref(),
         target,
+        all_one_bit_field_are_bool,
     )?;
     //Precompile templates
     let tera = get_tera_instance()?;

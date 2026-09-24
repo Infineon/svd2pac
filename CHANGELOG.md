@@ -6,6 +6,7 @@
 
 - New `--workspace-generation` experimental mode to generate a Cargo workspace with a shared `common` crate and one crate per peripheral.
 - Fields inherits access right from register they belong to when not declared.
+- New `--all-one-bit-field-are-bool` option to generate all one-bit fields as booleans. For enumerated one-bit fields, the enumeration descriptions are retained in the generated documentation.
 
 ### Changed
 

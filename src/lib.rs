@@ -34,6 +34,7 @@ pub enum Target {
 
 /// Generate peripheral access crate from SVD file
 #[derive(Parser, Debug)]
+#[allow(clippy::struct_excessive_bools)]
 #[command(author, version=env!("CARGO_PKG_VERSION"), about="Tool to generate peripheral access crate from SVD file", long_about = None)]
 pub struct Args {
     /// Disable formatting of generated code using rustfmt mainly for debugging
@@ -63,6 +64,13 @@ pub struct Args {
     /// EXPERIMENTAL: Generate a Cargo workspace where each peripheral is its own crate instead of a single package.
     #[arg(long,value_parser=clap::value_parser!(bool),default_value_t=false)]
     pub workspace_generation: bool,
+    /// Treat all one-bit fields as boolean values in the generated code.
+    ///
+    /// Enumerated fields with a single bit will also be treated as boolean values and enumeration values description is added to documentation
+    ///
+    /// This option is useful for simplifying the generated code when dealing with single-bit fields.
+    #[arg(long,value_parser=clap::value_parser!(bool),default_value_t=false)]
+    pub all_one_bit_field_are_bool: bool,
 }
 
 /// Main function that parses command line parameters after parsing it invoking [`main`]
@@ -118,6 +126,7 @@ pub fn main(args: Args) {
                 svd_validation_level: args.svd_validation_level,
                 target: args.target,
                 tracing: args.tracing,
+                all_one_bit_field_are_bool: args.all_one_bit_field_are_bool,
                 package_name: args.package_name,
                 license_file: args.license_file,
                 svd2pac_version: VERSION.to_owned(),
@@ -132,6 +141,7 @@ pub fn main(args: Args) {
                 svd_validation_level: args.svd_validation_level,
                 target: args.target,
                 tracing: args.tracing,
+                all_one_bit_field_are_bool: args.all_one_bit_field_are_bool,
                 package_name: args.package_name,
                 license_file: args.license_file,
                 svd2pac_version: VERSION.to_owned(),
