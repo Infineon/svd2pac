@@ -1,4 +1,4 @@
-{%- macro reg_size2num_type(bit_size) -%}
+{%- component reg_size2num_type(bit_size: string) -%}
 {%- if bit_size=="BIT8" -%}
 u8
 {%- elif bit_size=="BIT16" -%}
@@ -10,21 +10,21 @@ u64
 {%- else -%}
 Unsupported register size
 {%- endif -%}
-{%- endmacro reg_size2num_type -%}
+{%- endcomponent reg_size2num_type -%}
 
-{%- macro doc_attribute(documentation) -%}
+{%- component doc_attribute(documentation: string) -%}
 {%- set doc_string = documentation | svd_description_to_doc -%}
 {%- if doc_string != "" %} 
 #[doc = "{{doc_string}}"]
 {%- endif -%}
-{%- endmacro -%}
+{%- endcomponent doc_attribute -%}
 
 {# Generated register function #}
-{%- macro register_func(types_mod,reg) -%}
+{%- component register_func(types_mod: string, reg: map) -%}
 {%- set reg_struct = reg.name | to_struct_id -%}
 {%- set reg_struct_name = types_mod ~ "::" ~  reg_struct  -%}
 {%- set reg_mod_name = reg.name | to_mod_id -%}
-{{self::doc_attribute(documentation=reg.description)}}
+{{<doc_attribute documentation={reg.description} />}}
 #[inline(always)]
 {% if reg.dim == 1 -%}
 pub fn {{reg.name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
@@ -37,13 +37,13 @@ pub const fn {{reg.name | to_func_id }}(&self) -> &'static crate::common::Cluste
 {%- for func_name in reg.dim_index %}
 #[inline(always)]
 pub fn {{func_name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
-    unsafe { {{reg_struct_name}}T::from_ptr(self._svd2pac_as_ptr().add({{reg.offset + reg.dim_increment * loop.index0 | to_hex}}usize)) }
+    unsafe { {{reg_struct_name}}T::from_ptr(self._svd2pac_as_ptr().add({{(reg.offset + reg.dim_increment * loop.index0) | to_hex}}usize)) }
 }
 {%- endfor -%}
 {%- endif -%}
-{%- endmacro -%}
+{%- endcomponent register_func -%}
  
-{%- macro bitfield_type(field,reg_struct_name,reg_mod_name,turbofish) -%}
+{%- component bitfield_type(field: map, reg_struct_name: string, reg_mod_name: string, turbofish: bool) -%}
 {%-if turbofish %}{%set separator = "::"%}{%else%}{%set separator = ""%}{%endif-%}
 {%- if  field.mask == 1 and 0 == field.enum_types | length %}
     crate::common::RegisterFieldBool{{separator}}<{{field.offset}},{{field.dim}},{{field.dim_increment}},{{reg_struct_name}},common::{{field.access}}>
@@ -52,20 +52,20 @@ pub fn {{func_name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
         {%- set enum_name_type_read= field.enum_type_read | to_struct_id -%}
         {%- set field_type_read= reg_mod_name ~ "::" ~ enum_name_type_read -%}
     {%- else %}
-        {%- set field_type_read= self::reg_size2num_type(bit_size=field.size) -%}
+        {%- set field_type_read= <reg_size2num_type bit_size={field.size} /> -%}
     {%- endif -%}
     {%- if field.enum_type_write -%}
         {%- set enum_name_type_write= field.enum_type_write | to_struct_id -%}
         {%- set field_type_write= reg_mod_name ~ "::" ~ enum_name_type_write -%}
     {%- else %}
-        {%- set field_type_write= self::reg_size2num_type(bit_size=field.size) -%}
+        {%- set field_type_write= <reg_size2num_type bit_size={field.size} /> -%}
     {%- endif -%}
     crate::common::RegisterField{{separator}}<{{field.offset}},{{field.mask | to_hex}},{{field.dim}},{{field.dim_increment}},{{field_type_read}},{{field_type_write}},{{reg_struct_name}},common::{{field.access}}>
 {%- endif -%}
-{%- endmacro -%}
+{%- endcomponent bitfield_type -%}
 
 
-{%- macro register_struct(reg,reg_name="") -%}
+{%- component register_struct(reg: map, reg_name: string = "") -%}
 {%-if reg_name %}
 {%- set reg_struct_name = reg_name | to_struct_id -%}
 {%- set reg_mod_name = reg_name | to_mod_id -%}
@@ -75,15 +75,15 @@ pub fn {{func_name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
 {%- endif -%}
 
 
-{{self::doc_attribute(documentation=reg.description)}}
+{{<doc_attribute documentation={reg.description} />}}
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct {{reg_struct_name}} {
-    pub(crate) data: {{self::reg_size2num_type(bit_size=reg.size)}},
-    pub(crate) mask: {{self::reg_size2num_type(bit_size=reg.size)}}
+    pub(crate) data: {{<reg_size2num_type bit_size={reg.size} />}},
+    pub(crate) mask: {{<reg_size2num_type bit_size={reg.size} />}}
 }
 
 impl crate::common::RegisterValue for {{reg_struct_name}} {
-    type DataType = {{self::reg_size2num_type(bit_size=reg.size)}};
+    type DataType = {{<reg_size2num_type bit_size={reg.size} />}};
 
     fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
         (&mut self.data, &mut self.mask)
@@ -122,23 +122,23 @@ impl crate::common::NoBitfieldReg for {{reg_struct_name}} {}
 {% else -%}
 impl {{reg_struct_name}} {
     {%- for field_name,field in reg.fields %}
-    {{self::doc_attribute(documentation=field.description)}}
+    {{<doc_attribute documentation={field.description} />}}
     #[inline(always)]
     {%- if field.dim > 1 -%}
-    pub fn {{field.name | to_func_id }}(self,index:u8) -> {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
+    pub fn {{field.name | to_func_id }}(self,index:u8) -> {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={false} />}} {
         assert!(index < {{field.dim}});
-        {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=true)}}::from_register(self,index)
+        {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={true} />}}::from_register(self,index)
      
     }
     {%- for func_name in field.dim_index %}
     #[inline(always)]
-    pub fn {{func_name | to_func_id }}(self) -> {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
-        {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=true)}}::from_register(self,{{loop.index0}})
+    pub fn {{func_name | to_func_id }}(self) -> {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={false} />}} {
+        {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={true} />}}::from_register(self,{{loop.index0}})
     }
     {% endfor %}
     {%- else %}
-    pub fn {{field.name | to_func_id }}(self) -> {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
-        {{self::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=true)}}::from_register(self,0)
+    pub fn {{field.name | to_func_id }}(self) -> {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={false} />}} {
+        {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={true} />}}::from_register(self,0)
     }
     {%- endif -%}
     {%- endfor %}
@@ -164,25 +164,25 @@ pub mod {{reg_mod_name}} {
     {%- set enum_name_type= enum_type.name | to_struct_id %}
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     #[repr(transparent)]
-    pub struct {{enum_name_type}}({{self::reg_size2num_type(bit_size=enum_type.size)}});
+    pub struct {{enum_name_type}}({{<reg_size2num_type bit_size={enum_type.size} />}});
     
     impl {{enum_name_type}} {
-        pub fn new(value: {{self::reg_size2num_type(bit_size=enum_type.size)}}) -> Self {
+        pub fn new(value: {{<reg_size2num_type bit_size={enum_type.size} />}}) -> Self {
             Self(value)
         }
     }
 
     impl crate::common::EnumBitfieldStruct for {{enum_name_type}} {
-        type RegNumberT = {{self::reg_size2num_type(bit_size=enum_type.size)}};
+        type RegNumberT = {{<reg_size2num_type bit_size={enum_type.size} />}};
 
         fn value(&self) -> Self::RegNumberT {
             self.0
         }
     }
 
-    impl From<{{self::reg_size2num_type(bit_size=enum_type.size)}}> for {{enum_name_type}} {
+    impl From<{{<reg_size2num_type bit_size={enum_type.size} />}}> for {{enum_name_type}} {
         #[inline(always)]
-        fn from(value: {{self::reg_size2num_type(bit_size=enum_type.size)}}) -> Self {
+        fn from(value: {{<reg_size2num_type bit_size={enum_type.size} />}}) -> Self {
             Self(value)
         }
     }
@@ -197,13 +197,13 @@ pub mod {{reg_mod_name}} {
     impl CastFrom<u64> for {{enum_name_type}} {
         #[inline(always)]
         fn cast_from(val: u64) -> Self {
-            Self({{self::reg_size2num_type(bit_size=enum_type.size)}}::cast_from(val))
+            Self({{<reg_size2num_type bit_size={enum_type.size} />}}::cast_from(val))
         }
     }
 
     impl {{enum_name_type}} {
         {%- for val in enum_type.values %}
-        {{self::doc_attribute(documentation=val.description)}}
+        {{<doc_attribute documentation={val.description} />}}
         pub const {{val.name | to_enumerated_const_id }}:Self =Self({{val.value}});
         {%- endfor %}
     }
@@ -211,10 +211,10 @@ pub mod {{reg_mod_name}} {
     {% endfor %}
 }
 {%- endif -%}
-{%- endmacro -%}
+{%- endcomponent register_struct -%}
 
 {# Generate getter for clusters #}
-{%- macro cluster_func(types_mod,cluster,workspace_mode=false,package_name="",current_module_id="") -%}
+{%- component cluster_func(types_mod: string, cluster: map, workspace_mode: bool = false, package_name: string = "", current_module_id: string = "") -%}
 {%- set mod_struct_path = cluster.struct_module_path | join(sep="::") -%}
 {%- set first_seg = cluster.struct_module_path | first -%}
 {%- if workspace_mode and first_seg != current_module_id -%}
@@ -226,7 +226,9 @@ pub mod {{reg_mod_name}} {
 {%- set cluster_struct_path = crate_prefix ~ "::" ~ mod_struct_path ~ "::" ~ cluster_struct_id -%}
 {%- set underscored_cluster_struct_path = crate_prefix ~ "::" ~ mod_struct_path ~ "::_" ~ cluster_struct_id -%}
 {%- set cluster_func = cluster.name | to_func_id -%}
-{{self::doc_attribute(documentation=cluster.description)}}
+{%- set cluster_offset = cluster.offset | int -%}
+{%- set cluster_dim_increment = cluster.dim_increment | int -%}
+{{<doc_attribute documentation={cluster.description} />}}
 #[inline(always)]
 {%- if cluster.dim == 1 %}
 pub const fn {{cluster_func}}(&self) -> {{cluster_struct_path}}{
@@ -239,15 +241,15 @@ pub fn {{cluster_func}}(&self) -> &'static crate::common::ClusterRegisterArray<{
 {%- for func_name in cluster.dim_index %}
 #[inline(always)]
 pub fn {{func_name | to_func_id}}(&self) -> {{cluster_struct_path}} {
-    unsafe {   {{underscored_cluster_struct_path}}::_svd2pac_from_ptr(self._svd2pac_as_ptr().add({{cluster.offset + cluster.dim_increment * loop.index0 | to_hex}}usize)) }
+    unsafe {   {{underscored_cluster_struct_path}}::_svd2pac_from_ptr(self._svd2pac_as_ptr().add({{(cluster_offset + cluster_dim_increment * (loop.index0 | int)) | to_hex}}usize)) }
 }
 {%- endfor %}
 {%- endif -%}
-{%- endmacro -%}
+{%- endcomponent cluster_func -%}
 
 
 {# Macro to generate structure and module for a cluster#}
-{%- macro cluster_struct(cluster,workspace_mode=false,package_name="",current_module_id="") -%}
+{%- component cluster_struct(cluster: map, workspace_mode: bool = false, package_name: string = "", current_module_id: string = "") -%}
 {%- if not cluster.is_derived_from -%}
 {%- set cluster_struct = cluster.struct_id | to_struct_id -%}
 {%- set cluster_mod = cluster.module_id -%}
@@ -255,7 +257,7 @@ pub fn {{func_name | to_func_id}}(&self) -> {{cluster_struct_path}} {
 #[doc(hidden)]
 #[non_exhaustive]
 pub struct _{{ cluster_struct }};
-{{self::doc_attribute(documentation=cluster.description)}}
+{{<doc_attribute documentation={cluster.description} />}}
 pub type {{ cluster_struct }} = &'static _{{ cluster_struct }};
 
 unsafe impl ::core::marker::Sync for _{{ cluster_struct }} {}
@@ -272,10 +274,10 @@ impl _{{cluster_struct}} {
     }
 
     {% for register_name,reg in cluster.registers -%}
-    {{self::register_func(types_mod=cluster_mod,reg=reg)}}
+    {{<register_func types_mod={cluster_mod} reg={reg} />}}
     {% endfor -%}
     {% for cluster_name,cluster in cluster.clusters -%}
-    {{self::cluster_func(types_mod=cluster_mod,cluster=cluster,workspace_mode=workspace_mode,package_name=package_name,current_module_id=current_module_id)}}
+    {{<cluster_func types_mod={cluster_mod} cluster={cluster} workspace_mode={workspace_mode} package_name={package_name} current_module_id={current_module_id} />}}
     {% endfor -%}
 }
 
@@ -300,14 +302,14 @@ pub mod {{cluster_mod}} {
         ResetValue as _, Write as _,
     };
     {% for register_name,reg in cluster.registers -%}
-    {{self::register_struct(reg=reg)}}
+    {{<register_struct reg={reg} />}}
     {% endfor -%}
     {% for cluster_name,cluster in cluster.clusters -%}
-    {{self::cluster_struct(cluster=cluster,workspace_mode=workspace_mode,package_name=package_name,current_module_id=current_module_id) }}
+    {{<cluster_struct cluster={cluster} workspace_mode={workspace_mode} package_name={package_name} current_module_id={current_module_id} />}}
     {% endfor -%}
 }
 {%- endif -%} {# if not cluster.is_derived_from #}
-{%- endmacro -%}
+{%- endcomponent cluster_struct -%}
 
 {# ----------------------------------------------------------------------- #}
 {# Shared macros used by both single-package and workspace generation.      #}
@@ -319,11 +321,11 @@ pub mod {{cluster_mod}} {
 {# propagate to the `common` crate. In single-package mode the output is    #}
 {# unchanged. Feature names are always `name | lower`; only the `dep:`      #}
 {# crate identifier uses `module_id`.                                       #}
-{%- macro cargo_features(ir, tracing, target, workspace_mode, package_name="", ir_csfr=false) -%}
+{%- component cargo_features(ir: map, tracing: bool, target: string, workspace_mode: bool, package_name: string = "", ir_csfr) -%}
 {%- set_global all_peripheral_features = [] -%} {# array of all features #}
 {%- for peri_mod_name, peri in ir.device.peripheral_mod %}
 {%- set feature_name = peri.name | lower -%}
-{% set_global all_peripheral_features = all_peripheral_features | concat(with=feature_name) %}
+{% set_global all_peripheral_features = [...all_peripheral_features, feature_name] %}
 {%- if peri.derived_from is string %}
 {{feature_name}} = ["{{peri.derived_from | lower}}"]
 {%- elif workspace_mode %}
@@ -342,7 +344,7 @@ pub mod {{cluster_mod}} {
 {%- else %}
 {{feature_name}} = []
 {%- endif %}
-{% set_global all_peripheral_features = all_peripheral_features | concat(with=feature_name) %}
+{% set_global all_peripheral_features = [...all_peripheral_features, feature_name] %}
 {%- endfor %}
 {%- endif %}
 {# collect all module id and remove duplicated#}
@@ -360,11 +362,11 @@ tracing_dummy = []
 {%- if target=="CortexM" %}
 rt = ["cortex-m-rt/device"]
 {%- endif %}
-{%- endmacro cargo_features -%}
+{%- endcomponent cargo_features -%}
 
 {# Render the Cortex-M interrupt vector table, Interrupt enum and the       #}
 {# cortex_m re-exports. Used by both lib.tera and workspace_lib.tera.       #}
-{%- macro cortex_m_interrupt_table(ir) -%}
+{%- component cortex_m_interrupt_table(ir: map) -%}
 pub use cortex_m::peripheral::Peripherals as CorePeripherals;
 pub use cortex_m::peripheral::{CBP, CPUID, DCB, DWT, FPB, {%if ir.fpu_present %}FPU ,{%endif%} ITM, {%if ir.mpu_present %}MPU ,{%endif%} NVIC, SCB, {%if not ir.vendor_systick_config %}SYST,{%endif%} TPIU};
 {%- if ir.nvic_prio_bits %}
@@ -424,13 +426,13 @@ unsafe impl cortex_m::interrupt::InterruptNumber for Interrupt {
     }
 }
 {% endif -%}
-{%- endmacro cortex_m_interrupt_table -%}
+{%- endcomponent cortex_m_interrupt_table -%}
 
 {# Render the `Peripherals` struct (RTIC compatibility) with its take()/    #}
 {# steal() helpers. Used by both lib.tera and workspace_lib.tera. In        #}
 {# workspace mode the per-peripheral structs and constants are resolved     #}
 {# through the root crate's glob re-exports.                                #}
-{%- macro cortex_m_peripherals_struct(ir) -%}
+{%- component cortex_m_peripherals_struct(ir: map) -%}
 #[allow(non_snake_case)]
 /// Required for compatibility with RTIC and other frameworks
 pub struct Peripherals {
@@ -475,6 +477,6 @@ impl Peripherals {
         
     }
 }
-{%- endmacro cortex_m_peripherals_struct -%}
+{%- endcomponent cortex_m_peripherals_struct -%}
 
 

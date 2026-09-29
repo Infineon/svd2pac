@@ -1,4 +1,3 @@
-{% import "macros.tera" as macros %}
 /*
 {{ir.license_text}}
 */
@@ -77,6 +76,6 @@ pub const {{name | upper}}:[{{full_path_struct}};{{ p.base_addr | length }}] = [
 
 {#- Block to support Cortex-m-rt #}
 {% if target=="CortexM" -%}
-{{ macros::cortex_m_interrupt_table(ir=ir) }}
-{{ macros::cortex_m_peripherals_struct(ir=ir) }}
+{{<cortex_m_interrupt_table ir={ir} />}}
+{{<cortex_m_peripherals_struct ir={ir} />}}
 {% endif -%}
