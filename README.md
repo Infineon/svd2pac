@@ -121,7 +121,7 @@ Generate the PAC with a non-default feature flag to allow for tracing reads/writ
 
 #### Generate one-bit fields as booleans: `--all-one-bit-field-are-bool` option
 
-Enable with the `--all-one-bit-field-are-bool` cli flag. By default, one-bit fields
+Enable with the `--all-one-bit-fields-are-bool` cli flag. By default, one-bit fields
 are generated according to their SVD definition. With this option, all one-bit fields
 are generated as booleans, including enumerated one-bit fields. The descriptions of
 enumerated values are preserved in the generated field documentation.

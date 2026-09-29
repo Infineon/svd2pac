@@ -184,7 +184,7 @@ pub fn generate_rust_workspace(
         svd_validation_level,
         target,
         tracing,
-        all_one_bit_field_are_bool,
+        all_one_bit_fields_are_bool,
         ref package_name,
         ref license_file,
         ref svd2pac_version,
@@ -199,7 +199,7 @@ pub fn generate_rust_workspace(
         svd_validation_level,
         custom_license_text.as_ref(),
         target,
-        all_one_bit_field_are_bool,
+        all_one_bit_fields_are_bool,
     )?;
 
     // Precompile templates

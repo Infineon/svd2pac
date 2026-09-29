@@ -74,7 +74,7 @@ fn generate_generic_all_one_bit_fields_as_bool() {
         "",
         xml_path,
         generated_code_folder.path().to_str().unwrap(),
-        "--all-one-bit-field-are-bool",
+        "--all-one-bit-fields-are-bool",
     ];
     main_parse_arguments(args);
 

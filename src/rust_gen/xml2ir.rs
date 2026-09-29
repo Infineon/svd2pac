@@ -111,7 +111,7 @@ enum DeviceItem {
 #[derive(Default)]
 struct Visitor {
     device: Device,
-    all_one_bit_field_are_bool: bool,
+    all_one_bit_fields_are_bool: bool,
     svd_ref_to_ir_item: HashMap<String, DeviceItem>,
     // Current item svd path that is used to build
     // the key of svd_ref_to_ir_item. In case of array only the first item will be considered
@@ -256,7 +256,7 @@ impl Visitor {
             register.struct_id = register.name.to_sanitized_struct_ident();
         }
         // Get fields
-        let fields = get_all_register_field(reg, self.all_one_bit_field_are_bool)?;
+        let fields = get_all_register_field(reg, self.all_one_bit_fields_are_bool)?;
         match reg.properties.size {
             Some(value) => {
                 register.size = match value {
@@ -531,6 +531,7 @@ impl Visitor {
 /// # Arguments
 ///
 /// * `reg` - Register definition whose fields will be converted.
+/// * `all_one_bit_fields_are_bool` - If true, all one-bit fields are treated as boolean fields.
 ///
 /// # Returns
 ///
@@ -538,7 +539,7 @@ impl Visitor {
 /// in the IR.
 fn get_all_register_field(
     reg: &svd::MaybeArray<svd::RegisterInfo>,
-    all_one_bit_field_are_bool: bool,
+    all_one_bit_fields_are_bool: bool,
 ) -> Result<Vec<FieldGetterSetter>, anyhow::Error> {
     let mut fields = Vec::new();
     for field in reg.fields() {
@@ -568,8 +569,8 @@ fn get_all_register_field(
 
         let (dim, dim_increment, dim_index) = get_dim_dim_increment(field);
         let mut enum_types = get_values_types(field)?;
-        if all_one_bit_field_are_bool && field.bit_range.width == 1 {
-            let enum_documentation = format_enum_documentation(&enum_types);
+        if all_one_bit_fields_are_bool && field.bit_range.width == 1 {
+            let enum_documentation = format_bool_enum_documentation(&enum_types);
             if !enum_documentation.is_empty() {
                 if !description.is_empty() {
                     description.push_str("\n\n");
@@ -610,7 +611,7 @@ fn get_all_register_field(
     Ok(fields)
 }
 
-fn format_enum_documentation(enum_types: &[EnumeratedValueType]) -> String {
+fn format_bool_enum_documentation(enum_types: &[EnumeratedValueType]) -> String {
     [
         (EnumeratedValueUsage::Write, "Write"),
         (EnumeratedValueUsage::ReadWrite, "Read/Write"),
@@ -809,7 +810,7 @@ fn get_interrupt_table(
 pub(super) fn svd_device2ir(
     svd_device: &svd::Device,
     custom_license_text: Option<&String>,
-    all_one_bit_field_are_bool: bool,
+    all_one_bit_fields_are_bool: bool,
 ) -> Result<IR> {
     let entity_db = get_entity_db(svd_device);
     // Use custom license if available otherwise use license in svd and if it not present use empty string.
@@ -826,7 +827,7 @@ pub(super) fn svd_device2ir(
         std::clone::Clone::clone,
     );
     let mut visitor = Visitor {
-        all_one_bit_field_are_bool,
+        all_one_bit_fields_are_bool,
         ..Visitor::default()
     };
     visitor.visit_device(svd_device)?;

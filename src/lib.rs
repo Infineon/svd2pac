@@ -70,7 +70,7 @@ pub struct Args {
     ///
     /// This option is useful for simplifying the generated code when dealing with single-bit fields.
     #[arg(long,value_parser=clap::value_parser!(bool),default_value_t=false)]
-    pub all_one_bit_field_are_bool: bool,
+    pub all_one_bit_fields_are_bool: bool,
 }
 
 /// Main function that parses command line parameters after parsing it invoking [`main`]
@@ -126,7 +126,7 @@ pub fn main(args: Args) {
                 svd_validation_level: args.svd_validation_level,
                 target: args.target,
                 tracing: args.tracing,
-                all_one_bit_field_are_bool: args.all_one_bit_field_are_bool,
+                all_one_bit_fields_are_bool: args.all_one_bit_fields_are_bool,
                 package_name: args.package_name,
                 license_file: args.license_file,
                 svd2pac_version: VERSION.to_owned(),
@@ -141,7 +141,7 @@ pub fn main(args: Args) {
                 svd_validation_level: args.svd_validation_level,
                 target: args.target,
                 tracing: args.tracing,
-                all_one_bit_field_are_bool: args.all_one_bit_field_are_bool,
+                all_one_bit_fields_are_bool: args.all_one_bit_fields_are_bool,
                 package_name: args.package_name,
                 license_file: args.license_file,
                 svd2pac_version: VERSION.to_owned(),
