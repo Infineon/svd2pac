@@ -765,10 +765,10 @@ pub(super) fn parse_xml(
         SvdValidationLevel::Strict => svd::ValidateLevel::Strict,
     };
     let result = svd_parser::parse_with_config(xml, &parser_config);
-    if let Err(err) = &result {
-        if let Some(error_at) = err.downcast_ref::<svd_parser::SVDErrorAt>() {
-            error!("Error while parsing {error_at}");
-        }
+    if let Err(err) = &result
+        && let Some(error_at) = err.downcast_ref::<svd_parser::SVDErrorAt>()
+    {
+        error!("Error while parsing {error_at}");
     }
     result
 }

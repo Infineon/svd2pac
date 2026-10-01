@@ -2,7 +2,7 @@
 name = "svd2pac"
 version = "0.8.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 categories = ["command-line-utilities", "development-tools::ffi"]
 readme = "README.md"
 repository = "https://github.com/Infineon/svd2pac"
@@ -15,7 +15,7 @@ anyhow = "1.0.70"
 lazy-regex = "3.0"
 thiserror = "2.0"
 svd-parser = { version = "0.14.10", features = ["derive-from", "expand"] }
-tera = "1.19.0"
+tera = { version = "2.0", features = ["preserve_order"] }
 clap = { version = "4.4", features = ["derive", "cargo"] }
 log = { version = "0.4.17", features = ["std"] }
 env_logger = "0.10.0"
