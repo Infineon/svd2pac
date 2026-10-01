@@ -13,6 +13,7 @@ use crate::{SvdValidationLevel, Target};
 use anyhow::{Context, Result, anyhow};
 use lazy_regex::regex;
 use log::{error, info, warn};
+use serde::Deserialize;
 use std::error::Error;
 use std::fmt::Write;
 use std::fs;
@@ -24,8 +25,7 @@ use tera::{Kwargs, State, Tera, Value};
 
 /// Convert [`Vec<PathChunk>`] to a string representation of a register path.
 fn filter_render_path(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
-    let json_value = serde_json::to_value(value).map_err(|e| tera::Error::message(e.to_string()))?;
-    match serde_json::from_value::<Vec<ir::PathChunk>>(json_value) {
+    match Vec::<ir::PathChunk>::deserialize(value) {
         Ok(path) => {
             let rendered =
                 path.iter()
@@ -59,15 +59,16 @@ fn filter_render_path(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera
 
 /// Convert a String to array of line splitting it at \n or \r\n and prepend each line with `prefix`
 /// This filter is intended to create multiple line comments from a String
+#[allow(clippy::needless_pass_by_value)] // Kwargs must be taken by value to match Tera's Filter trait
 fn filter_prepend_lines(value: &Value, args: Kwargs, _: &State) -> Result<Value, tera::Error> {
     let reg_ex = regex!(r#"(\r\n)|(\n)"#);
     let input_string = value
         .as_str()
         .ok_or_else(|| tera::Error::message("prepend_lines expects a string value"))?;
-    let prefix_string: String = args.must_get("prefix")?;
+    let prefix_string: &str = args.must_get("prefix")?;
     let split_lines = reg_ex
         .split(input_string)
-        .map(|s| prefix_string.clone() + s)
+        .map(|s| format!("{prefix_string}{s}"))
         .collect::<Vec<_>>();
     let splits = Value::try_from_serializable(&split_lines)?;
     Ok(splits)
@@ -75,86 +76,84 @@ fn filter_prepend_lines(value: &Value, args: Kwargs, _: &State) -> Result<Value,
 
 /// Convert JSON number to hexadecimal String filter for tera template
 fn filter_to_hex(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
-    if value.is_number() {
-        value.as_u64().map_or_else(
-            || Err(tera::Error::message("to_hex accept only unsigned numbers")),
-            |u64_val| Ok(Value::normal_string(&format!("0x{u64_val:x}"))),
-        )
-    } else {
-        Err(tera::Error::message(format!(
-            "to_hex accept only numbers as input. value:{value}"
-        )))
-    }
+    let u64_val = value.as_u64().ok_or_else(|| {
+        tera::Error::message(format!(
+            "to_hex accept only unsigned numbers as input. value:{value}"
+        ))
+    })?;
+    Ok(Value::normal_string(&format!("0x{u64_val:x}")))
 }
 
 /// Convert stringified number to hex value. Useful when iterating over maps
 /// in tera files as tera converts the key to strings regardless of the type.
 fn filter_num_str_to_hex(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
-    if let Some(number_str) = value.as_str() {
-        number_str.parse::<u64>().map_or_else(
-            |_| {
-                Err(tera::Error::message(format!(
-                    "num_str_to_hex could not parse value:{value} as number"
-                )))
-            },
-            |u64_val| Ok(Value::normal_string(&format!("0x{u64_val:x}"))),
-        )
-    } else {
-        Err(tera::Error::message(format!(
+    let number_str = value.as_str().ok_or_else(|| {
+        tera::Error::message(format!(
             "num_str_to_hex only accepts strings. value:{value}"
-        )))
-    }
+        ))
+    })?;
+    let u64_val = number_str.parse::<u64>().map_err(|_| {
+        tera::Error::message(format!(
+            "num_str_to_hex could not parse value:{value} as number"
+        ))
+    })?;
+    Ok(Value::normal_string(&format!("0x{u64_val:x}")))
 }
 
 fn filter_to_struct_id(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
-    if let Some(string) = value.as_str() {
-        Ok(Value::normal_string(&string.to_owned().to_sanitized_struct_ident()))
-    } else {
-        Err(tera::Error::message(format!(
+    let string = value.as_str().ok_or_else(|| {
+        tera::Error::message(format!(
             "filter_to_struct_id only supports String as argument. value:{value}"
-        )))
-    }
+        ))
+    })?;
+    Ok(Value::normal_string(
+        &string.to_owned().to_sanitized_struct_ident(),
+    ))
 }
 
 fn filter_to_mod_id(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
-    if let Some(string) = value.as_str() {
-        Ok(Value::normal_string(&string.to_owned().to_sanitized_mod_ident()))
-    } else {
-        Err(tera::Error::message(format!(
+    let string = value.as_str().ok_or_else(|| {
+        tera::Error::message(format!(
             "filter_to_mod_id only supports String as argument. value:{value}",
-        )))
-    }
+        ))
+    })?;
+    Ok(Value::normal_string(
+        &string.to_owned().to_sanitized_mod_ident(),
+    ))
 }
 
 #[allow(dead_code)]
 fn filter_to_enum_id(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
-    if let Some(string) = value.as_str() {
-        Ok(Value::normal_string(&string.to_owned().to_sanitized_enum_ident()))
-    } else {
-        Err(tera::Error::message(format!(
+    let string = value.as_str().ok_or_else(|| {
+        tera::Error::message(format!(
             "filter_to_enum_id case support only String as argument. value:{value}",
-        )))
-    }
+        ))
+    })?;
+    Ok(Value::normal_string(
+        &string.to_owned().to_sanitized_enum_ident(),
+    ))
 }
 
 fn filter_to_const_id(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
-    if let Some(string) = value.as_str() {
-        Ok(Value::normal_string(&string.to_owned().to_sanitized_const_ident()))
-    } else {
-        Err(tera::Error::message(format!(
+    let string = value.as_str().ok_or_else(|| {
+        tera::Error::message(format!(
             "filter_to_const_id only supports String as argument. value:{value}",
-        )))
-    }
+        ))
+    })?;
+    Ok(Value::normal_string(
+        &string.to_owned().to_sanitized_const_ident(),
+    ))
 }
 
 fn filter_to_func_id(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
-    if let Some(string) = value.as_str() {
-        Ok(Value::normal_string(&string.to_owned().to_sanitized_func_ident()))
-    } else {
-        Err(tera::Error::message(format!(
+    let string = value.as_str().ok_or_else(|| {
+        tera::Error::message(format!(
             "filter_to_func_id only supports String as argument. value:{value}"
-        )))
-    }
+        ))
+    })?;
+    Ok(Value::normal_string(
+        &string.to_owned().to_sanitized_func_ident(),
+    ))
 }
 
 /// Sanitize a string so it can be used in doc attribute
@@ -163,19 +162,15 @@ fn filter_svd_description_to_doc(
     _: Kwargs,
     _: &State,
 ) -> Result<Value, tera::Error> {
-    if let Some(doc_string) = value.as_str() {
-        let escaped =
-            doc_string
-                .replace('[', r"\[")
-                .replace(']', r"\]")
-                .escape_debug()
-            .to_string();
-        Ok(Value::normal_string(&escaped))
-    } else {
-        Err(tera::Error::message(
-            "svd_description_to_doc accepts only string",
-        ))
-    }
+    let doc_string = value
+        .as_str()
+        .ok_or_else(|| tera::Error::message("svd_description_to_doc accepts only string"))?;
+    let escaped = doc_string
+        .replace('[', r"\[")
+        .replace(']', r"\]")
+        .escape_debug()
+        .to_string();
+    Ok(Value::normal_string(&escaped))
 }
 
 fn execute_template(

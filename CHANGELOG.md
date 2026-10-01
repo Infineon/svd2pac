@@ -18,7 +18,7 @@
 - Updated `anyhow` to address a soundness issue and refreshed regression test references.
 - For generated Aurix PACs, the minimum supported Rust version is now 1.94 and the unstable `feature(stdsimd)` usage was removed.
 - <vendorSystickConfig> is mandatory only for CortexM target.
-- Upgraded internal template engine `tera` to 2.0. Migrated custom filters to the new `Kwargs`/`State` API, converted templates from macros to components, and adjusted a handful of templates for Tera 2 syntax/behaviour changes (removed `concat` filter, operator precedence, whitespace trimming). This is an internal generator change only; generated PAC output is unaffected.
+- Upgraded internal template engine `tera` to 2.0. This is an internal generator change only; generated PAC output is unaffected.
 
 ### Breaking
 

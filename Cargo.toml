@@ -2,7 +2,7 @@
 name = "svd2pac"
 version = "0.8.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 categories = ["command-line-utilities", "development-tools::ffi"]
 readme = "README.md"
 repository = "https://github.com/Infineon/svd2pac"
