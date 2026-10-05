@@ -5,7 +5,6 @@ pub trait ToSanitizedSymbol {
     fn to_sanitized_mod_ident(&self) -> String;
     fn to_sanitized_struct_ident(&self) -> String;
     fn to_sanitized_func_ident(&self) -> String;
-    fn to_sanitized_enum_ident(&self) -> String;
     fn to_sanitized_const_ident(&self) -> String;
     fn to_sanitized_ident(&self) -> String;
     fn to_internal_ident(&self) -> String;
@@ -29,12 +28,6 @@ impl ToSanitizedSymbol for str {
         self.to_internal_ident()
             .remove_invalid_char()
             .to_lowercase()
-            .to_sanitized_ident()
-    }
-    fn to_sanitized_enum_ident(&self) -> String {
-        self.to_internal_ident()
-            .remove_invalid_char()
-            .to_case(Case::Pascal)
             .to_sanitized_ident()
     }
     fn to_sanitized_const_ident(&self) -> String {

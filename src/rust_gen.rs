@@ -122,18 +122,6 @@ fn filter_to_mod_id(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::
     ))
 }
 
-#[allow(dead_code)]
-fn filter_to_enum_id(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
-    let string = value.as_str().ok_or_else(|| {
-        tera::Error::message(format!(
-            "filter_to_enum_id case support only String as argument. value:{value}",
-        ))
-    })?;
-    Ok(Value::normal_string(
-        &string.to_owned().to_sanitized_enum_ident(),
-    ))
-}
-
 fn filter_to_const_id(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
     let string = value.as_str().ok_or_else(|| {
         tera::Error::message(format!(
