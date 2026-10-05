@@ -28,16 +28,16 @@ fn collect_referenced_modules(
         own_module_id: &str,
         acc: &mut std::collections::BTreeSet<String>,
     ) {
-        if let Some(first) = cluster.struct_module_path.first() {
-            if first != own_module_id {
-                acc.insert(first.clone());
-            }
+        if let Some(first) = cluster.struct_module_path.first()
+            && first != own_module_id
+        {
+            acc.insert(first.clone());
         }
         for reg in cluster.registers.values() {
-            if let Some(first) = reg.borrow().struct_module_path.first() {
-                if first != own_module_id {
-                    acc.insert(first.clone());
-                }
+            if let Some(first) = reg.borrow().struct_module_path.first()
+                && first != own_module_id
+            {
+                acc.insert(first.clone());
             }
         }
         for nested in cluster.clusters.values() {
@@ -49,10 +49,10 @@ fn collect_referenced_modules(
     for reg in peri.registers.values() {
         // first element of struct_module_path is the module_id of the peripheral that owns the struct
         // in other words the peripheral name
-        if let Some(first) = reg.borrow().struct_module_path.first() {
-            if first != own_module_id {
-                acc.insert(first.clone());
-            }
+        if let Some(first) = reg.borrow().struct_module_path.first()
+            && first != own_module_id
+        {
+            acc.insert(first.clone());
         }
     }
     for cluster in peri.clusters.values() {
@@ -258,16 +258,16 @@ pub fn generate_rust_workspace(
     // Aurix CSFR: in workspace mode each CSFR peripheral is generated as its
     // own crate in `peripherals/<module_id>/` and then re-exported by the root
     // crate behind feature flags.
-    if target == Target::Aurix {
-        if let Some(ir_csfr) = generate_aurix_core_ir(xml_path, settings)? {
-            rust_files.extend(generate_workspace_csfr_crates(
-                &tera,
-                &ir_csfr,
-                &context,
-                destination_folder,
-            )?);
-            context.insert("ir_csfr", &ir_csfr);
-        }
+    if target == Target::Aurix
+        && let Some(ir_csfr) = generate_aurix_core_ir(xml_path, settings)?
+    {
+        rust_files.extend(generate_workspace_csfr_crates(
+            &tera,
+            &ir_csfr,
+            &context,
+            destination_folder,
+        )?);
+        context.insert("ir_csfr", &ir_csfr);
     }
 
     let root_lib = destination_folder.join("src/lib.rs");

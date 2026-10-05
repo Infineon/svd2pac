@@ -22,7 +22,7 @@ pub fn reg_name_from_addr(addr: u64) -> Option<&'static &'static str> {
 
 static REGISTER_NAMES: phf::Map<u64, &'static str> = phf_map! {
   {%- for address, registers in register_addresses %}
-  {{ address | num_str_to_hex }}u64 => "
+  {{ address | str | num_str_to_hex }}u64 => "
     {%- for register_path in registers %}
       {{ register_path | render_path }},
     {%- endfor %}

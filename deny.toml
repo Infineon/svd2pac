@@ -88,7 +88,7 @@ version = 2
 # List of explicitly allowed licenses
 # See https://spdx.org/licenses/ for list of possible licenses
 # [possible values: any SPDX 3.11 short identifier (+ optional exception)].
-allow = ["MIT", "Apache-2.0", "Unicode-3.0", "BSD-3-Clause"]
+allow = ["MIT", "Apache-2.0", "Unicode-3.0"]
 # The confidence threshold for detecting a license from license text.
 # The higher the value, the more closely the license text must be to the
 # canonical license text of a valid SPDX license file.
@@ -197,16 +197,14 @@ deny = [
 
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
-    { name = "windows-sys", version = "=0.60.2" },
-    #{ name = "ansi_term", version = "=0.11.0" },
+    #{ name = "thiserror", version = "=2.0.20" },
+    { name = "syn", version = "=3.0.6" },
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate
 # detection. Unlike skip, it also includes the entire tree of transitive
 # dependencies starting at the specified crate, up to a certain depth, which is
 # by default infinite.
-skip-tree = [
-    #{ name = "ansi_term", version = "=0.11.0", depth = 20 },
-]
+skip-tree = [{ name = "thiserror", version = "=2.0.20", depth = 3 }]
 
 # This section is considered when running `cargo deny check sources`.
 # More documentation about the 'sources' section can be found here:

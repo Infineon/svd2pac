@@ -13,7 +13,7 @@ use crate::{SvdValidationLevel, Target};
 use anyhow::{Context, Result, anyhow};
 use lazy_regex::regex;
 use log::{error, info, warn};
-use std::collections::HashMap;
+use serde::Deserialize;
 use std::error::Error;
 use std::fmt::Write;
 use std::fs;
@@ -21,11 +21,11 @@ use std::fs::File;
 use std::io::Read;
 use std::io::{BufRead, BufReader};
 use std::process::Command;
-use tera::{Tera, Value, to_value, try_get_value};
+use tera::{Kwargs, State, Tera, Value};
 
 /// Convert [`Vec<PathChunk>`] to a string representation of a register path.
-fn filter_render_path(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
-    match serde_json::from_value::<Vec<ir::PathChunk>>(value.clone()) {
+fn filter_render_path(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
+    match Vec::<ir::PathChunk>::deserialize(value) {
         Ok(path) => {
             let rendered =
                 path.iter()
@@ -49,9 +49,9 @@ fn filter_render_path(value: &Value, _args: &HashMap<String, Value>) -> tera::Re
                         );
                         output
                     });
-            Ok(Value::String(rendered))
+            Ok(Value::normal_string(&rendered))
         }
-        Err(e) => Err(tera::Error::msg(format!(
+        Err(e) => Err(tera::Error::message(format!(
             "filter_render_path only accepts Vec<PathChunk> as input.\nCannot deserialize value:{value} because:\nerror:{e}"
         ))),
     }
@@ -59,129 +59,106 @@ fn filter_render_path(value: &Value, _args: &HashMap<String, Value>) -> tera::Re
 
 /// Convert a String to array of line splitting it at \n or \r\n and prepend each line with `prefix`
 /// This filter is intended to create multiple line comments from a String
-fn filter_prepend_lines(value: &Value, args: &HashMap<String, Value>) -> tera::Result<Value> {
+#[allow(clippy::needless_pass_by_value)] // Kwargs must be taken by value to match Tera's Filter trait
+fn filter_prepend_lines(value: &Value, args: Kwargs, _: &State) -> Result<Value, tera::Error> {
     let reg_ex = regex!(r#"(\r\n)|(\n)"#);
-    let input_string = try_get_value!("prepend_lines", "value", String, value.clone());
-    let prefix_string = match args.get("prefix") {
-        Some(val) => try_get_value!("prepend_lines", "prefix", String, val),
-        None => {
-            return Err(tera::Error::msg(
-                "Filter `prepend_lines` expected an arg called `prefix`",
-            ));
-        }
-    };
-    let splits = to_value(
-        reg_ex
-            .split(&input_string)
-            .map(|s| prefix_string.clone() + s)
-            .collect::<Vec<_>>(),
-    )
-    .map_err(|e| tera::Error::msg(format!("Failed to convert to value: {e}")))?;
+    let input_string = value
+        .as_str()
+        .ok_or_else(|| tera::Error::message("prepend_lines expects a string value"))?;
+    let prefix_string: &str = args.must_get("prefix")?;
+    let split_lines = reg_ex
+        .split(input_string)
+        .map(|s| format!("{prefix_string}{s}"))
+        .collect::<Vec<_>>();
+    let splits = Value::try_from_serializable(&split_lines)?;
     Ok(splits)
 }
 
 /// Convert JSON number to hexadecimal String filter for tera template
-fn filter_to_hex(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
-    if let Value::Number(number) = value {
-        number.as_u64().map_or_else(
-            || Err(tera::Error::msg("to_hex accept only unsigned numbers")),
-            |u64_val| Ok(Value::String(format!("0x{u64_val:x}"))),
-        )
-    } else {
-        Err(tera::Error::msg(format!(
-            "to_hex accept only numbers as input. value:{value}"
-        )))
-    }
+fn filter_to_hex(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
+    let u64_val = value.as_u64().ok_or_else(|| {
+        tera::Error::message(format!(
+            "to_hex accept only unsigned numbers as input. value:{value}"
+        ))
+    })?;
+    Ok(Value::normal_string(&format!("0x{u64_val:x}")))
 }
 
 /// Convert stringified number to hex value. Useful when iterating over maps
 /// in tera files as tera converts the key to strings regardless of the type.
-fn filter_num_str_to_hex(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
-    if let Value::String(number_str) = value {
-        number_str.parse::<u64>().map_or_else(
-            |_| {
-                Err(tera::Error::msg(format!(
-                    "num_str_to_hex could not parse value:{value} as number"
-                )))
-            },
-            |u64_val| Ok(Value::String(format!("0x{u64_val:x}"))),
-        )
-    } else {
-        Err(tera::Error::msg(format!(
+fn filter_num_str_to_hex(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
+    let number_str = value.as_str().ok_or_else(|| {
+        tera::Error::message(format!(
             "num_str_to_hex only accepts strings. value:{value}"
-        )))
-    }
+        ))
+    })?;
+    let u64_val = number_str.parse::<u64>().map_err(|_| {
+        tera::Error::message(format!(
+            "num_str_to_hex could not parse value:{value} as number"
+        ))
+    })?;
+    Ok(Value::normal_string(&format!("0x{u64_val:x}")))
 }
 
-fn filter_to_struct_id(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
-    if let Value::String(string) = value {
-        Ok(Value::String(string.to_owned().to_sanitized_struct_ident()))
-    } else {
-        Err(tera::Error::msg(format!(
+fn filter_to_struct_id(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
+    let string = value.as_str().ok_or_else(|| {
+        tera::Error::message(format!(
             "filter_to_struct_id only supports String as argument. value:{value}"
-        )))
-    }
+        ))
+    })?;
+    Ok(Value::normal_string(
+        &string.to_owned().to_sanitized_struct_ident(),
+    ))
 }
 
-fn filter_to_mod_id(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
-    if let Value::String(string) = value {
-        Ok(Value::String(string.to_owned().to_sanitized_mod_ident()))
-    } else {
-        Err(tera::Error::msg(format!(
+fn filter_to_mod_id(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
+    let string = value.as_str().ok_or_else(|| {
+        tera::Error::message(format!(
             "filter_to_mod_id only supports String as argument. value:{value}",
-        )))
-    }
+        ))
+    })?;
+    Ok(Value::normal_string(
+        &string.to_owned().to_sanitized_mod_ident(),
+    ))
 }
 
-#[allow(dead_code)]
-fn filter_to_enum_id(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
-    if let Value::String(string) = value {
-        Ok(Value::String(string.to_owned().to_sanitized_enum_ident()))
-    } else {
-        Err(tera::Error::msg(format!(
-            "filter_to_enum_id case support only String as argument. value:{value}",
-        )))
-    }
-}
-
-fn filter_to_const_id(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
-    if let Value::String(string) = value {
-        Ok(Value::String(string.to_owned().to_sanitized_const_ident()))
-    } else {
-        Err(tera::Error::msg(format!(
+fn filter_to_const_id(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
+    let string = value.as_str().ok_or_else(|| {
+        tera::Error::message(format!(
             "filter_to_const_id only supports String as argument. value:{value}",
-        )))
-    }
+        ))
+    })?;
+    Ok(Value::normal_string(
+        &string.to_owned().to_sanitized_const_ident(),
+    ))
 }
 
-fn filter_to_func_id(value: &Value, _args: &HashMap<String, Value>) -> tera::Result<Value> {
-    if let Value::String(string) = value {
-        Ok(Value::String(string.to_owned().to_sanitized_func_ident()))
-    } else {
-        Err(tera::Error::msg(format!(
+fn filter_to_func_id(value: &Value, _: Kwargs, _: &State) -> Result<Value, tera::Error> {
+    let string = value.as_str().ok_or_else(|| {
+        tera::Error::message(format!(
             "filter_to_func_id only supports String as argument. value:{value}"
-        )))
-    }
+        ))
+    })?;
+    Ok(Value::normal_string(
+        &string.to_owned().to_sanitized_func_ident(),
+    ))
 }
 
 /// Sanitize a string so it can be used in doc attribute
 fn filter_svd_description_to_doc(
     value: &Value,
-    _args: &HashMap<String, Value>,
-) -> tera::Result<Value> {
-    if let Value::String(doc_string) = value {
-        Ok(Value::String(
-            doc_string
-                .replace('[', r"\[")
-                .replace(']', r"\]")
-                .escape_debug()
-                .to_string(),
-        ))
-    } else {
-        Err(tera::Error::msg(
-            "svd_description_to_doc accepts only string",
-        ))
-    }
+    _: Kwargs,
+    _: &State,
+) -> Result<Value, tera::Error> {
+    let doc_string = value
+        .as_str()
+        .ok_or_else(|| tera::Error::message("svd_description_to_doc accepts only string"))?;
+    let escaped = doc_string
+        .replace('[', r"\[")
+        .replace(']', r"\]")
+        .escape_debug()
+        .to_string();
+    Ok(Value::normal_string(&escaped))
 }
 
 fn execute_template(
@@ -214,6 +191,15 @@ fn execute_template(
 /// Get instance of Tera that includes required templates
 fn get_tera_instance() -> anyhow::Result<Tera> {
     let mut tera = Tera::default();
+    tera.register_filter("to_hex", filter_to_hex);
+    tera.register_filter("num_str_to_hex", filter_num_str_to_hex);
+    tera.register_filter("render_path", filter_render_path);
+    tera.register_filter("to_struct_id", filter_to_struct_id);
+    tera.register_filter("to_func_id", filter_to_func_id);
+    tera.register_filter("to_mod_id", filter_to_mod_id);
+    tera.register_filter("to_enumerated_const_id", filter_to_const_id);
+    tera.register_filter("prepend_lines", filter_prepend_lines);
+    tera.register_filter("svd_description_to_doc", filter_svd_description_to_doc);
     tera.add_raw_templates(vec![
         (
             "Cargo_toml.tera",
@@ -237,7 +223,10 @@ fn get_tera_instance() -> anyhow::Result<Tera> {
             include_str!("../templates/rust/aurix_core.tera"),
         ),
         ("common.tera", include_str!("../templates/rust/common.tera")),
-        ("macros.tera", include_str!("../templates/rust/macros.tera")),
+        (
+            "components.tera",
+            include_str!("../templates/rust/components.tera"),
+        ),
         (
             "build_cortex.tera",
             include_str!("../templates/rust/build_cortex.tera"),
@@ -268,15 +257,6 @@ fn get_tera_instance() -> anyhow::Result<Tera> {
         ),
     ])?;
 
-    tera.register_filter("to_hex", filter_to_hex);
-    tera.register_filter("num_str_to_hex", filter_num_str_to_hex);
-    tera.register_filter("render_path", filter_render_path);
-    tera.register_filter("to_struct_id", filter_to_struct_id);
-    tera.register_filter("to_func_id", filter_to_func_id);
-    tera.register_filter("to_mod_id", filter_to_mod_id);
-    tera.register_filter("to_enumerated_const_id", filter_to_const_id);
-    tera.register_filter("prepend_lines", filter_prepend_lines);
-    tera.register_filter("svd_description_to_doc", filter_svd_description_to_doc);
     Ok(tera)
 }
 

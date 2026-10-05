@@ -1,4 +1,3 @@
-{% import "macros.tera" as macros -%}
 {% for line in  ir.license_text | prepend_lines(prefix="# ") -%}
 {{line}}
 {% endfor -%}
@@ -60,7 +59,7 @@ cortex-m = "0.7.6"
 {%- endif %}
 
 [features]
-{{ macros::cargo_features(ir=ir, tracing=tracing, target=target, workspace_mode=true, package_name=package_name, ir_csfr=ir_csfr | default(value=false)) }}
+{{<cargo_features ir={ir} tracing={tracing} target={target} workspace_mode={true} package_name={package_name} ir_csfr={ir_csfr | default(value=false)} />}}
 
 [package.metadata.docs.rs]
 features = ["all"{% if target=="CortexM" %},"rt"{%endif%}]

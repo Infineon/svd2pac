@@ -1,11 +1,9 @@
-{% import "macros.tera" as macros %}
-
 {# Generated core register function #}
-{%- macro register_core_func(types_mod,reg, base_addr) -%}
+{%- component register_core_func(types_mod: string, reg: map, base_addr: integer) -%}
 {%- set reg_struct = reg.name | to_struct_id -%}
 {%- set reg_struct_name = types_mod ~ "::" ~  reg_struct  -%}
 {%- set reg_mod_name = reg.name | to_mod_id -%}
-{%- set reg_addr = base_addr+reg.offset | to_hex -%}
+    {%- set reg_addr = (base_addr + reg.offset) | to_hex -%}
 #[doc = r"{{reg.description | svd_description_to_doc}}"]
 #[inline(always)]
 {% if reg.dim == 1 -%}
@@ -14,67 +12,67 @@ pub const fn {{reg.name | to_func_id }}(&self) -> crate::common::RegCore<{{reg_s
 }
 {%- else -%}
 {%- for index in range(end=reg.dim) -%}
-pub const fn {{reg.name~index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}, {{base_addr+reg.offset+index*reg.dim_increment | to_hex }},{{reg.reset_value}}> {
+pub const fn {{(reg.name~index) | to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}, {{(base_addr + reg.offset + index * reg.dim_increment) | to_hex }},{{reg.reset_value}}> {
     unsafe { crate::common::RegCore::new() }
 }
 {% endfor -%}
 {%- endif -%}
-{%- endmacro -%}
+{%- endcomponent register_core_func -%}
 
 
 {# Generated core cluster unrolled into register function #}
-{%- macro cluster_register_core_func(types_mod,reg,base_addr,cluster_index,cluster) -%}
-{%- set reg_struct = cluster.name~"_"~reg.name | to_struct_id -%}
+{%- component cluster_register_core_func(types_mod: string, reg: map, base_addr: integer, cluster_index: integer, cluster: map) -%}
+{%- set reg_struct = (cluster.name~"_"~reg.name) | to_struct_id -%}
 {%- set reg_struct_name = types_mod ~ "::" ~  reg_struct  -%}
-{%- set reg_addr = base_addr+reg.offset | to_hex -%}
+    {%- set reg_addr = (base_addr + reg.offset) | to_hex -%}
 #[doc = r"{{reg.description | svd_description_to_doc}}"]
 #[inline(always)]
 {% if reg.dim == 1 -%}
 {% if cluster.dim == 1 -%}
-pub const fn {{cluster.name~"_"~reg.name| to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}, {{reg_addr}},{{reg.reset_value}}> {
+pub const fn {{(cluster.name~"_"~reg.name) | to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}, {{reg_addr}},{{reg.reset_value}}> {
     unsafe { crate::common::RegCore::new() }
 }
 {%- else -%}
-pub const fn {{cluster.name~"_"~reg.name~cluster_index| to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}, {{reg_addr}},{{reg.reset_value}}> {
+pub const fn {{(cluster.name~"_"~reg.name~cluster_index) | to_func_id }}(&self) -> crate::common::RegCore<{{reg_struct_name}}, {{reg_addr}},{{reg.reset_value}}> {
     unsafe { crate::common::RegCore::new() }
 }
 {%- endif -%}
 {%- else -%}
 {%- for reg_index in range(end=reg.dim) -%}
 {% if cluster.dim == 1 -%}
-pub const fn {{cluster.name~"_"~reg.name~reg_index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}, {{base_addr+reg.offset+reg_index*reg.dim_increment | to_hex }},{{reg.reset_value}}> {
+pub const fn {{(cluster.name~"_"~reg.name~reg_index) | to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}, {{(base_addr + reg.offset + reg_index * reg.dim_increment) | to_hex }},{{reg.reset_value}}> {
     unsafe { crate::common::RegCore::new() }
 }
 {%- else -%}
-pub const fn {{cluster.name~"_"~reg.name~"_"~cluster_index~"_"~reg_index| to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}T, {{base_addr+reg.offset+reg_index*reg.dim_increment | to_hex }},{{reg.reset_value}}> {
+pub const fn {{(cluster.name~"_"~reg.name~"_"~cluster_index~"_"~reg_index) | to_func_id }}(&self)-> crate::common::RegCore<{{reg_struct_name}}T, {{(base_addr + reg.offset + reg_index * reg.dim_increment) | to_hex }},{{reg.reset_value}}> {
     unsafe { crate::common::RegCore::new() }
 }
 {%- endif -%}
 {% endfor -%}
 {%- endif -%}
-{%- endmacro -%}
+{%- endcomponent cluster_register_core_func -%}
 
 {# Unroll the cluster register for aurix csfr #}
-{%- macro cluster_func_csfr(types_mod,cluster, base_addr) -%}
+{%- component cluster_func_csfr(types_mod: string, cluster: map, base_addr: integer) -%}
 {%- set cluster_struct_id = cluster.name | to_struct_id -%}
-{%- set cluster_base_addr = base_addr+cluster.offset -%}
+{%- set cluster_base_addr = base_addr + cluster.offset -%}
 #[doc = "{{cluster.description | svd_description_to_doc}}"]
 {%- if cluster.dim == 1 %}
 {% for register_name,reg in cluster.registers -%}
-{{self::cluster_register_core_func(types_mod="self",reg=reg, base_addr=cluster_base_addr,cluster_index=0,cluster=cluster)}}
+{{<cluster_register_core_func types_mod="self" reg={reg} base_addr={cluster_base_addr} cluster_index={0} cluster={cluster} />}}
 {% endfor -%}
 {%- else %}
 {%- for index in range(end=cluster.dim) -%}
-{%- set current_cluster_addr = cluster_base_addr+index*cluster.dim_increment -%}
+{%- set current_cluster_addr = cluster_base_addr + index * cluster.dim_increment -%}
 {% for register_name,reg in cluster.registers -%}
-{{self::cluster_register_core_func(types_mod="self",reg=reg, base_addr=current_cluster_addr,cluster_index=index,cluster=cluster)}}
+{{<cluster_register_core_func types_mod="self" reg={reg} base_addr={current_cluster_addr} cluster_index={index} cluster={cluster} />}}
 {% endfor -%}
 {% endfor -%}
 {%- endif -%}
-{%- endmacro -%}
+{%- endcomponent cluster_func_csfr -%}
 
 
-{%- macro register_core_struct(reg,reg_name="") -%}
+{%- component register_core_struct(reg: map, reg_name: string = "") -%}
 {%-if reg_name %}
 {%- set reg_struct_name = reg_name | to_struct_id -%}
 {%- set reg_mod_name = reg_name | to_mod_id -%}
@@ -84,15 +82,15 @@ pub const fn {{cluster.name~"_"~reg.name~"_"~cluster_index~"_"~reg_index| to_fun
 {%- endif -%}
 
 
-{{macros::doc_attribute(documentation=reg.description)}}
+{{<doc_attribute documentation={reg.description} />}}
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct {{reg_struct_name}} {
-    pub(crate) data: {{macros::reg_size2num_type(bit_size=reg.size)}},
-    pub(crate) mask: {{macros::reg_size2num_type(bit_size=reg.size)}}
+    pub(crate) data: {{<reg_size2num_type bit_size={reg.size} />}},
+    pub(crate) mask: {{<reg_size2num_type bit_size={reg.size} />}}
 }
 
 impl crate::common::RegisterValue for {{reg_struct_name}} {
-    type DataType = {{macros::reg_size2num_type(bit_size=reg.size)}};
+    type DataType = {{<reg_size2num_type bit_size={reg.size} />}};
 
     fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
         (&mut self.data, &mut self.mask)
@@ -127,23 +125,23 @@ impl crate::common::NoBitfieldReg for {{reg_struct_name}} {}
 {% else -%}
 impl {{reg_struct_name}} {
     {%- for field_name,field in reg.fields %}
-    {{macros::doc_attribute(documentation=field.description)}}
+    {{<doc_attribute documentation={field.description} />}}
     #[inline(always)]
     {%- if field.dim > 1 -%}
-    pub fn {{field.name | to_func_id }}(self,index:u8) -> {{macros::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
+    pub fn {{field.name | to_func_id }}(self,index:u8) -> {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={false} />}} {
         assert!(index < {{field.dim}});
-        {{macros::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=true)}}::from_register(self,index)
+        {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={true} />}}::from_register(self,index)
      
     }
     {%- for func_name in field.dim_index %}
     #[inline(always)]
-    pub fn {{func_name | to_func_id }}(self) -> {{macros::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
-        {{macros::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=true)}}::from_register(self,{{loop.index0}})
+    pub fn {{func_name | to_func_id }}(self) -> {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={false} />}} {
+        {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={true} />}}::from_register(self,{{loop.index0}})
     }
     {% endfor %}
     {%- else %}
-    pub fn {{field.name | to_func_id }}(self) -> {{macros::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=false)}} {
-        {{macros::bitfield_type(field=field,reg_struct_name=reg_struct_name,reg_mod_name=reg_mod_name,turbofish=true)}}::from_register(self,0)
+    pub fn {{field.name | to_func_id }}(self) -> {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={false} />}} {
+        {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={true} />}}::from_register(self,0)
     }
     {%- endif -%}
     {%- endfor %}
@@ -164,25 +162,25 @@ pub mod {{reg_mod_name}} {
     {%- set enum_name_type= enum_type.name | to_struct_id %}
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
     #[repr(transparent)]
-    pub struct {{enum_name_type}}({{macros::reg_size2num_type(bit_size=enum_type.size)}});
+    pub struct {{enum_name_type}}({{<reg_size2num_type bit_size={enum_type.size} />}});
     
     impl {{enum_name_type}} {
-        pub fn new(value: {{macros::reg_size2num_type(bit_size=enum_type.size)}}) -> Self {
+        pub fn new(value: {{<reg_size2num_type bit_size={enum_type.size} />}}) -> Self {
             Self(value)
         }
     }
 
     impl crate::common::EnumBitfieldStruct for {{enum_name_type}} {
-        type RegNumberT = {{macros::reg_size2num_type(bit_size=enum_type.size)}};
+        type RegNumberT = {{<reg_size2num_type bit_size={enum_type.size} />}};
 
         fn value(&self) -> Self::RegNumberT {
             self.0
         }
     }
 
-    impl From<{{macros::reg_size2num_type(bit_size=enum_type.size)}}> for {{enum_name_type}} {
+    impl From<{{<reg_size2num_type bit_size={enum_type.size} />}}> for {{enum_name_type}} {
         #[inline(always)]
-        fn from(value: {{macros::reg_size2num_type(bit_size=enum_type.size)}}) -> Self {
+        fn from(value: {{<reg_size2num_type bit_size={enum_type.size} />}}) -> Self {
             Self(value)
         }
     }
@@ -197,12 +195,12 @@ pub mod {{reg_mod_name}} {
     impl CastFrom<u64> for {{enum_name_type}} {
         #[inline(always)]
         fn cast_from(val: u64) -> Self {
-            Self({{macros::reg_size2num_type(bit_size=enum_type.size)}}::cast_from(val))
+            Self({{<reg_size2num_type bit_size={enum_type.size} />}}::cast_from(val))
         }
     }
     impl {{enum_name_type}} {
         {%- for val in enum_type.values %}
-        {{macros::doc_attribute(documentation=val.description)}}
+        {{<doc_attribute documentation={val.description} />}}
         pub const {{val.name | to_enumerated_const_id }}:Self =Self({{val.value}});
         {%- endfor %}
     }
@@ -210,7 +208,7 @@ pub mod {{reg_mod_name}} {
     {% endfor %}
 }
 {%- endif -%}
-{%- endmacro -%}
+{%- endcomponent register_core_struct -%}
 
 
 /*
@@ -235,20 +233,20 @@ unsafe impl ::core::marker::Send for super::{{peri_struct}}  {}
 unsafe impl ::core::marker::Sync for super::{{peri_struct}}  {}
 impl super::{{peri_struct}} {
 {%- for register_name,reg in peri.registers %}
-{{self::register_core_func(types_mod="self",reg=reg, base_addr=peri_base_addr)}}
+{{<register_core_func types_mod="self" reg={reg} base_addr={peri_base_addr} />}}
 {% endfor -%}
 {% for cluster_name,cluster in peri.clusters -%}
-{{self::cluster_func_csfr(types_mod="self",cluster=cluster, base_addr=peri_base_addr)}}
+{{<cluster_func_csfr types_mod="self" cluster={cluster} base_addr={peri_base_addr} />}}
 {% endfor %}
 
 }
 {% for register_name,reg in peri.registers -%}
-{{self::register_core_struct(reg=reg)}}
+{{<register_core_struct reg={reg} />}}
 {% endfor %}
 {% for cluster_name,cluster in peri.clusters -%}
 {% for register_name,reg in cluster.registers -%}
 {% set cluster_reg_name = cluster.name~"_"~reg.name  -%}
-{{macros::register_struct(reg=reg,reg_name=cluster_reg_name,is_memory_mapped=false)}}
+{{<register_struct reg={reg} reg_name={cluster_reg_name} />}}
 {% endfor %}
 {% endfor %}
 
