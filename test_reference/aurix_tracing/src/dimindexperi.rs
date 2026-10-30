@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:56:11 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 12:53:51 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -22,7 +22,7 @@ impl super::DimIndexPeri {
     #[inline(always)]
     pub(crate) const fn _svd2pac_as_ptr(&self) -> *mut u8 {
         self.ptr
-    } 
+    }
 #[doc = "Array cluster index"]
 #[inline(always)]
 pub fn clust(&self) -> &'static crate::common::ClusterRegisterArray<crate::dimindexperi::_Clust, 3, 0x30> {
@@ -46,7 +46,7 @@ pub fn clu5st(&self) -> crate::dimindexperi::Clust {
 #[doc(hidden)]
 #[non_exhaustive]
 pub struct _Clust;
- 
+
 #[doc = "Array cluster index"]
 pub type Clust = &'static _Clust;
 
@@ -171,7 +171,6 @@ impl crate::common::Reg<AReg> for ARegT {}
 unsafe impl crate::common::Read<AReg> for ARegT {}
 unsafe impl crate::common::Write<AReg> for ARegT {}
 impl AReg {
-    
     #[inline(always)]pub fn arraybitfield_(self,index:u8) -> crate::common::RegisterField<1,0x3,3,2,u8,u8,AReg,common::RW> {
         assert!(index < 3);
         crate::common::RegisterField::<1,0x3,3,2,u8,u8,AReg,common::RW>::from_register(self,index)
@@ -236,33 +235,24 @@ impl crate::common::Reg<BReg> for BRegT {}
 unsafe impl crate::common::Read<BReg> for BRegT {}
 unsafe impl crate::common::Write<BReg> for BRegT {}
 impl BReg {
-    
-    #[inline(always)]pub fn arraybitfieldbool_(self,index:u8) -> 
-    crate::common::RegisterFieldBool<0,3,1,BReg,common::RW> {
+    #[inline(always)]pub fn arraybitfieldbool_(self,index:u8) -> crate::common::RegisterFieldBool<0,3,1,BReg,common::RW> {
         assert!(index < 3);
-        
-    crate::common::RegisterFieldBool::<0,3,1,BReg,common::RW>::from_register(self,index)
+        crate::common::RegisterFieldBool::<0,3,1,BReg,common::RW>::from_register(self,index)
      
     }
     #[inline(always)]
-    pub fn arraybitfieldbool_c(self) -> 
-    crate::common::RegisterFieldBool<0,3,1,BReg,common::RW> {
-        
-    crate::common::RegisterFieldBool::<0,3,1,BReg,common::RW>::from_register(self,0)
+    pub fn arraybitfieldbool_c(self) -> crate::common::RegisterFieldBool<0,3,1,BReg,common::RW> {
+        crate::common::RegisterFieldBool::<0,3,1,BReg,common::RW>::from_register(self,0)
     }
     
     #[inline(always)]
-    pub fn arraybitfieldbool_d(self) -> 
-    crate::common::RegisterFieldBool<0,3,1,BReg,common::RW> {
-        
-    crate::common::RegisterFieldBool::<0,3,1,BReg,common::RW>::from_register(self,1)
+    pub fn arraybitfieldbool_d(self) -> crate::common::RegisterFieldBool<0,3,1,BReg,common::RW> {
+        crate::common::RegisterFieldBool::<0,3,1,BReg,common::RW>::from_register(self,1)
     }
     
     #[inline(always)]
-    pub fn arraybitfieldbool_e(self) -> 
-    crate::common::RegisterFieldBool<0,3,1,BReg,common::RW> {
-        
-    crate::common::RegisterFieldBool::<0,3,1,BReg,common::RW>::from_register(self,2)
+    pub fn arraybitfieldbool_e(self) -> crate::common::RegisterFieldBool<0,3,1,BReg,common::RW> {
+        crate::common::RegisterFieldBool::<0,3,1,BReg,common::RW>::from_register(self,2)
     }
     
 }

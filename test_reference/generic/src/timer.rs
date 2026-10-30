@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:59:10 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 13:01:44 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -147,19 +147,16 @@ impl BitfieldReg {
     pub fn boolr(self) -> crate::common::RegisterFieldBool<0, 1, 0, BitfieldReg, common::R> {
         crate::common::RegisterFieldBool::<0, 1, 0, BitfieldReg, common::R>::from_register(self, 0)
     }
-
     #[doc = "Boolean Bitfield Write Only"]
     #[inline(always)]
     pub fn boolw(self) -> crate::common::RegisterFieldBool<1, 1, 0, BitfieldReg, common::W> {
         crate::common::RegisterFieldBool::<1, 1, 0, BitfieldReg, common::W>::from_register(self, 0)
     }
-
     #[doc = "Boolean bitfield Read Write"]
     #[inline(always)]
     pub fn boolrw(self) -> crate::common::RegisterFieldBool<2, 1, 0, BitfieldReg, common::RW> {
         crate::common::RegisterFieldBool::<2, 1, 0, BitfieldReg, common::RW>::from_register(self, 0)
     }
-
     #[doc = "Raw Bitfield Read Only"]
     #[inline(always)]
     pub fn bitfieldr(
@@ -169,7 +166,6 @@ impl BitfieldReg {
             self, 0,
         )
     }
-
     #[doc = "Bitfield Raw Write Only"]
     #[inline(always)]
     pub fn bitfieldw(
@@ -179,7 +175,6 @@ impl BitfieldReg {
             self, 0,
         )
     }
-
     #[doc = "BitField Raw Read Write"]
     #[inline(always)]
     pub fn bitfieldrw(
@@ -189,7 +184,6 @@ impl BitfieldReg {
             self, 0,
         )
     }
-
     #[doc = "Bitfield with enumerated field"]
     #[inline(always)]
     pub fn bitfieldenumerated(
@@ -215,7 +209,6 @@ impl BitfieldReg {
             common::RW,
         >::from_register(self, 0)
     }
-
     #[doc = "Array of bitfields"]
     #[inline(always)]
     pub fn fieldarray(
@@ -301,49 +294,34 @@ pub mod bitfield_reg {
     impl BitfieldEnumerated {
         #[doc = "Core Clock"]
         pub const C_CLK: Self = Self(0);
-
         #[doc = "GPIO A, PIN 0"]
         pub const GPIOA_0: Self = Self(1);
-
         #[doc = "GPIO A, PIN 1"]
         pub const GPIOA_1: Self = Self(2);
-
         #[doc = "GPIO A, PIN 2"]
         pub const GPIOA_2: Self = Self(3);
-
         #[doc = "GPIO A, PIN 3"]
         pub const GPIOA_3: Self = Self(4);
-
         #[doc = "GPIO A, PIN 4"]
         pub const GPIOA_4: Self = Self(5);
-
         #[doc = "GPIO A, PIN 5"]
         pub const GPIOA_5: Self = Self(6);
-
         #[doc = "GPIO A, PIN 6"]
         pub const GPIOA_6: Self = Self(7);
-
         #[doc = "GPIO A, PIN 7"]
         pub const GPIOA_7: Self = Self(8);
-
         #[doc = "GPIO B, PIN 0"]
         pub const GPIOB_0: Self = Self(9);
-
         #[doc = "GPIO B, PIN 1"]
         pub const GPIOB_1: Self = Self(10);
-
         #[doc = "GPIO B, PIN 2"]
         pub const GPIOB_2: Self = Self(11);
-
         #[doc = "GPIO B, PIN 3"]
         pub const GPIOB_3: Self = Self(12);
-
         #[doc = "GPIO C, PIN 0"]
         pub const GPIOC_0: Self = Self(13);
-
         #[doc = "GPIO C, PIN 1"]
         pub const GPIOC_5: Self = Self(14);
-
         #[doc = "GPIO C, PIN 2"]
         pub const GPIOC_6: Self = Self(15);
     }
@@ -389,10 +367,8 @@ pub mod bitfield_reg {
     impl FieldArray {
         #[doc = "Only rising edges result in a counter increment or decrement"]
         pub const RISING: Self = Self(0);
-
         #[doc = "Only falling edges result in a counter increment or decrement"]
         pub const FALLING: Self = Self(1);
-
         #[doc = "Rising and falling edges result in a counter increment or decrement"]
         pub const BOTH: Self = Self(2);
     }
@@ -437,7 +413,6 @@ impl Sr {
             self, 0,
         )
     }
-
     #[doc = "Shows if the MATCH was hit"]
     #[inline(always)]
     pub fn r#match(
@@ -445,7 +420,6 @@ impl Sr {
     ) -> crate::common::RegisterField<8, 0x1, 1, 0, sr::Match, sr::Match, Sr, common::RW> {
         crate::common::RegisterField::<8,0x1,1,0,sr::Match,sr::Match,Sr,common::RW>::from_register(self,0)
     }
-
     #[doc = "Shows if an underflow occured. This flag is sticky"]
     #[inline(always)]
     pub fn un(self) -> crate::common::RegisterField<9, 0x1, 1, 0, sr::Un, sr::Un, Sr, common::RW> {
@@ -453,7 +427,6 @@ impl Sr {
             self, 0,
         )
     }
-
     #[doc = "Shows if an overflow occured. This flag is sticky"]
     #[inline(always)]
     pub fn ov(self) -> crate::common::RegisterField<10, 0x1, 1, 0, sr::Ov, sr::Ov, Sr, common::RW> {
@@ -461,7 +434,6 @@ impl Sr {
             self, 0,
         )
     }
-
     #[doc = "Shows if Timer is in RESET state"]
     #[inline(always)]
     pub fn rst(
@@ -469,7 +441,6 @@ impl Sr {
     ) -> crate::common::RegisterField<12, 0x1, 1, 0, sr::Rst, sr::Rst, Sr, common::R> {
         crate::common::RegisterField::<12,0x1,1,0,sr::Rst,sr::Rst,Sr,common::R>::from_register(self,0)
     }
-
     #[doc = "Shows the currently active RELOAD Register"]
     #[inline(always)]
     pub fn reload(
@@ -535,7 +506,6 @@ pub mod sr {
     impl Run {
         #[doc = "Timer is not running"]
         pub const STOPPED: Self = Self(0);
-
         #[doc = "Timer is running"]
         pub const RUNNING: Self = Self(1);
     }
@@ -581,7 +551,6 @@ pub mod sr {
     impl Match {
         #[doc = "The MATCH condition was not hit"]
         pub const NO_MATCH: Self = Self(0);
-
         #[doc = "The MATCH condition was hit"]
         pub const MATCH_HIT: Self = Self(1);
     }
@@ -627,7 +596,6 @@ pub mod sr {
     impl Un {
         #[doc = "No underflow occured since last clear"]
         pub const NO_UNDERFLOW: Self = Self(0);
-
         #[doc = "A minimum of one underflow occured since last clear"]
         pub const UNDERFLOW: Self = Self(1);
     }
@@ -673,7 +641,6 @@ pub mod sr {
     impl Ov {
         #[doc = "No overflow occured since last clear"]
         pub const NO_OVERFLOW: Self = Self(0);
-
         #[doc = "A minimum of one overflow occured since last clear"]
         pub const OVERFLOW_OCCURED: Self = Self(1);
     }
@@ -719,7 +686,6 @@ pub mod sr {
     impl Rst {
         #[doc = "Timer is not in RESET state and can operate"]
         pub const READY: Self = Self(0);
-
         #[doc = "Timer is in RESET state and can not operate"]
         pub const IN_RESET: Self = Self(1);
     }
@@ -765,13 +731,10 @@ pub mod sr {
     impl Reload {
         #[doc = "Reload Register number 0 is active"]
         pub const RELOAD_0: Self = Self(0);
-
         #[doc = "Reload Register number 1 is active"]
         pub const RELOAD_1: Self = Self(1);
-
         #[doc = "Reload Register number 2 is active"]
         pub const RELOAD_2: Self = Self(2);
-
         #[doc = "Reload Register number 3 is active"]
         pub const RELOAD_3: Self = Self(3);
     }
@@ -814,7 +777,6 @@ impl Int {
     ) -> crate::common::RegisterField<0, 0x1, 1, 0, int::En, int::En, Int, common::RW> {
         crate::common::RegisterField::<0,0x1,1,0,int::En,int::En,Int,common::RW>::from_register(self,0)
     }
-
     #[doc = "Interrupt Mode, selects on which condition the Timer should generate an Interrupt"]
     #[inline(always)]
     pub fn mode(
@@ -880,7 +842,6 @@ pub mod int {
     impl En {
         #[doc = "Timer does not generate Interrupts"]
         pub const DISABLED: Self = Self(0);
-
         #[doc = "Timer triggers the TIMERn Interrupt"]
         pub const ENABLE: Self = Self(1);
     }
@@ -926,10 +887,8 @@ pub mod int {
     impl Mode {
         #[doc = "Timer generates an Interrupt when the MATCH condition is hit"]
         pub const MATCH: Self = Self(0);
-
         #[doc = "Timer generates an Interrupt when it underflows"]
         pub const UNDERFLOW: Self = Self(1);
-
         #[doc = "Timer generates an Interrupt when it overflows"]
         pub const OVERFLOW: Self = Self(2);
     }
@@ -1279,7 +1238,6 @@ pub mod register64bit {
 
     impl Boolean {
         pub const TRUE: Self = Self(1);
-
         pub const FALSE: Self = Self(0);
     }
 }
@@ -1424,7 +1382,6 @@ pub mod cluster1 {
                 self, 0,
             )
         }
-
         #[inline(always)]
         pub fn psc(
             self,
@@ -1794,7 +1751,6 @@ pub mod clusterdim {
                 self, 0,
             )
         }
-
         #[inline(always)]
         pub fn psc(
             self,

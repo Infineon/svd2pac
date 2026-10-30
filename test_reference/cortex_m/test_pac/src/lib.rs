@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:58:05 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 12:55:57 +0000
 #![no_std]
 #![allow(non_camel_case_types)]
 #![doc = "SVD Test for Rust PAC generator"]

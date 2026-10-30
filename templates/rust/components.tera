@@ -14,7 +14,7 @@ Unsupported register size
 
 {%- component doc_attribute(documentation: string) -%}
 {%- set doc_string = documentation | svd_description_to_doc -%}
-{%- if doc_string != "" %} 
+{%- if doc_string != "" %}
 #[doc = "{{doc_string}}"]
 {%- endif -%}
 {%- endcomponent doc_attribute -%}
@@ -42,10 +42,10 @@ pub fn {{func_name | to_func_id }}(&self) -> &'static {{reg_struct_name}}T {
 {%- endfor -%}
 {%- endif -%}
 {%- endcomponent register_func -%}
- 
+
 {%- component bitfield_type(field: map, reg_struct_name: string, reg_mod_name: string, turbofish: bool) -%}
 {%-if turbofish %}{%set separator = "::"%}{%else%}{%set separator = ""%}{%endif-%}
-{%- if  field.mask == 1 and 0 == field.enum_types | length %}
+{%- if  field.mask == 1 and 0 == field.enum_types | length -%}
     crate::common::RegisterFieldBool{{separator}}<{{field.offset}},{{field.dim}},{{field.dim_increment}},{{reg_struct_name}},common::{{field.access}}>
 {%- else -%}
     {%- if field.enum_type_read -%}
@@ -122,7 +122,7 @@ impl crate::common::NoBitfieldReg for {{reg_struct_name}} {}
 {% else -%}
 impl {{reg_struct_name}} {
     {%- for field_name,field in reg.fields %}
-    {{<doc_attribute documentation={field.description} />}}
+    {{-<doc_attribute documentation={field.description} />}}
     #[inline(always)]
     {%- if field.dim > 1 -%}
     pub fn {{field.name | to_func_id }}(self,index:u8) -> {{<bitfield_type field={field} reg_struct_name={reg_struct_name} reg_mod_name={reg_mod_name} turbofish={false} />}} {
@@ -203,7 +203,7 @@ pub mod {{reg_mod_name}} {
 
     impl {{enum_name_type}} {
         {%- for val in enum_type.values %}
-        {{<doc_attribute documentation={val.description} />}}
+        {{-<doc_attribute documentation={val.description} />}}
         pub const {{val.name | to_enumerated_const_id }}:Self =Self({{val.value}});
         {%- endfor %}
     }

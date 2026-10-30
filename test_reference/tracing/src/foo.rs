@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 16:00:55 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 13:03:11 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -127,7 +127,6 @@ pub mod r#in {
     impl _Self {
         #[doc = "Input is on low level."]
         pub const _0_VALUE: Self = Self(0);
-
         #[doc = "Input is on high level."]
         pub const _1_VALUE: Self = Self(1);
     }
