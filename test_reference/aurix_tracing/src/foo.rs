@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:56:11 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 12:53:51 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -23,7 +23,7 @@ impl super::Foo {
     pub(crate) const fn _svd2pac_as_ptr(&self) -> *mut u8 {
         self.ptr
     }
- 
+
 #[doc = "FOO Input Register"]
 #[inline(always)]
 pub fn r#in(&self) -> &'static self::InT {
@@ -31,7 +31,7 @@ pub fn r#in(&self) -> &'static self::InT {
 }
 
 }
- 
+
 #[doc = "FOO Input Register"]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct In {
@@ -68,7 +68,6 @@ impl crate::common::Reg<In> for InT {}
 unsafe impl crate::common::Read<In> for InT {}
 unsafe impl crate::common::Write<In> for InT {}
 impl In {
-     
 #[doc = "SELF element of FOO"]
     #[inline(always)]
     pub fn _self(self) -> crate::common::RegisterField<1,0x1,1,0,r#in::_Self,r#in::_Self,In,common::RW> {
@@ -130,10 +129,8 @@ pub mod r#in {
     }
 
     impl _Self {
-         
 #[doc = "Input is on low level."]
         pub const _0_VALUE:Self =Self(0);
-         
 #[doc = "Input is on high level."]
         pub const _1_VALUE:Self =Self(1);
     }

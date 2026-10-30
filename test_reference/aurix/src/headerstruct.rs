@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:56:11 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 11:28:15 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -22,7 +22,7 @@ impl super::HeaderStruct {
     #[inline(always)]
     pub(crate) const fn _svd2pac_as_ptr(&self) -> *mut u8 {
         self.ptr
-    } 
+    }
 #[doc = "Cluster that defines the base type"]
 #[inline(always)]
 pub const fn i2c2(&self) -> crate::headerstruct::I2C2{
@@ -34,7 +34,7 @@ pub const fn i2c2(&self) -> crate::headerstruct::I2C2{
 #[doc(hidden)]
 #[non_exhaustive]
 pub struct _I2C2;
- 
+
 #[doc = "Cluster that defines the base type"]
 pub type I2C2 = &'static _I2C2;
 

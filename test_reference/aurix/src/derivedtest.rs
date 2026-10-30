@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:56:11 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 11:28:15 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -23,7 +23,7 @@ impl super::DerivedTest {
     pub(crate) const fn _svd2pac_as_ptr(&self) -> *mut u8 {
         self.ptr
     }
- 
+
 #[doc = "BaseRegister"]
 #[inline(always)]
 pub fn baseregister(&self) -> &'static self::BaseRegisterT {
@@ -41,13 +41,13 @@ pub fn derivedregister(&self) -> &'static self::DerivedRegisterT {
 pub fn derivedfromfaraway(&self) -> &'static self::DerivedFromFarAwayT {
     unsafe {   self::DerivedFromFarAwayT::from_ptr(self._svd2pac_as_ptr().add(4100usize)) }
 }
- 
+
 #[doc = "Cluster that defines the base type"]
 #[inline(always)]
 pub const fn basecluster(&self) -> crate::derivedtest::BaseClusterType{
     unsafe {   crate::derivedtest::_BaseClusterType::_svd2pac_from_ptr(self._svd2pac_as_ptr().add(0usize)) }
 }
- 
+
 #[doc = "ArrayCluster"]
 #[inline(always)]
 pub fn arraycluster(&self) -> &'static crate::common::ClusterRegisterArray<crate::derivedtest::_BaseClusterType, 4, 0x8> {
@@ -65,7 +65,7 @@ pub const fn derivedfromfarawaycluster(&self) -> crate::timer::cluster1::Cluster
 }
 
 }
- 
+
 #[doc = "BaseRegister"]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct BaseRegister {
@@ -102,7 +102,6 @@ impl crate::common::Reg<BaseRegister> for BaseRegisterT {}
 unsafe impl crate::common::Read<BaseRegister> for BaseRegisterT {}
 unsafe impl crate::common::Write<BaseRegister> for BaseRegisterT {}
 impl BaseRegister {
-     
 #[doc = "Shows if Timer is running or not"]
     #[inline(always)]
     pub fn run(self) -> crate::common::RegisterField<0,0x1,1,0,baseregister::Run,baseregister::Run,BaseRegister,common::R> {
@@ -164,10 +163,8 @@ pub mod baseregister {
     }
 
     impl Run {
-         
 #[doc = "Timer is not running"]
         pub const STOPPED:Self =Self(0);
-         
 #[doc = "Timer is running"]
         pub const RUNNING:Self =Self(1);
     }
@@ -264,7 +261,7 @@ impl crate::common::ResetValue<DerivedFromFarAway> for DerivedFromFarAwayT {
 #[doc(hidden)]
 #[non_exhaustive]
 pub struct _BaseClusterType;
- 
+
 #[doc = "Cluster that defines the base type"]
 pub type BaseClusterType = &'static _BaseClusterType;
 

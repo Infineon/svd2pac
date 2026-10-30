@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:58:05 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 12:55:57 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -259,7 +259,6 @@ pub mod clust {
             index: u8,
         ) -> crate::common::RegisterFieldBool<0, 3, 1, BReg, common::RW> {
             assert!(index < 3);
-
             crate::common::RegisterFieldBool::<0, 3, 1, BReg, common::RW>::from_register(
                 self, index,
             )

@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 16:00:55 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 13:03:11 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -151,14 +151,12 @@ impl RegBitfieldRaw {
     ) -> crate::common::RegisterField<0, 0x1ff, 1, 0, u16, u16, RegBitfieldRaw, common::RW> {
         crate::common::RegisterField::<0,0x1ff,1,0,u16,u16,RegBitfieldRaw,common::RW>::from_register(self,0)
     }
-
     #[inline(always)]
     pub fn bitfield17bits(
         self,
     ) -> crate::common::RegisterField<9, 0x3ffff, 1, 0, u32, u32, RegBitfieldRaw, common::RW> {
         crate::common::RegisterField::<9,0x3ffff,1,0,u32,u32,RegBitfieldRaw,common::RW>::from_register(self,0)
     }
-
     #[inline(always)]
     pub fn bool(self) -> crate::common::RegisterFieldBool<27, 1, 0, RegBitfieldRaw, common::RW> {
         crate::common::RegisterFieldBool::<27, 1, 0, RegBitfieldRaw, common::RW>::from_register(
@@ -229,7 +227,6 @@ impl Reg16BitEnum {
             common::RW,
         >::from_register(self, 0)
     }
-
     #[doc = "Boolean with enum"]
     #[inline(always)]
     pub fn boolenum(
@@ -312,7 +309,6 @@ pub mod reg16bitenum {
 
     impl Bitfield9BitsEnum {
         pub const VAL_0: Self = Self(0);
-
         pub const VAL_256: Self = Self(256);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -356,7 +352,6 @@ pub mod reg16bitenum {
 
     impl Boolenum {
         pub const BOOL_0: Self = Self(0);
-
         pub const BOOL_1: Self = Self(1);
     }
 }
@@ -533,7 +528,6 @@ impl RegEnumValue {
             common::RW,
         >::from_register(self, 0)
     }
-
     #[inline(always)]
     pub fn only_write_enum(
         self,
@@ -558,7 +552,6 @@ impl RegEnumValue {
             common::RW,
         >::from_register(self, 0)
     }
-
     #[inline(always)]
     pub fn read_write_enum(
         self,
@@ -583,7 +576,6 @@ impl RegEnumValue {
             common::RW,
         >::from_register(self, 0)
     }
-
     #[inline(always)]
     pub fn read_write_enum_split(
         self,
@@ -608,7 +600,6 @@ impl RegEnumValue {
             common::RW,
         >::from_register(self, 0)
     }
-
     #[inline(always)]
     pub fn read_write_enum_split_binary(
         self,
@@ -633,7 +624,6 @@ impl RegEnumValue {
             common::RW,
         >::from_register(self, 0)
     }
-
     #[inline(always)]
     pub fn inherited_access_enum(
         self,
@@ -715,9 +705,7 @@ pub mod regenumvalue {
 
     impl OnlyReadEnumRead {
         pub const VALUE_2: Self = Self(2);
-
         pub const VALUE_1: Self = Self(1);
-
         pub const VALUE_0: Self = Self(0);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -761,9 +749,7 @@ pub mod regenumvalue {
 
     impl OnlyWriteEnumWrite {
         pub const VALUE_2: Self = Self(2);
-
         pub const VALUE_1: Self = Self(1);
-
         pub const VALUE_0: Self = Self(0);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -807,9 +793,7 @@ pub mod regenumvalue {
 
     impl ReadWriteEnum {
         pub const VALUE_2: Self = Self(2);
-
         pub const VALUE_1: Self = Self(1);
-
         pub const VALUE_0: Self = Self(0);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -853,9 +837,7 @@ pub mod regenumvalue {
 
     impl ReadWriteEnumSplitRead {
         pub const VALUE_2: Self = Self(2);
-
         pub const VALUE_1: Self = Self(1);
-
         pub const VALUE_0: Self = Self(0);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -899,9 +881,7 @@ pub mod regenumvalue {
 
     impl ReadWriteEnumSplitWrite {
         pub const VALUE_2: Self = Self(0);
-
         pub const VALUE_1: Self = Self(2);
-
         pub const VALUE_0: Self = Self(1);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -945,7 +925,6 @@ pub mod regenumvalue {
 
     impl ReadWriteEnumSplitBinaryRead {
         pub const VALUE_1: Self = Self(1);
-
         pub const VALUE_0: Self = Self(0);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -989,7 +968,6 @@ pub mod regenumvalue {
 
     impl ReadWriteEnumSplitBinaryWrite {
         pub const VALUE_2: Self = Self(0);
-
         pub const VALUE_0: Self = Self(1);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -1033,7 +1011,6 @@ pub mod regenumvalue {
 
     impl InheritedAccessEnumRead {
         pub const VALUE_1: Self = Self(1);
-
         pub const VALUE_0: Self = Self(0);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -1077,7 +1054,6 @@ pub mod regenumvalue {
 
     impl InheritedAccessEnumWrite {
         pub const VALUE_2: Self = Self(0);
-
         pub const VALUE_0: Self = Self(1);
     }
 }

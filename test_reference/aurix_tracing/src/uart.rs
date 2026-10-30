@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:56:11 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 12:53:51 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -23,55 +23,55 @@ impl super::Uart {
     pub(crate) const fn _svd2pac_as_ptr(&self) -> *mut u8 {
         self.ptr
     }
- 
+
 #[doc = "read-write reg"]
 #[inline(always)]
 pub const fn reg1_(&self) -> &'static crate::common::ClusterRegisterArray<self::Reg1T, 2, 0x4> {
     unsafe { crate::common::ClusterRegisterArray::from_ptr(self._svd2pac_as_ptr().add(0x0usize)) }
 }
 
- 
+
 #[doc = "Register with bitfields without enumeration"]
 #[inline(always)]
 pub fn regbitfieldraw(&self) -> &'static self::RegBitfieldRawT {
     unsafe {   self::RegBitfieldRawT::from_ptr(self._svd2pac_as_ptr().add(256usize)) }
 }
 
- 
+
 #[doc = "read write reg enum"]
 #[inline(always)]
 pub fn reg16bitenum(&self) -> &'static self::Reg16BitEnumT {
     unsafe {   self::Reg16BitEnumT::from_ptr(self._svd2pac_as_ptr().add(260usize)) }
 }
 
- 
+
 #[doc = "Read write whithout enum"]
 #[inline(always)]
 pub fn reg8bitraw(&self) -> &'static self::Reg8BitRawT {
     unsafe {   self::Reg8BitRawT::from_ptr(self._svd2pac_as_ptr().add(262usize)) }
 }
 
- 
+
 #[doc = "Read write without enum"]
 #[inline(always)]
 pub fn reg16bitraw(&self) -> &'static self::Reg16BitRawT {
     unsafe {   self::Reg16BitRawT::from_ptr(self._svd2pac_as_ptr().add(264usize)) }
 }
 
- 
+
 #[doc = "Read write without enum"]
 #[inline(always)]
 pub fn reg32bitraw(&self) -> &'static self::Reg32BitRawT {
     unsafe {   self::Reg32BitRawT::from_ptr(self._svd2pac_as_ptr().add(272usize)) }
 }
 
- 
+
 #[doc = "Enumvalues with different usage value"]
 #[inline(always)]
 pub fn regenumvalue(&self) -> &'static self::RegEnumValueT {
     unsafe {   self::RegEnumValueT::from_ptr(self._svd2pac_as_ptr().add(512usize)) }
 }
- 
+
 #[doc = "Cluster to test when peripheral has same name as register"]
 #[inline(always)]
 pub const fn uart(&self) -> crate::uart::Uart{
@@ -79,7 +79,7 @@ pub const fn uart(&self) -> crate::uart::Uart{
 }
 
 }
- 
+
 #[doc = "read-write reg"]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Reg1 {
@@ -124,7 +124,7 @@ impl crate::common::ResetValue<Reg1> for Reg1T {
     }
 }
 
- 
+
 #[doc = "Register with bitfields without enumeration"]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct RegBitfieldRaw {
@@ -161,22 +161,17 @@ impl crate::common::Reg<RegBitfieldRaw> for RegBitfieldRawT {}
 unsafe impl crate::common::Read<RegBitfieldRaw> for RegBitfieldRawT {}
 unsafe impl crate::common::Write<RegBitfieldRaw> for RegBitfieldRawT {}
 impl RegBitfieldRaw {
-    
     #[inline(always)]
     pub fn bitfield9bits(self) -> crate::common::RegisterField<0,0x1ff,1,0,u16,u16,RegBitfieldRaw,common::RW> {
         crate::common::RegisterField::<0,0x1ff,1,0,u16,u16,RegBitfieldRaw,common::RW>::from_register(self,0)
     }
-    
     #[inline(always)]
     pub fn bitfield17bits(self) -> crate::common::RegisterField<9,0x3ffff,1,0,u32,u32,RegBitfieldRaw,common::RW> {
         crate::common::RegisterField::<9,0x3ffff,1,0,u32,u32,RegBitfieldRaw,common::RW>::from_register(self,0)
     }
-    
     #[inline(always)]
-    pub fn bool(self) -> 
-    crate::common::RegisterFieldBool<27,1,0,RegBitfieldRaw,common::RW> {
-        
-    crate::common::RegisterFieldBool::<27,1,0,RegBitfieldRaw,common::RW>::from_register(self,0)
+    pub fn bool(self) -> crate::common::RegisterFieldBool<27,1,0,RegBitfieldRaw,common::RW> {
+        crate::common::RegisterFieldBool::<27,1,0,RegBitfieldRaw,common::RW>::from_register(self,0)
     }
 }
 impl crate::common::ResetValue<RegBitfieldRaw> for RegBitfieldRawT {
@@ -186,7 +181,7 @@ impl crate::common::ResetValue<RegBitfieldRaw> for RegBitfieldRawT {
     }
 }
 
- 
+
 #[doc = "read write reg enum"]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Reg16BitEnum {
@@ -223,13 +218,11 @@ impl crate::common::Reg<Reg16BitEnum> for Reg16BitEnumT {}
 unsafe impl crate::common::Read<Reg16BitEnum> for Reg16BitEnumT {}
 unsafe impl crate::common::Write<Reg16BitEnum> for Reg16BitEnumT {}
 impl Reg16BitEnum {
-     
 #[doc = "Check when bitfield size is not standard"]
     #[inline(always)]
     pub fn bitfield9bitsenum(self) -> crate::common::RegisterField<0,0x1ff,1,0,reg16bitenum::Bitfield9BitsEnum,reg16bitenum::Bitfield9BitsEnum,Reg16BitEnum,common::RW> {
         crate::common::RegisterField::<0,0x1ff,1,0,reg16bitenum::Bitfield9BitsEnum,reg16bitenum::Bitfield9BitsEnum,Reg16BitEnum,common::RW>::from_register(self,0)
     }
-     
 #[doc = "Boolean with enum"]
     #[inline(always)]
     pub fn boolenum(self) -> crate::common::RegisterField<9,0x7f,1,0,reg16bitenum::Boolenum,reg16bitenum::Boolenum,Reg16BitEnum,common::RW> {
@@ -291,9 +284,7 @@ pub mod reg16bitenum {
     }
 
     impl Bitfield9BitsEnum {
-        
         pub const VAL_0:Self =Self(0);
-        
         pub const VAL_256:Self =Self(256);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -336,13 +327,11 @@ pub mod reg16bitenum {
     }
 
     impl Boolenum {
-        
         pub const BOOL_0:Self =Self(0);
-        
         pub const BOOL_1:Self =Self(1);
     }
 }
- 
+
 #[doc = "Read write whithout enum"]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Reg8BitRaw {
@@ -387,7 +376,7 @@ impl crate::common::ResetValue<Reg8BitRaw> for Reg8BitRawT {
     }
 }
 
- 
+
 #[doc = "Read write without enum"]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Reg16BitRaw {
@@ -432,7 +421,7 @@ impl crate::common::ResetValue<Reg16BitRaw> for Reg16BitRawT {
     }
 }
 
- 
+
 #[doc = "Read write without enum"]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Reg32BitRaw {
@@ -477,7 +466,7 @@ impl crate::common::ResetValue<Reg32BitRaw> for Reg32BitRawT {
     }
 }
 
- 
+
 #[doc = "Enumvalues with different usage value"]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct RegEnumValue {
@@ -514,32 +503,26 @@ impl crate::common::Reg<RegEnumValue> for RegEnumValueT {}
 unsafe impl crate::common::Read<RegEnumValue> for RegEnumValueT {}
 unsafe impl crate::common::Write<RegEnumValue> for RegEnumValueT {}
 impl RegEnumValue {
-    
     #[inline(always)]
     pub fn only_read_enum(self) -> crate::common::RegisterField<0,0x7,1,0,regenumvalue::OnlyReadEnumRead,u8,RegEnumValue,common::RW> {
         crate::common::RegisterField::<0,0x7,1,0,regenumvalue::OnlyReadEnumRead,u8,RegEnumValue,common::RW>::from_register(self,0)
     }
-    
     #[inline(always)]
     pub fn only_write_enum(self) -> crate::common::RegisterField<3,0x7,1,0,u8,regenumvalue::OnlyWriteEnumWrite,RegEnumValue,common::RW> {
         crate::common::RegisterField::<3,0x7,1,0,u8,regenumvalue::OnlyWriteEnumWrite,RegEnumValue,common::RW>::from_register(self,0)
     }
-    
     #[inline(always)]
     pub fn read_write_enum(self) -> crate::common::RegisterField<6,0x3,1,0,regenumvalue::ReadWriteEnum,regenumvalue::ReadWriteEnum,RegEnumValue,common::RW> {
         crate::common::RegisterField::<6,0x3,1,0,regenumvalue::ReadWriteEnum,regenumvalue::ReadWriteEnum,RegEnumValue,common::RW>::from_register(self,0)
     }
-    
     #[inline(always)]
     pub fn read_write_enum_split(self) -> crate::common::RegisterField<8,0x3,1,0,regenumvalue::ReadWriteEnumSplitRead,regenumvalue::ReadWriteEnumSplitWrite,RegEnumValue,common::RW> {
         crate::common::RegisterField::<8,0x3,1,0,regenumvalue::ReadWriteEnumSplitRead,regenumvalue::ReadWriteEnumSplitWrite,RegEnumValue,common::RW>::from_register(self,0)
     }
-    
     #[inline(always)]
     pub fn read_write_enum_split_binary(self) -> crate::common::RegisterField<10,0x1,1,0,regenumvalue::ReadWriteEnumSplitBinaryRead,regenumvalue::ReadWriteEnumSplitBinaryWrite,RegEnumValue,common::RW> {
         crate::common::RegisterField::<10,0x1,1,0,regenumvalue::ReadWriteEnumSplitBinaryRead,regenumvalue::ReadWriteEnumSplitBinaryWrite,RegEnumValue,common::RW>::from_register(self,0)
     }
-    
     #[inline(always)]
     pub fn inherited_access_enum(self) -> crate::common::RegisterField<11,0x1,1,0,regenumvalue::InheritedAccessEnumRead,regenumvalue::InheritedAccessEnumWrite,RegEnumValue,common::RW> {
         crate::common::RegisterField::<11,0x1,1,0,regenumvalue::InheritedAccessEnumRead,regenumvalue::InheritedAccessEnumWrite,RegEnumValue,common::RW>::from_register(self,0)
@@ -600,11 +583,8 @@ pub mod regenumvalue {
     }
 
     impl OnlyReadEnumRead {
-        
         pub const VALUE_2:Self =Self(2);
-        
         pub const VALUE_1:Self =Self(1);
-        
         pub const VALUE_0:Self =Self(0);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -647,11 +627,8 @@ pub mod regenumvalue {
     }
 
     impl OnlyWriteEnumWrite {
-        
         pub const VALUE_2:Self =Self(2);
-        
         pub const VALUE_1:Self =Self(1);
-        
         pub const VALUE_0:Self =Self(0);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -694,11 +671,8 @@ pub mod regenumvalue {
     }
 
     impl ReadWriteEnum {
-        
         pub const VALUE_2:Self =Self(2);
-        
         pub const VALUE_1:Self =Self(1);
-        
         pub const VALUE_0:Self =Self(0);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -741,11 +715,8 @@ pub mod regenumvalue {
     }
 
     impl ReadWriteEnumSplitRead {
-        
         pub const VALUE_2:Self =Self(2);
-        
         pub const VALUE_1:Self =Self(1);
-        
         pub const VALUE_0:Self =Self(0);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -788,11 +759,8 @@ pub mod regenumvalue {
     }
 
     impl ReadWriteEnumSplitWrite {
-        
         pub const VALUE_2:Self =Self(0);
-        
         pub const VALUE_1:Self =Self(2);
-        
         pub const VALUE_0:Self =Self(1);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -835,9 +803,7 @@ pub mod regenumvalue {
     }
 
     impl ReadWriteEnumSplitBinaryRead {
-        
         pub const VALUE_1:Self =Self(1);
-        
         pub const VALUE_0:Self =Self(0);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -880,9 +846,7 @@ pub mod regenumvalue {
     }
 
     impl ReadWriteEnumSplitBinaryWrite {
-        
         pub const VALUE_2:Self =Self(0);
-        
         pub const VALUE_0:Self =Self(1);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -925,9 +889,7 @@ pub mod regenumvalue {
     }
 
     impl InheritedAccessEnumRead {
-        
         pub const VALUE_1:Self =Self(1);
-        
         pub const VALUE_0:Self =Self(0);
     }
     #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -970,9 +932,7 @@ pub mod regenumvalue {
     }
 
     impl InheritedAccessEnumWrite {
-        
         pub const VALUE_2:Self =Self(0);
-        
         pub const VALUE_0:Self =Self(1);
     }
 }
@@ -980,7 +940,7 @@ pub mod regenumvalue {
 #[doc(hidden)]
 #[non_exhaustive]
 pub struct _Uart;
- 
+
 #[doc = "Cluster to test when peripheral has same name as register"]
 pub type Uart = &'static _Uart;
 
@@ -1059,7 +1019,6 @@ impl crate::common::Reg<Uart> for UartT {}
 unsafe impl crate::common::Read<Uart> for UartT {}
 unsafe impl crate::common::Write<Uart> for UartT {}
 impl Uart {
-    
     #[inline(always)]
     pub fn uart(self) -> crate::common::RegisterField<0,0x7,1,0,u8,u8,Uart,common::RW> {
         crate::common::RegisterField::<0,0x7,1,0,u8,u8,Uart,common::RW>::from_register(self,0)

@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 16:00:55 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 13:03:11 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -194,7 +194,6 @@ pub mod baseregister {
     impl Run {
         #[doc = "Timer is not running"]
         pub const STOPPED: Self = Self(0);
-
         #[doc = "Timer is running"]
         pub const RUNNING: Self = Self(1);
     }

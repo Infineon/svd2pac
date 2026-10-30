@@ -2,7 +2,7 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Tue, 30 Jun 2026 15:56:11 +0000
+// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 12:53:51 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
@@ -23,7 +23,7 @@ impl super::EscapeTest {
     pub(crate) const fn _svd2pac_as_ptr(&self) -> *mut u8 {
         self.ptr
     }
- 
+
 #[doc = "\\[\\]\\\"😀\"\\n\\a\\r\'𒀀𒀽"]
 #[inline(always)]
 pub fn register(&self) -> &'static self::RegisterT {
@@ -31,7 +31,7 @@ pub fn register(&self) -> &'static self::RegisterT {
 }
 
 }
- 
+
 #[doc = "\\[\\]\\\"😀\"\\n\\a\\r\'𒀀𒀽"]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Register {
@@ -68,7 +68,6 @@ impl crate::common::Reg<Register> for RegisterT {}
 unsafe impl crate::common::Read<Register> for RegisterT {}
 unsafe impl crate::common::Write<Register> for RegisterT {}
 impl Register {
-     
 #[doc = "\\[\\]\\\"😀\"\\n\\a\\r\'𒀀𒀽"]
     #[inline(always)]
     pub fn field(self) -> crate::common::RegisterField<1,0x1,1,0,register::Field,register::Field,Register,common::RW> {
@@ -130,7 +129,6 @@ pub mod register {
     }
 
     impl Field {
-         
 #[doc = "\\[\\]\\\"😀\"\\n\\a\\r\'𒀀𒀽"]
         pub const ENUM_VALUE:Self =Self(0);
     }
