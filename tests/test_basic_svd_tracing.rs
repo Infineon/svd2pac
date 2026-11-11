@@ -80,5 +80,5 @@ fn compile_generated_tracing() {
         Some(env!("AURIX_TOOLCHAIN").to_string()),
     );
     assert_cargo_command(&generated_code_folder, CargoCommand::Clean, None);
-    assert_folders_eq("./test_reference/tracing", &generated_code_folder);
+    check_reference_output("./test_reference/tracing", &generated_code_folder);
 }

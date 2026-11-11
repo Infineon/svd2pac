@@ -2,7 +2,6 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 12:53:51 +0000
 
 //! Contains perfect hash function that maps form raw addresses to
 //! a string containing the names of all registers that point to an address.

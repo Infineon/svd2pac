@@ -63,7 +63,7 @@ fn compile_generated_generic() {
         );
     }
     assert_cargo_command(&generated_code_folder, CargoCommand::Clean, None);
-    assert_folders_eq("./test_reference/generic", &generated_code_folder);
+    check_reference_output("./test_reference/generic", &generated_code_folder);
 }
 
 #[test]
@@ -78,7 +78,7 @@ fn generate_generic_all_one_bit_fields_as_bool() {
     ];
     main_parse_arguments(args);
 
-    assert_folders_eq(
+    check_reference_output(
         "./test_reference/generic_all_one_bit_field_are_bool",
         &generated_code_folder,
     );
@@ -100,5 +100,6 @@ fn test_license_text_option() {
     main_parse_arguments(args);
     let license_path = generated_code_folder.path().join("LICENSE.txt");
     assert!(license_path.exists(), "Not found LICENSE.txt");
-    assert_files_eq("./tests/resources/LICENSE.txt", license_path);
+    assert_files_eq("./tests/resources/LICENSE.txt", license_path)
+        .expect("LICENSE.txt differs from expected");
 }

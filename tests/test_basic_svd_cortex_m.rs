@@ -33,5 +33,5 @@ fn compile_generated_cortex_m() {
     assert_cargo_command(&workspace_folder, CargoCommand::Clippy, None);
 
     assert_cargo_command(&workspace_folder, CargoCommand::Clean, None);
-    assert_folders_eq("./test_reference/cortex_m", &workspace_folder);
+    check_reference_output("./test_reference/cortex_m", &workspace_folder);
 }

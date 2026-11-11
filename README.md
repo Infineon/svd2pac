@@ -480,6 +480,10 @@ rustup target add thumbv7em-none-eabihf
 To test the generation of Aurix PAC it is necessary to install Hightec Rust Aurix compiler and select it as default compiler.
 `build.rs` detects automatically the toolchain and add the configuration option to enable Aurix specific tests.
 
+The tests compare the generated output with expected output in the `test_reference` directory in order to prevent
+unintentional changes to the generated code. If you want to update the reference output to reflect intentional changes,
+you can run the tests with `SVD2PAC_BLESS_TESTS=1`.
+
 ## Credits
 
 A small portion of template common.tera is copied from
