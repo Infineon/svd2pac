@@ -2,7 +2,6 @@
 Test license
 
 */
-// Generated from SVD 1.2, with svd2pac 0.8.0 on Fri, 30 Oct 2026 13:01:44 +0000
 
 #![allow(clippy::identity_op)]
 #![allow(clippy::module_inception)]
