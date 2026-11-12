@@ -9,6 +9,7 @@ pub trait ToSanitizedSymbol {
     fn to_sanitized_ident(&self) -> String;
     fn to_internal_ident(&self) -> String;
     fn remove_invalid_char(&self) -> String;
+    fn remove_double_underscores(&self) -> String;
 }
 
 impl ToSanitizedSymbol for str {
@@ -16,24 +17,28 @@ impl ToSanitizedSymbol for str {
         self.to_internal_ident()
             .remove_invalid_char()
             .to_lowercase()
+            .remove_double_underscores()
             .to_sanitized_ident()
     }
     fn to_sanitized_struct_ident(&self) -> String {
         self.to_internal_ident()
             .remove_invalid_char()
             .to_case(Case::Pascal)
+            .remove_double_underscores()
             .to_sanitized_ident()
     }
     fn to_sanitized_func_ident(&self) -> String {
         self.to_internal_ident()
             .remove_invalid_char()
             .to_lowercase()
+            .remove_double_underscores()
             .to_sanitized_ident()
     }
     fn to_sanitized_const_ident(&self) -> String {
         self.to_internal_ident()
             .remove_invalid_char()
             .to_case(Case::ScreamingSnake)
+            .remove_double_underscores()
             .to_sanitized_ident()
     }
     fn to_sanitized_ident(&self) -> String {
@@ -59,6 +64,10 @@ impl ToSanitizedSymbol for str {
     fn remove_invalid_char(&self) -> String {
         // Remove all char that are not valid for Rust identifier
         let reg_ex = regex!("[^a-zA-Z0-9_]");
+        reg_ex.replace_all(self, "_").into_owned()
+    }
+    fn remove_double_underscores(&self) -> String {
+        let reg_ex = regex!("__+");
         reg_ex.replace_all(self, "_").into_owned()
     }
 }
