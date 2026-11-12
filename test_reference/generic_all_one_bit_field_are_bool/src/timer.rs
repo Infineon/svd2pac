@@ -88,6 +88,14 @@ impl super::Timer {
         unsafe { self::Register64BitT::from_ptr(self._svd2pac_as_ptr().add(96usize)) }
     }
 
+    #[doc = "Register with double underscore in name"]
+    #[inline(always)]
+    pub fn register_with_double_underscore(&self) -> &'static self::RegisterWithDoubleUnderscoreT {
+        unsafe {
+            self::RegisterWithDoubleUnderscoreT::from_ptr(self._svd2pac_as_ptr().add(112usize))
+        }
+    }
+
     #[doc = "Register to test when peripheral has same name as register"]
     #[inline(always)]
     pub fn timer(&self) -> &'static self::TimerT {
@@ -885,6 +893,62 @@ impl crate::common::ResetValue<Register64Bit> for Register64BitT {
     #[inline(always)]
     fn reset_value(&self) -> Register64Bit {
         Register64Bit::new(18446744073709551615)
+    }
+}
+
+#[doc = "Register with double underscore in name"]
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct RegisterWithDoubleUnderscore {
+    pub(crate) data: u32,
+    pub(crate) mask: u32,
+}
+
+impl crate::common::RegisterValue for RegisterWithDoubleUnderscore {
+    type DataType = u32;
+
+    fn inner_mut(&mut self) -> (&mut Self::DataType, &mut Self::DataType) {
+        (&mut self.data, &mut self.mask)
+    }
+
+    fn inner(&self) -> (Self::DataType, Self::DataType) {
+        (self.data, self.mask)
+    }
+
+    fn new(data: Self::DataType) -> Self {
+        Self { data, mask: 0x0 }
+    }
+}
+
+#[doc(hidden)]
+pub struct RegisterWithDoubleUnderscoreT;
+unsafe impl crate::common::AsPtr for RegisterWithDoubleUnderscoreT {}
+impl crate::common::Reg<RegisterWithDoubleUnderscore> for RegisterWithDoubleUnderscoreT {}
+
+unsafe impl crate::common::Read<RegisterWithDoubleUnderscore> for RegisterWithDoubleUnderscoreT {}
+unsafe impl crate::common::Write<RegisterWithDoubleUnderscore> for RegisterWithDoubleUnderscoreT {}
+impl RegisterWithDoubleUnderscore {
+    #[doc = "Field with double underscore in name"]
+    #[inline(always)]
+    pub fn field_with_double_underscore(
+        self,
+    ) -> crate::common::RegisterField<0, 0xff, 1, 0, u8, u8, RegisterWithDoubleUnderscore, common::RW>
+    {
+        crate::common::RegisterField::<
+            0,
+            0xff,
+            1,
+            0,
+            u8,
+            u8,
+            RegisterWithDoubleUnderscore,
+            common::RW,
+        >::from_register(self, 0)
+    }
+}
+impl crate::common::ResetValue<RegisterWithDoubleUnderscore> for RegisterWithDoubleUnderscoreT {
+    #[inline(always)]
+    fn reset_value(&self) -> RegisterWithDoubleUnderscore {
+        RegisterWithDoubleUnderscore::new(0)
     }
 }
 

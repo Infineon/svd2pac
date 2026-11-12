@@ -64,6 +64,9 @@ static REGISTER_NAMES: phf::Map<u64, &'static str> = phf_map! {
   0x40010060u64 => "
       TIMER.register64bit(),
     ",
+  0x40010070u64 => "
+      TIMER.register_with_double_underscore(),
+    ",
   0x40012000u64 => "
       TIMER.timer(),
     ",
