@@ -1,4 +1,3 @@
-#![cfg(aurix_tests)]
 mod common;
 use common::*;
 use fs_extra::dir::CopyOptions;
@@ -7,7 +6,6 @@ use std::{env, path::Path};
 use svd2pac::main_parse_arguments;
 use toml_edit::{Array, Document, Table, array, value};
 
-/// This test requires Aurix Rust compiler pre-installed
 #[test]
 fn compile_generated_aurix() {
     let xml_path = concat!(env!("CARGO_MANIFEST_DIR"), "/test_svd/simple.xml");
@@ -56,17 +54,21 @@ fn compile_generated_aurix() {
     )
     .expect("Failed to copy required files to build cargo project");
 
-    assert_cargo_command(
-        &generated_code_folder,
-        CargoCommand::Build,
-        Some(env!("AURIX_TOOLCHAIN").to_string()),
-    );
-    assert_cargo_command(
-        &generated_code_folder,
-        CargoCommand::Clean,
-        Some(env!("AURIX_TOOLCHAIN").to_string()),
-    );
-    assert_folders_eq("./test_reference/aurix", &generated_code_folder);
+    // This test requires Aurix Rust compiler pre-installed
+    #[cfg(aurix_tests)]
+    {
+        assert_cargo_command(
+            &generated_code_folder,
+            CargoCommand::Build,
+            Some(env!("AURIX_TOOLCHAIN").to_string()),
+        );
+        assert_cargo_command(
+            &generated_code_folder,
+            CargoCommand::Clean,
+            Some(env!("AURIX_TOOLCHAIN").to_string()),
+        );
+    }
+    check_reference_output("./test_reference/aurix", &generated_code_folder);
 }
 
 /// Generate PAC with tracing code but feature is disabled
@@ -120,15 +122,18 @@ fn compile_generated_aurix_tracing() {
     )
     .expect("Failed to copy required files to build cargo project");
 
-    assert_cargo_command(
-        &generated_code_folder,
-        CargoCommand::Build,
-        Some(env!("AURIX_TOOLCHAIN").to_string()),
-    );
-    assert_cargo_command(
-        &generated_code_folder,
-        CargoCommand::Clean,
-        Some(env!("AURIX_TOOLCHAIN").to_string()),
-    );
-    assert_folders_eq("./test_reference/aurix_tracing", &generated_code_folder);
+    #[cfg(aurix_tests)]
+    {
+        assert_cargo_command(
+            &generated_code_folder,
+            CargoCommand::Build,
+            Some(env!("AURIX_TOOLCHAIN").to_string()),
+        );
+        assert_cargo_command(
+            &generated_code_folder,
+            CargoCommand::Clean,
+            Some(env!("AURIX_TOOLCHAIN").to_string()),
+        );
+    }
+    check_reference_output("./test_reference/aurix_tracing", &generated_code_folder);
 }
